@@ -33,7 +33,7 @@ Guía para Claude Code al trabajar en este repositorio.
 - Dictamen: `trg_brom_evaluar_resultado` (BEFORE INSERT/UPDATE en resultados) y `trg_brom_actualizar_dictamen_muestra` (AFTER). Un cambio de criterio no recalcula resultados ya guardados.
 - Registro: RPC `brom_registrar_muestra_con_resultados(p_lote, p_receta_id, p_usuario_id, p_resultados, p_fecha_lote)`. Edición: RPC `brom_actualizar_muestra_con_resultados` (migración v6); si no existe, el frontend usa el procedimiento anterior por pasos.
 - RLS: lectura para autenticados; catálogos, usuarios y borrado solo admin; un lote lo edita quien lo registró o un admin. `brom_usuarios` solo es visible para uno mismo o un admin.
-- Migraciones en `supabase/migrations/` con su reversión en `rollback/`. Se aplican con `apply_migration` solo con autorización del usuario.
+- Migraciones en `supabase/migrations/` con su reversión en `rollback/`. Se aplican con `apply_migration` solo con autorización del usuario. Aplicadas: `brom_v6` y `brom_v6_permisos` (las funciones `brom_` no son ejecutables por `anon`; mantén ese criterio en las nuevas).
 - Fotos: `fotoDe()` usa `foto_url` o, si está vacío, la foto histórica del bucket público `avatares` (solo lectura) para los 5 usuarios iniciales.
 
 ## Pruebas de interfaz sin credenciales
