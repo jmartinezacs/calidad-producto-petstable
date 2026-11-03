@@ -14,7 +14,7 @@ Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Br
 - **Gráficas:** porcentaje de cumplimiento en pastel, cumplimiento por receta y por área, colores distintos por barra, meses y textos sin abreviaturas; la gráfica ampliada ya se visualiza y el recuadro de información ya no se queda fijo.
 - **Centro de ayuda** con 50 respuestas en 10 temas, tutorial de instalación y **guía de usuario descargable en PDF**.
 
-Requiere la migración `supabase/migrations/20261103_brom_v7_liberacion.sql`.
+Base de datos: migración `supabase/migrations/20261103_brom_v7_liberacion.sql` (aplicada).
 
 ## Desarrollo
 
