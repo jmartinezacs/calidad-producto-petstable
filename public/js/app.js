@@ -16,7 +16,7 @@ import ayuda from './modules/ayuda.js';
 const TODOS = ['admin', 'analista', 'calidad'];
 const ROUTES = {
   panel:      { mod: dashboard,  icon: 'layout-dashboard', label: 'Panel',               roles: TODOS, mobile: true },
-  lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes analizados',    roles: TODOS, mobile: true },
+  lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes y liberación',  roles: TODOS, mobile: true },
   resultados: { mod: resultados, icon: 'line-chart',       label: 'Resultados',          roles: TODOS, mobile: true },
   catalogos:  { mod: catalogos,  icon: 'book-open-check',  label: 'Recetas y métodos',   roles: TODOS, mobile: true },
   usuarios:   { mod: usuarios,   icon: 'user-cog',         label: 'Usuarios',            roles: ['admin'] },
@@ -60,7 +60,7 @@ async function loadProfileAndStart() {
     const p = data?.[0];
     if (!p || !p.activo || !TODOS.includes(p.rol)) {
       await sb.auth.signOut({ scope: 'local' });
-      showLogin('Tu cuenta no tiene acceso a Análisis Bromatológicos o está inactiva. Solicítalo a un administrador.');
+      showLogin('Tu cuenta no tiene acceso a Liberación de producto o está inactiva. Solicítalo a un administrador.');
       return;
     }
     state.profile = { ...p, nombre: p.nombre_completo || p.correo, email: p.correo, foto_url: fotoDe(p) };
@@ -213,7 +213,7 @@ async function route() {
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     // El título de la pestaña permanece fijo al navegar
-    document.title = 'Análisis Bromatológicos';
+    document.title = 'Liberación de producto';
     closeMenu();
     const view = $('#view');
     view.innerHTML = '';

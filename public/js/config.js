@@ -7,5 +7,5 @@
 window.BROM_CONFIG = {
   SUPABASE_URL: "https://domumnsezocubigfqwry.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_CDb37asQiekme1SuDnIANw_csZ5ZNRh",
-  APP_VERSION: "6.0"
+  APP_VERSION: "7.0"
 };

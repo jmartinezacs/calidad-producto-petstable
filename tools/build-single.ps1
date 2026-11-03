@@ -12,7 +12,7 @@ $utf8 = New-Object Text.UTF8Encoding($false)
 function Read-Text($rel) { ([IO.File]::ReadAllText((Join-Path $Src $rel), [Text.Encoding]::UTF8)).Replace("`r`n", "`n") }
 
 # ---------- 1. Empaquetar módulos ES en un script clásico ----------
-$order = @('core', 'modules/lotes', 'modules/resultados', 'modules/dashboard', 'modules/catalogos',
+$order = @('core', 'modules/pdf', 'modules/certificado', 'modules/lotes', 'modules/resultados', 'modules/dashboard', 'modules/catalogos',
            'modules/usuarios', 'modules/perfil', 'modules/ayuda', 'app')
 function Resolve-Key([string]$from, [string]$spec) {
   $s = $spec -replace '\.js$', ''
@@ -81,7 +81,7 @@ Swap '  <script type="module" src="/js/app.js?v=1.0.0"></script>' "  <script>$bu
 foreach ($ref in @('/css/', '/js/', '/img/', '/icons/', 'favicon.ico')) {
   if ($html.Contains($ref)) { throw "Quedó una referencia externa a $ref" }
 }
-$html = "<!-- Análisis Bromatológicos · Pet's Table — archivo generado por tools/build-single.ps1. Edita las fuentes en public/ y vuelve a generar. -->`n" + $html
+$html = "<!-- Liberación de producto · Pet's Table — archivo generado por tools/build-single.ps1. Edita las fuentes en public/ y vuelve a generar. -->`n" + $html
 [IO.File]::WriteAllText((Join-Path $Out 'index.html'), $html, $utf8)
 Copy-Item (Join-Path $Src 'apple-touch-icon.png') (Join-Path $Out 'apple-touch-icon.png') -Force
 # Archivos que no pueden ir dentro del HTML: service worker (instalación) y manifiesto

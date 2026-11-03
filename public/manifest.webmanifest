@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Análisis Bromatológicos · Pet's Table",
-  "short_name": "Bromatológicos",
-  "description": "Calidad de producto de Pet's Table S.A. de C.V.: lotes analizados, resultados bromatológicos y tendencias.",
+  "name": "Liberación de producto · Pet's Table",
+  "short_name": "Liberación",
+  "description": "Liberación de producto de Pet's Table S.A. de C.V.: análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, liberación de lotes y certificados de calidad.",
   "lang": "es-MX",
   "dir": "ltr",
   "start_url": "/",

@@ -1,17 +1,20 @@
-# Análisis Bromatológicos · Pet's Table
+# Liberación de producto · Pet's Table
 
-Portal de calidad de producto de Pet's Table S.A. de C.V.: lotes analizados, resultados bromatológicos con dictamen automático y tendencias por receta y método.
+Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
-## Novedades de la versión 6.0
+## Versión 7.0
 
-- Diseño unificado con Servicio médico, Pruebas industriales y Metrología (mismo encabezado, menú, tarjetas, modo claro/oscuro, ícono y favicon).
-- **Panel:** indicadores de lotes, resultados, % de cumplimiento y fuera de especificación; lotes por mes, dictamen, cumplimiento por receta y no conformidades por método; filtro por periodo.
-- **Lotes analizados:** búsqueda y filtros (receta, dictamen, periodo), tarjetas con dictamen, vista previa de Cumple / No cumple al capturar, aviso de lote duplicado, exportación a CSV. La edición se hace en una sola transacción (con la migración v6; sin ella se usa el procedimiento anterior).
-- **Resultados:** filtros reactivos; gráficas grandes por receta (dos por fila) con límites (incluido rango), media, puntos fuera de especificación en rojo y etiquetas sin encimarse; indicadores por método (n, media, desviación estándar, mín.–máx.); tabla de 20 registros con el mismo conjunto filtrado; exportación a CSV; gráficas ampliables y descargables como imagen.
-- **Recetas y métodos:** nueva pestaña de **especificaciones por receta**; referencia normativa editable; parámetro **Rango** (requiere la migración v6).
-- **Usuarios:** edición de nombre, puesto, rol, estado y fotografía. **Mi perfil:** foto propia, contraseña, tema e instalación como app.
-- Preguntas frecuentes actualizadas y con buscador.
-- Correcciones respecto a v5.5: la tabla de detalle ahora respeta los filtros; cerrar sesión ya no cierra las demás apps de Pet's Table; el formulario de métodos ofrecía «Rango» aunque la base no lo aceptaba; las fotos ya no van incrustadas en el HTML (de 7.2 MB a ~0.5 MB).
+- **Nuevo nombre:** Liberación de producto.
+- **Cuatro áreas de análisis** con su responsable: Bromatológico (laboratorio y Jefatura de calidad), Fisicoquímico (pH, humedad), Microbiológico (coliformes totales, Salmonella, hongos y levaduras, mesófilos aerobios) y Sensorial (olor, color, sabor, textura). Los métodos de verificación se marcan «Cumple» o «No cumple», con «Marcar todo como cumple» por área.
+- **Liberación del lote** por la Jefatura de calidad cuando todos los análisis requeridos cumplen; folio `CC-AAAA-0001`, bitácora y reversión por un administrador con motivo.
+- **Certificado de calidad en PDF** (una hoja carta) con producto, especie, lote, resultados por área, dictamen y firma de quien liberó.
+- **Recetas por especie** (canino, felino…) con color característico y códigos `REC-01`; duplicar una receta para otra especie copia sus especificaciones. Meat Festival naranja, Chicken Chase turquesa y Tasty Piggy verde.
+- **Especificaciones por receta** con opción «No aplica» y **áreas configurables** (quién captura cada una).
+- **Usuarios:** agregar personas que ya tienen cuenta de Pet's Table (búsqueda con su foto); fotos alineadas.
+- **Gráficas:** porcentaje de cumplimiento en pastel, cumplimiento por receta y por área, colores distintos por barra, meses y textos sin abreviaturas; la gráfica ampliada ya se visualiza y el recuadro de información ya no se queda fijo.
+- **Centro de ayuda** con 50 respuestas en 10 temas, tutorial de instalación y **guía de usuario descargable en PDF**.
+
+Requiere la migración `supabase/migrations/20261103_brom_v7_liberacion.sql`.
 
 ## Desarrollo
 

@@ -7,7 +7,7 @@
 import {
   esc, icon, refreshIcons, toast, emptyState, errorState, fmtDate, fmtNum, todayISO, fechaLote,
   dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio, getCatalogos, getResultados, makeChart, destroyCharts,
-  toCSV, descargar, cssVar, fmtValor, prefs,
+  toCSV, descargar, cssVar, fmtValor, prefs, mesLargo, recetaTxt,
 } from '../core.js';
 
 const POR_PAGINA = 20;
@@ -18,14 +18,15 @@ export default {
     root = el; pagina = 1;
     el.innerHTML = `
       <section class="page-intro">
-        <div><span class="eyebrow">Laboratorio</span><h1>Resultados</h1>
-          <p>Tendencia histórica por receta y método, con límites de especificación y media del periodo filtrado.</p></div>
+        <div><span class="eyebrow">Calidad de producto</span><h1>Resultados</h1>
+          <p>Tendencia histórica por receta, área y método, con límites de especificación y media del periodo filtrado.</p></div>
         <div class="page-actions"><button class="btn secondary" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
       </section>
       <div class="card filtros-card">
         <div class="filtros">
           <div class="field"><label for="r-periodo">Periodo</label><select id="r-periodo"><option value="">Todo el histórico</option></select></div>
           <div class="field"><label for="r-receta">Receta</label><select id="r-receta"><option value="">Todas las recetas</option></select></div>
+          <div class="field"><label for="r-area">Área de análisis</label><select id="r-area"><option value="">Todas las áreas</option></select></div>
           <div class="field"><label for="r-metodo">Método</label><select id="r-metodo"><option value="">Todos los métodos</option></select></div>
           <button class="btn ghost" data-r="limpiar">${icon('filter-x')} Limpiar filtros</button>
         </div>
@@ -38,7 +39,7 @@ export default {
       </section>`;
     el.addEventListener('click', onClick);
     el.querySelector('#r-periodo').addEventListener('change', aplicar);
-    el.querySelector('#r-receta').addEventListener('change', () => { llenarMetodos(); aplicar(); });
+    el.querySelectorAll('#r-receta, #r-area').forEach((s) => s.addEventListener('change', () => { llenarMetodos(); aplicar(); }));
     el.querySelector('#r-metodo').addEventListener('change', aplicar);
     await cargar(params);
   },
@@ -56,8 +57,9 @@ async function cargar(params = {}) {
       const m = r.brom_muestras;
       return {
         ...r, lote: m.lote, receta_id: m.receta_id, fecha: fechaLote(m.fecha_analisis),
-        receta: cat.recetas.find((x) => x.id === m.receta_id) || { codigo: '—', nombre_receta: 'Receta no disponible' },
+        receta: cat.recetas.find((x) => x.id === m.receta_id) || { codigo: '—', nombre_receta: 'Receta no disponible', color: '#64748B' },
         metodo: criterio(cat.metodos.find((x) => x.id === r.metodo_id), cat.spec(m.receta_id, r.metodo_id)),
+        area: cat.area(cat.metodos.find((x) => x.id === r.metodo_id)?.area),
       };
     });
     llenarFiltros(params);
@@ -71,11 +73,6 @@ async function cargar(params = {}) {
   }
 }
 
-const mesLargo = (ym) => {
-  const s = new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(new Date(`${ym}-15T12:00:00Z`));
-  return s.charAt(0).toUpperCase() + s.slice(1);
-};
-
 function llenarFiltros(params) {
   const per = root.querySelector('#r-periodo'), rec = root.querySelector('#r-receta');
   const meses = [...new Set(filas.map((f) => f.fecha.slice(0, 7)).filter(Boolean))].sort().reverse();
@@ -85,19 +82,25 @@ function llenarFiltros(params) {
     + meses.map((m) => `<option value="m${m}">${esc(mesLargo(m))}</option>`).join('');
   const usadas = new Set(filas.map((f) => f.receta_id));
   rec.innerHTML = '<option value="">Todas las recetas</option>' + cat.recetas.filter((r) => usadas.has(r.id))
-    .map((r) => `<option value="${esc(r.id)}">${esc(r.codigo)} — ${esc(r.nombre_receta)}</option>`).join('');
+    .map((r) => `<option value="${esc(r.id)}">${esc(recetaTxt(r))}</option>`).join('');
+  const areasUsadas = new Set(filas.map((f) => f.area.id));
+  root.querySelector('#r-area').innerHTML = '<option value="">Todas las áreas</option>' + cat.areas.filter((a) => areasUsadas.has(a.id))
+    .map((a) => `<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
+  guardadoArea(params.area);
   const guardado = (k, sel, v) => { if (v && [...sel.options].some((o) => o.value === v)) sel.value = v; };
   guardado('per', per, params.periodo ?? prefs.get('brom.res.periodo'));
   guardado('rec', rec, params.receta);
   llenarMetodos(params.metodo);
 }
 
-// El filtro de método muestra solo los métodos con resultados en la receta elegida
+function guardadoArea(v) { const s = root.querySelector('#r-area'); if (v && [...s.options].some((o) => o.value === v)) s.value = v; }
+
+// El filtro de método muestra solo los métodos con resultados en la receta y el área elegidas
 function llenarMetodos(preferido) {
   const sel = root.querySelector('#r-metodo');
   const prev = preferido || sel.value;
-  const rec = root.querySelector('#r-receta').value;
-  const ids = new Set(filas.filter((f) => !rec || f.receta_id === rec).map((f) => f.metodo_id));
+  const rec = root.querySelector('#r-receta').value, area = root.querySelector('#r-area').value;
+  const ids = new Set(filas.filter((f) => (!rec || f.receta_id === rec) && (!area || f.area.id === area)).map((f) => f.metodo_id));
   const metodos = cat.metodos.filter((m) => ids.has(m.id));
   sel.innerHTML = '<option value="">Todos los métodos</option>' + metodos.map((m) => `<option value="${esc(m.id)}">${esc(m.metodo)}</option>`).join('');
   sel.value = metodos.some((m) => m.id === prev) ? prev : '';
@@ -114,7 +117,8 @@ function enPeriodo(fecha, p) {
 
 function filtradas() {
   const p = root.querySelector('#r-periodo').value, rec = root.querySelector('#r-receta').value, met = root.querySelector('#r-metodo').value;
-  return filas.filter((f) => enPeriodo(f.fecha, p) && (!rec || f.receta_id === rec) && (!met || f.metodo_id === met));
+  const area = root.querySelector('#r-area').value;
+  return filas.filter((f) => enPeriodo(f.fecha, p) && (!rec || f.receta_id === rec) && (!area || f.area.id === area) && (!met || f.metodo_id === met));
 }
 
 // Cambio de filtro: todo se recalcula y la tabla vuelve a la primera página
@@ -134,12 +138,12 @@ function resumen(datos) {
   const lotes = new Set(datos.map((d) => d.muestra_id)).size;
   const pct = ok + no ? Math.round((ok / (ok + no)) * 1000) / 10 : null;
   root.querySelector('#r-resumen').innerHTML = `
-    <span class="chip-stat">${icon('layers')} <b>${fmtNum(lotes)}</b> lote(s)</span>
-    <span class="chip-stat">${icon('flask-conical')} <b>${fmtNum(datos.length)}</b> resultado(s)</span>
+    <span class="chip-stat">${icon('layers')} <b>${fmtNum(lotes)}</b> ${lotes === 1 ? 'lote' : 'lotes'}</span>
+    <span class="chip-stat">${icon('flask-conical')} <b>${fmtNum(datos.length)}</b> ${datos.length === 1 ? 'resultado' : 'resultados'}</span>
     <span class="chip-stat ok">${icon('check')} <b>${fmtNum(ok)}</b> cumplen</span>
     <span class="chip-stat bad">${icon('x')} <b>${fmtNum(no)}</b> no cumplen</span>
     ${pend ? `<span class="chip-stat warn">${icon('hourglass')} <b>${fmtNum(pend)}</b> pendientes</span>` : ''}
-    ${pct !== null ? `<span class="chip-stat info">${icon('percent')} <b>${pct.toLocaleString('es-MX')}%</b> de cumplimiento</span>` : ''}`;
+    ${pct !== null ? `<span class="chip-stat info">${icon('percent')} <b>${pct.toLocaleString('es-MX')} %</b> de cumplimiento</span>` : ''}`;
   refreshIcons();
 }
 
@@ -170,7 +174,7 @@ const etiquetasRepresentativas = {
     if (n <= max) for (let i = 0; i < n; i++) idx.add(i);
     else for (let k = 0; k < max; k++) idx.add(Math.round((k * (n - 1)) / (max - 1)));
     // Siempre se etiquetan los puntos fuera de especificación, el mínimo y el máximo
-    ds._fuera?.forEach((i) => idx.add(i));
+    (ds._fuera || []).forEach((i) => idx.add(i));
     const nums = ds.data.map((v) => (typeof v === 'number' ? v : null));
     const validos = nums.filter((v) => v !== null);
     if (validos.length) { idx.add(nums.indexOf(Math.max(...validos))); idx.add(nums.indexOf(Math.min(...validos))); }
@@ -178,7 +182,7 @@ const etiquetasRepresentativas = {
     ctx.font = `700 ${zoom ? 13 : 10.5}px Inter, Segoe UI, system-ui, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     const cajas = [];
-    [...idx].sort((a, b) => (ds._fuera?.has(b) ? 1 : 0) - (ds._fuera?.has(a) ? 1 : 0) || a - b).forEach((i) => {
+    [...idx].sort((a, b) => (ds._fuera?.includes(b) ? 1 : 0) - (ds._fuera?.includes(a) ? 1 : 0) || a - b).forEach((i) => {
       const el = meta.data[i], v = ds.data[i];
       if (!el || v === null || v === undefined || el.skip) return;
       const txt = ds._cualitativo ? (v === 1 ? 'Positivo' : 'Negativo') : fmtValor(v, 3);
@@ -190,7 +194,7 @@ const etiquetasRepresentativas = {
       const caja = { x1: x - w / 2, x2: x + w / 2, y1: y - h, y2: y };
       if (cajas.some((c) => c.x1 < caja.x2 && caja.x1 < c.x2 && c.y1 < caja.y2 && caja.y1 < c.y2)) return;
       cajas.push(caja);
-      ctx.fillStyle = ds._fuera?.has(i) ? (cssVar('--bad') || '#C42F37') : (cssVar('--text') || '#172431');
+      ctx.fillStyle = ds._fuera?.includes(i) ? (cssVar('--bad') || '#C42F37') : (cssVar('--text') || '#172431');
       ctx.fillText(txt, x, y);
     });
     ctx.restore();
@@ -205,10 +209,10 @@ function graficas(datos) {
     refreshIcons(); return;
   }
   if (!datos.length) {
-    box.innerHTML = `<div class="card">${emptyState({ ico: 'search-x', title: 'Sin resultados para los filtros', text: 'Cambia el periodo, la receta o el método.' })}</div>`;
+    box.innerHTML = `<div class="card">${emptyState({ ico: 'search-x', title: 'Sin resultados para los filtros', text: 'Cambia el periodo, la receta, el área o el método.' })}</div>`;
     refreshIcons(); return;
   }
-  // Agrupación: receta → método
+  // Agrupación: receta → método (en el orden del catálogo: área y orden del método)
   const porReceta = new Map();
   datos.forEach((d) => {
     if (!porReceta.has(d.receta_id)) porReceta.set(d.receta_id, { receta: d.receta, metodos: new Map(), n: 0 });
@@ -217,12 +221,14 @@ function graficas(datos) {
     if (!g.metodos.has(d.metodo_id)) g.metodos.set(d.metodo_id, []);
     g.metodos.get(d.metodo_id).push(d);
   });
+  const posMetodo = (id) => cat.metodos.findIndex((m) => m.id === id);
   const grupos = [...porReceta.values()].sort((a, b) => String(a.receta.codigo).localeCompare(String(b.receta.codigo), 'es'));
   const pendientes = [];
   box.innerHTML = grupos.map((g, gi) => {
-    const metodos = [...g.metodos.values()].sort((a, b) => String(a[0].metodo.metodo).localeCompare(String(b[0].metodo.metodo), 'es'));
-    return `<div class="receta-sep"><span class="rs-code">${esc(g.receta.codigo)}</span><b>${esc(g.receta.nombre_receta)}</b>
-        <span class="rs-count">${fmtNum(g.n)} resultado(s) · ${metodos.length} método(s)</span></div>
+    const metodos = [...g.metodos.values()].sort((a, b) => posMetodo(a[0].metodo_id) - posMetodo(b[0].metodo_id));
+    return `<div class="receta-sep" style="--rc:${esc(g.receta.color || '#F58020')}"><span class="rs-code">${esc(g.receta.codigo)}</span><b>${esc(g.receta.nombre_receta)}</b>
+        ${g.receta.especie ? `<span class="rs-especie">${esc(g.receta.especie)}</span>` : ''}
+        <span class="rs-count">${fmtNum(g.n)} ${g.n === 1 ? 'resultado' : 'resultados'} · ${metodos.length} ${metodos.length === 1 ? 'método' : 'métodos'}</span></div>
       <div class="trend-grid">${metodos.map((items, mi) => {
         const id = `tr-${gi}-${mi}`;
         pendientes.push([id, items]);
@@ -230,7 +236,7 @@ function graficas(datos) {
       }).join('')}</div>`;
   }).join('');
   refreshIcons();
-  pendientes.forEach(([id, items]) => dibujar(id, items));
+  pendientes.forEach(([id, items]) => (items[0].metodo.tipo_resultado === 'numerico' ? dibujar(id, items) : dibujarCumplimiento(id, items)));
 }
 
 function tarjetaGrafica(id, items) {
@@ -241,72 +247,79 @@ function tarjetaGrafica(id, items) {
   const ok = items.filter((i) => i.cumple === true).length, no = items.filter((i) => i.cumple === false).length;
   const pct = ok + no ? Math.round((ok / (ok + no)) * 100) : null;
   const u = m.unidades ? ` ${m.unidades}` : '';
-  return `<div class="card trend-card">
-    <div class="card-head"><div><h3>${esc(m.metodo)}</h3><p>${esc(items[0].receta.codigo)} · ${esc(tipoLabel(m.tipo_resultado))} · ${esc(refLabel(m))}${m.particular ? ' (específico de la receta)' : ''}</p></div>
-      ${pct !== null ? `<span class="pill ${no ? 'bad' : 'ok'}">${pct}% cumple</span>` : ''}</div>
+  return `<div class="card trend-card ${num ? '' : 'trend-cumple'}">
+    <div class="card-head"><div><h3>${esc(m.metodo)}</h3><p><span class="area-dot" style="--ac:${esc(items[0].area.color)}"></span>${esc(items[0].area.nombre)} · ${esc(refLabel(m))}${m.particular ? ' (específico de la receta)' : ''}</p></div>
+      ${pct !== null ? `<span class="pill ${no ? 'bad' : 'ok'}">${pct} % cumple</span>` : ''}</div>
     <div class="trend-stats">
       <span><small>Registros</small><b>${fmtNum(items.length)}</b></span>
-      ${s ? `<span class="media"><small>Media (x̄)</small><b>${fmtValor(s.media, 3)}${esc(u)}</b></span>
-      <span><small>Desv. estándar</small><b>${fmtValor(s.de, 3)}</b></span>
-      <span><small>Mín. – Máx.</small><b>${fmtValor(s.min, 3)} – ${fmtValor(s.max, 3)}</b></span>` : ''}
-      <span class="${no ? 'bad' : ''}" title="Fuera de especificación"><small>Fuera de espec.</small><b>${fmtNum(no)}</b></span>
+      ${s ? `<span class="media"><small>Media</small><b>${fmtValor(s.media, 3)}${esc(u)}</b></span>
+      <span><small>Desviación estándar</small><b>${fmtValor(s.de, 3)}</b></span>
+      <span><small>Mínimo y máximo</small><b>${fmtValor(s.min, 3)} y ${fmtValor(s.max, 3)}</b></span>` : `<span class="ok-stat"><small>Cumplen</small><b>${fmtNum(ok)}</b></span>`}
+      <span class="${no ? 'bad' : ''}"><small>Fuera de especificación</small><b>${fmtNum(no)}</b></span>
     </div>
-    <div tabindex="0" title="Ampliar gráfica" class="chart-box trend-box"><canvas id="${id}" role="img" aria-label="Tendencia de ${esc(m.metodo)} en ${esc(items[0].receta.nombre_receta)}"></canvas></div>
+    <div tabindex="0" title="Ampliar gráfica" class="chart-box ${num ? 'trend-box' : 'sm'}"><canvas id="${id}" role="img" aria-label="${num ? 'Tendencia' : 'Cumplimiento'} de ${esc(m.metodo)} en ${esc(items[0].receta.nombre_receta)}"></canvas></div>
   </div>`;
 }
 
+// Métodos de verificación o cualitativos: porcentaje de lotes que cumplen
+function dibujarCumplimiento(id, items) {
+  const ok = items.filter((i) => i.cumple === true).length, no = items.filter((i) => i.cumple === false).length;
+  const pend = items.length - ok - no;
+  const etiquetas = ['Cumple', 'No cumple', 'Pendiente'], valores = [ok, no, pend], colores = ['#16A34A', '#E0464E', '#F59E0B'];
+  const usar = valores.map((v, i) => i).filter((i) => valores[i] > 0);
+  makeChart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels: usar.map((i) => etiquetas[i]), datasets: [{ data: usar.map((i) => valores[i]), backgroundColor: usar.map((i) => colores[i]), borderWidth: 0, _porcentaje: true }] },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: (c) => ` ${c.label}: ${fmtNum(c.raw)} ${c.raw === 1 ? 'lote' : 'lotes'} (${Math.round((c.raw / items.length) * 1000) / 10} %)` } },
+      },
+    },
+  });
+}
+
+const fechaCompleta = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 function dibujar(id, items0) {
   const items = [...items0].sort((a, b) => (a.fecha === b.fecha ? String(a.created_at).localeCompare(String(b.created_at)) : a.fecha.localeCompare(b.fecha)));
   const m = items[0].metodo;
-  const num = m.tipo_resultado === 'numerico';
-  const cualitativo = m.tipo_resultado === 'positivo_negativo';
-  const valores = items.map((i) => {
-    if (num) return Number.isFinite(Number(i.resultado)) && i.resultado !== null ? Number(i.resultado) : null;
-    if (cualitativo) { const t = String(i.resultado_texto || '').toLowerCase(); return t === 'positivo' ? 1 : t === 'negativo' ? 0 : null; }
-    return i.cumple === null ? null : i.cumple ? 1 : 0;
-  });
-  const fuera = new Set(items.map((it, i) => (it.cumple === false ? i : -1)).filter((i) => i >= 0));
-  const naranja = '#F58020', turq = '#1BC7C7', rojo = '#E0464E', violeta = '#7A5BE6';
+  const color = items[0].receta.color || '#F58020';
+  const valores = items.map((i) => (Number.isFinite(Number(i.resultado)) && i.resultado !== null ? Number(i.resultado) : null));
+  // Arreglo (no Set): la gráfica ampliada copia los datos como JSON
+  const fuera = items.map((it, i) => (it.cumple === false ? i : -1)).filter((i) => i >= 0);
+  const rojo = '#E0464E', turq = '#0891B2';
   const datasets = [{
-    label: m.metodo, data: valores, borderColor: naranja, backgroundColor: 'rgba(245,128,32,.10)', fill: false,
+    label: m.metodo, data: valores, borderColor: color, backgroundColor: color, fill: false,
     borderWidth: 2.4, tension: 0, spanGaps: true,
-    pointRadius: items.map((_, i) => (fuera.has(i) ? 5 : 3)), pointHoverRadius: 7,
-    pointBackgroundColor: items.map((_, i) => (fuera.has(i) ? rojo : naranja)), pointBorderColor: '#fff', pointBorderWidth: 1.2,
-    _etiquetas: true, _fuera: fuera, _cualitativo: !num,
+    pointRadius: items.map((_, i) => (fuera.includes(i) ? 5 : 3)), pointHoverRadius: 7,
+    pointBackgroundColor: items.map((_, i) => (fuera.includes(i) ? rojo : color)), pointBorderColor: '#fff', pointBorderWidth: 1.2,
+    _etiquetas: true, _fuera: fuera, _cualitativo: false,
   }];
-  const linea = (label, v, color, dash) => ({ label, data: items.map(() => v), borderColor: color, backgroundColor: color, borderDash: dash, borderWidth: 1.8, pointRadius: 0, pointHoverRadius: 0, pointStyle: 'line', fill: false });
+  const linea = (label, v, c, dash) => ({ label, data: items.map(() => v), borderColor: c, backgroundColor: c, borderDash: dash, borderWidth: 1.8, pointRadius: 0, pointHoverRadius: 0, pointStyle: 'line', fill: false });
   const p = m.parametro_referencia || 'ninguno';
   const refs = [];
-  if (num && m.valor_referencia !== null && m.valor_referencia !== undefined && p !== 'ninguno') {
+  if (m.valor_referencia !== null && m.valor_referencia !== undefined && p !== 'ninguno') {
     const ref = Number(m.valor_referencia);
     const nombre = { minimo: 'Límite mínimo', maximo: 'Límite máximo', exacto: 'Valor exacto', rango: 'Límite inferior' }[p] || 'Referencia';
     datasets.push(linea(`${nombre} (${fmtValor(ref)})`, ref, rojo, [7, 5])); refs.push(ref);
     if (p === 'rango' && m.valor_referencia_max !== null) {
       const mx = Number(m.valor_referencia_max);
-      datasets.push(linea(`Límite superior (${fmtValor(mx)})`, mx, rojo, [7, 5])); refs.push(mx);
+      datasets.push(linea(`Límite superior (${fmtValor(mx)})`, mx, '#9333EA', [7, 5])); refs.push(mx);
     }
   }
   const vals = valores.filter((v) => v !== null);
-  const s = num ? stats(vals) : null;
+  const s = stats(vals);
   if (s) { datasets.push(linea(`Media (${fmtValor(s.media, 3)})`, s.media, turq, [3, 4])); refs.push(s.media); }
-  if (!num && p === 'exacto' && m.valor_referencia_texto && cualitativo) {
-    datasets.push(linea(`Esperado (${m.valor_referencia_texto})`, String(m.valor_referencia_texto).toLowerCase() === 'positivo' ? 1 : 0, violeta, [7, 5]));
-  }
   // Eje Y: incluye todos los datos, los límites y la media (sin cambiar el tamaño de la gráfica)
-  let y;
-  if (num) {
-    const todos = [...vals, ...refs];
-    const lo = Math.min(...todos), hi = Math.max(...todos);
-    const pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.06 || 1;
-    // suggestedMin/Max: Chart.js redondea a marcas "limpias" sin dejar fuera ningún valor
-    y = { suggestedMin: lo - pad, suggestedMax: hi + pad, beginAtZero: false, ticks: { maxTicksLimit: 7, callback: (v) => fmtValor(v, 2) }, title: { display: !!m.unidades, text: m.unidades || '' } };
-  } else {
-    y = { min: -0.25, max: 1.25, beginAtZero: false, ticks: { stepSize: 1, callback: (v) => (v === 1 ? (cualitativo ? 'Positivo' : 'Cumple') : v === 0 ? (cualitativo ? 'Negativo' : 'No cumple') : '') } };
-  }
+  const todos = [...vals, ...refs];
+  const lo = Math.min(...todos), hi = Math.max(...todos);
+  const pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.06 || 1;
+  // suggestedMin/Max: Chart.js redondea a marcas "limpias" sin dejar fuera ningún valor
+  const y = { suggestedMin: lo - pad, suggestedMax: hi + pad, beginAtZero: false, ticks: { maxTicksLimit: 7, callback: (v) => fmtValor(v, 2) }, title: { display: !!m.unidades, text: m.unidades || '' } };
   const u = m.unidades ? ` ${m.unidades}` : '';
   makeChart(document.getElementById(id), {
     type: 'line',
-    data: { labels: items.map((i) => fmtDate(i.fecha).slice(0, 6) + i.fecha.slice(2, 4)), datasets },
+    data: { labels: items.map((i) => fechaCompleta(i.fecha)), datasets },
     plugins: [etiquetasRepresentativas],
     options: {
       layout: { padding: { top: 8, right: 22, left: 6 } },
@@ -321,12 +334,12 @@ function dibujar(id, items0) {
                 const it = items[c.dataIndex];
                 return ` ${resultadoTxt(it, m)} · ${it.cumple === true ? 'Cumple' : it.cumple === false ? 'No cumple' : 'Pendiente'}`;
               }
-              return ` ${c.dataset.label}${num ? u : ''}`;
+              return ` ${c.dataset.label}${u}`;
             },
           },
         },
       },
-      scales: { x: { ticks: { autoSkip: true, maxRotation: 0, maxTicksLimit: 8 } }, y },
+      scales: { x: { ticks: { autoSkip: true, maxRotation: 0, maxTicksLimit: 6, font: { size: 10 } } }, y },
     },
   });
 }
@@ -343,21 +356,22 @@ function tabla(datos) {
   const desde = (pagina - 1) * POR_PAGINA;
   const vista = orden.slice(desde, desde + POR_PAGINA);
   box.innerHTML = `<div class="table-wrap responsive"><table class="table"><thead><tr>
-      <th>Fecha del lote</th><th>Lote</th><th>Receta</th><th>Método</th><th>Resultado</th><th>Referencia</th><th>Dictamen</th><th>Registró</th></tr></thead>
+      <th>Fecha del lote</th><th>Lote</th><th>Receta</th><th>Área</th><th>Método</th><th>Resultado</th><th>Especificación</th><th>Dictamen</th><th>Registró</th></tr></thead>
     <tbody>${vista.map((d) => `<tr>
       <td data-label="Fecha del lote"><div class="td-in">${fmtDate(d.fecha)}</div></td>
       <td data-label="Lote"><div class="td-in cell-main">${esc(d.lote)}</div></td>
-      <td data-label="Receta"><div class="td-in">${esc(d.receta.nombre_receta)}</div></td>
+      <td data-label="Receta"><div class="td-in"><span class="receta-chip" style="--rc:${esc(d.receta.color || '#64748B')}">${esc(d.receta.codigo)}</span> ${esc(d.receta.nombre_receta)}</div></td>
+      <td data-label="Área"><div class="td-in"><span class="area-dot" style="--ac:${esc(d.area.color)}"></span>${esc(d.area.nombre)}</div></td>
       <td data-label="Método"><div class="td-in">${esc(d.metodo.metodo)}</div></td>
       <td data-label="Resultado"><div class="td-in"><b>${esc(resultadoTxt(d, d.metodo))}</b></div></td>
-      <td data-label="Referencia"><div class="td-in cell-sub">${esc(refLabel(d.metodo))}</div></td>
+      <td data-label="Especificación"><div class="td-in cell-sub">${esc(refLabel(d.metodo))}</div></td>
       <td data-label="Dictamen"><div class="td-in">${dictamenPill(d.cumple)}</div></td>
       <td data-label="Registró"><div class="td-in">${esc(d.analista_texto || '—')}</div></td></tr>`).join('')}</tbody></table></div>
     <div class="pager">
-      <span>Mostrando <b>${fmtNum(desde + 1)}–${fmtNum(desde + vista.length)}</b> de <b>${fmtNum(orden.length)}</b></span>
+      <span>Mostrando <b>${fmtNum(desde + 1)} a ${fmtNum(desde + vista.length)}</b> de <b>${fmtNum(orden.length)}</b></span>
       <div class="pager-ctrl">
         <button class="btn secondary sm" data-pg="${pagina - 1}" ${pagina <= 1 ? 'disabled' : ''}>${icon('chevron-left')} Anterior</button>
-        <span>Pág. ${pagina} / ${paginas}</span>
+        <span>Página ${pagina} de ${paginas}</span>
         <button class="btn secondary sm" data-pg="${pagina + 1}" ${pagina >= paginas ? 'disabled' : ''}>Siguiente ${icon('chevron-right')}</button>
       </div>
     </div>`;
@@ -371,7 +385,7 @@ function onClick(e) {
   if (!a) return;
   if (a.dataset.r === 'retry') { cargar(); return; }
   if (a.dataset.r === 'limpiar') {
-    ['#r-periodo', '#r-receta'].forEach((s) => { root.querySelector(s).value = ''; });
+    ['#r-periodo', '#r-receta', '#r-area'].forEach((s) => { root.querySelector(s).value = ''; });
     llenarMetodos(''); aplicar(); return;
   }
   if (a.dataset.r === 'csv') {
@@ -382,14 +396,16 @@ function onClick(e) {
       { label: 'Lote', get: (d) => d.lote },
       { label: 'Código de receta', get: (d) => d.receta.codigo },
       { label: 'Receta', get: (d) => d.receta.nombre_receta },
+      { label: 'Especie', get: (d) => d.receta.especie },
+      { label: 'Área de análisis', get: (d) => d.area.nombre },
       { label: 'Método', get: (d) => d.metodo.metodo },
       { label: 'Resultado', get: (d) => d.resultado_texto ?? (d.resultado === null ? '' : Number(d.resultado)) },
       { label: 'Unidad', get: (d) => d.metodo.unidades },
-      { label: 'Referencia', get: (d) => refLabel(d.metodo) },
+      { label: 'Especificación', get: (d) => refLabel(d.metodo) },
       { label: 'Dictamen', get: (d) => (d.cumple === true ? 'Cumple' : d.cumple === false ? 'No cumple' : 'Pendiente') },
       { label: 'Registró', get: (d) => d.analista_texto },
     ]);
-    descargar(`resultados-bromatologicos-${todayISO()}.csv`, csv);
+    descargar(`resultados-liberacion-${todayISO()}.csv`, csv);
     toast(`Se exportaron ${fmtNum(datos.length)} resultados.`, 'success');
   }
 }

@@ -57,7 +57,7 @@ export function fmtLongDate(iso) {
   return new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso + 'T12:00:00Z'));
 }
 export function monthShort(iso) {
-  return new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC', month: 'short' }).format(new Date(iso + 'T12:00:00Z')).replace('.', '');
+  return new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC', month: 'long' }).format(new Date(iso + 'T12:00:00Z'));
 }
 export const fmtNum = (n) => new Intl.NumberFormat('es-MX').format(Number(n || 0));
 
@@ -72,7 +72,7 @@ export function sanitizeSearch(q) { return String(q || '').replace(/[%,()*\\"'`;
 export function debounce(fn, ms = 300) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
 // ---------- Catálogos de negocio ----------
-export const ROLES = { admin: 'Administrador', analista: 'Analista', calidad: 'Calidad' };
+export const ROLES = { admin: 'Administrador', analista: 'Analista de laboratorio', calidad: 'Jefatura de calidad' };
 export const roleLabel = (r) => ROLES[r] || r || '—';
 // Dictamen: true cumple, false no cumple, null pendiente (lo calculan los triggers de la base)
 export function dictamenPill(v) {
@@ -80,7 +80,7 @@ export function dictamenPill(v) {
   if (v === false) return `<span class="pill bad">${icon('x')} No cumple</span>`;
   return `<span class="pill warn">${icon('hourglass')} Pendiente</span>`;
 }
-export const TIPOS_RESULTADO = { numerico: 'Cuantitativo', positivo_negativo: 'Cualitativo', texto: 'Texto' };
+export const TIPOS_RESULTADO = { numerico: 'Cuantitativo', positivo_negativo: 'Cualitativo (positivo o negativo)', verificacion: 'Verificación (cumple o no cumple)', texto: 'Texto' };
 export const tipoLabel = (t) => TIPOS_RESULTADO[t] || 'Cuantitativo';
 export const PARAMETROS = { ninguno: 'Sin parámetro', minimo: 'Mínimo', maximo: 'Máximo', exacto: 'Valor exacto', rango: 'Rango' };
 // Especificación por receta (brom_especificaciones_receta.tipo_limite) → parámetro del método
@@ -90,7 +90,7 @@ export const PARAM_A_LIMITE = { minimo: 'min', maximo: 'max', exacto: 'exacto', 
 // (misma regla que brom_evaluar_resultado)
 export function criterio(metodo, spec) {
   const m = { ...(metodo || {}) };
-  if (spec) {
+  if (spec && spec.aplica !== false) {
     m.parametro_referencia = LIMITE_A_PARAM[spec.tipo_limite] || 'ninguno';
     m.valor_referencia = spec.valor_referencia ?? m.valor_referencia;
     m.valor_referencia_max = spec.valor_referencia_max ?? m.valor_referencia_max;
@@ -103,13 +103,14 @@ export const fmtValor = (v, max = 4) => (v === null || v === undefined || v === 
 export function refLabel(m) {
   const p = String(m?.parametro_referencia || 'ninguno').toLowerCase();
   const u = m?.unidades ? ` ${m.unidades}` : '';
+  if (m?.tipo_resultado === 'verificacion') return 'Debe cumplir el criterio de calidad';
   if (m?.tipo_resultado && m.tipo_resultado !== 'numerico') {
     return p === 'exacto' && m.valor_referencia_texto ? `Esperado: ${m.valor_referencia_texto}` : 'Sin criterio de cumplimiento';
   }
   if (p === 'minimo') return `Mínimo ${fmtValor(m.valor_referencia)}${u}`;
   if (p === 'maximo') return `Máximo ${fmtValor(m.valor_referencia)}${u}`;
   if (p === 'exacto') return `Exacto ${fmtValor(m.valor_referencia)}${u}`;
-  if (p === 'rango') return `${fmtValor(m.valor_referencia)} a ${fmtValor(m.valor_referencia_max)}${u}`;
+  if (p === 'rango') return `De ${fmtValor(m.valor_referencia)} a ${fmtValor(m.valor_referencia_max)}${u}`;
   return 'Sin criterio de cumplimiento';
 }
 export const resultadoTxt = (r, m) => (r?.resultado_texto ?? (r?.resultado !== null && r?.resultado !== undefined ? `${fmtValor(r.resultado)}${m?.unidades ? ` ${m.unidades}` : ''}` : '—'));
@@ -118,35 +119,80 @@ export function fechaLote(ts) {
   if (!ts) return '';
   return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ts));
 }
+// Mes completo con año: «Julio de 2026» (nunca abreviado)
+export function mesLargo(ym) {
+  const s = new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(new Date(`${ym.slice(0, 7)}-15T12:00:00Z`));
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 // Número de lote a partir de la fecha: DDMMYY (27/09/2026 → 270926)
 export const loteDesdeFecha = (iso) => (iso ? `${iso.slice(8, 10)}${iso.slice(5, 7)}${iso.slice(2, 4)}` : '');
 export const UNIDADES = ['%', 'g', 'kg', 'mg', 'µg', 'ng', 'mg/kg', 'g/kg', 'g/100g', 'mg/100g', 'mL/100g', 'mg/L', 'g/L', 'µg/L', 'µg/mL', 'ng/mL',
   'mol', 'mmol', 'mol/L', 'mmol/L', 'meq/L', 'mL', 'L', 'µL', 'ppm', 'ppb', 'mg/m³', 'UFC/g', 'UFC/mL', 'UFC/cm²', 'pH', 'AW', '°Brix',
   '°C', '°F', 'kcal', 'kJ', 'kcal/100g', 'kJ/100g', 'mS/cm', 'µS/cm', 'NTU', 'Pa', 'kPa', 'bar', 'mmHg', 'rpm', 's', 'min', 'h', 'µm', 'mm', 'cm'];
+export const ESPECIES = ['Canino', 'Felino'];
 
-// Catálogos (recetas, métodos y especificaciones) en caché de sesión
+// Catálogos (áreas, recetas, métodos y especificaciones) en caché de sesión
 let catP = null;
 export function getCatalogos({ force = false } = {}) {
   if (!catP || force) {
     catP = Promise.all([
-      sb.from('brom_recetas').select('id, codigo, nombre_receta, activa').order('codigo'),
-      sb.from('brom_catalogo_metodos').select('id, metodo, referencia_normativa, unidades, activo, tipo_resultado, parametro_referencia, valor_referencia, valor_referencia_max, valor_referencia_texto').order('metodo'),
-      sb.from('brom_especificaciones_receta').select('id, receta_id, metodo_id, tipo_limite, valor_referencia, valor_referencia_max, valor_referencia_texto'),
+      sb.from('brom_areas_analisis').select('id, nombre, descripcion, color, orden, roles_captura, activa').order('orden'),
+      sb.from('brom_recetas').select('id, codigo, nombre_receta, activa, especie, color').order('codigo'),
+      sb.from('brom_catalogo_metodos').select('id, metodo, referencia_normativa, unidades, activo, tipo_resultado, parametro_referencia, valor_referencia, valor_referencia_max, valor_referencia_texto, area, orden').order('orden').order('metodo'),
+      sb.from('brom_especificaciones_receta').select('id, receta_id, metodo_id, tipo_limite, valor_referencia, valor_referencia_max, valor_referencia_texto, aplica'),
     ]).then((rs) => {
       rs.forEach((r) => { if (r.error) throw r.error; });
-      const [recetas, metodos, specs] = rs.map((r) => r.data || []);
+      const [areas, recetas, metodos0, specs] = rs.map((r) => r.data || []);
+      const ordenArea = new Map(areas.map((a) => [a.id, a.orden]));
+      const metodos = [...metodos0].sort((a, b) => (ordenArea.get(a.area) ?? 99) - (ordenArea.get(b.area) ?? 99) || a.orden - b.orden || a.metodo.localeCompare(b.metodo, 'es'));
       const specMap = new Map(specs.map((s) => [`${s.receta_id}|${s.metodo_id}`, s]));
-      return { recetas, metodos, specs, spec: (recetaId, metodoId) => specMap.get(`${recetaId}|${metodoId}`) || null };
+      const spec = (recetaId, metodoId) => specMap.get(`${recetaId}|${metodoId}`) || null;
+      const area = (id) => areas.find((a) => a.id === id) || { id, nombre: 'Sin área', color: '#64748B', roles_captura: [], orden: 99 };
+      // Métodos que se exigen para liberar un lote de la receta (misma regla que brom_metodos_requeridos)
+      const requeridos = (recetaId) => metodos.filter((m) => m.activo && area(m.area).activa !== false && spec(recetaId, m.id)?.aplica !== false);
+      return { areas, recetas, metodos, specs, spec, area, requeridos };
     }).catch((e) => { catP = null; throw e; });
   }
   return catP;
 }
 export function invalidarCatalogos() { catP = null; }
+export const puedeCapturar = (area) => state.isAdmin || (area?.roles_captura || []).includes(state.profile?.rol);
+export const puedeLiberar = () => ['admin', 'calidad'].includes(state.profile?.rol);
+export const recetaTxt = (r) => (r ? `${r.codigo} · ${r.nombre_receta}${r.especie ? ` (${r.especie})` : ''}` : 'Receta no disponible');
 
-// Todos los resultados con su lote, receta y método (base de Panel y Resultados)
+// Estado de liberación de un lote:
+// liberado (con folio) · no_conforme (algún resultado no cumple) · listo (todos los análisis
+// requeridos cumplen) · en_proceso (faltan análisis por capturar o evaluar)
+export const ESTADOS_LOTE = {
+  liberado: { label: 'Liberado', cls: 'ok', ico: 'badge-check', color: '#16A34A' },
+  listo: { label: 'Listo para liberar', cls: 'info', ico: 'shield-check', color: '#1BC7C7' },
+  en_proceso: { label: 'En proceso', cls: 'warn', ico: 'hourglass', color: '#F59E0B' },
+  no_conforme: { label: 'No conforme', cls: 'bad', ico: 'triangle-alert', color: '#E0464E' },
+};
+export function estadoLote(lote, resultados, cat) {
+  const req = cat.requeridos(lote.receta_id);
+  const porMetodo = new Map((resultados || []).map((r) => [r.metodo_id, r]));
+  const faltan = req.filter((m) => porMetodo.get(m.id)?.cumple == null);
+  const fallan = (resultados || []).filter((r) => r.cumple === false);
+  const porArea = cat.areas.filter((a) => a.activa !== false).map((a) => {
+    const ms = req.filter((m) => m.area === a.id);
+    const rs = ms.map((m) => porMetodo.get(m.id));
+    return {
+      area: a, total: ms.length,
+      cumple: rs.filter((r) => r?.cumple === true).length,
+      noCumple: (resultados || []).filter((r) => r.cumple === false && cat.metodos.find((m) => m.id === r.metodo_id)?.area === a.id).length,
+      pendientes: rs.filter((r) => r?.cumple == null).length,
+    };
+  }).filter((x) => x.total > 0 || x.noCumple > 0);
+  const estado = lote.liberado_en ? 'liberado' : fallan.length ? 'no_conforme' : faltan.length ? 'en_proceso' : 'listo';
+  return { estado, faltan, fallan, porArea, requeridos: req.length, completos: req.length - faltan.length };
+}
+export const estadoPill = (e, extra = '') => { const x = ESTADOS_LOTE[e] || ESTADOS_LOTE.en_proceso; return `<span class="pill ${x.cls}">${icon(x.ico)} ${esc(x.label)}${extra}</span>`; };
+
+// Todos los resultados con su lote (base de Panel y Resultados)
 export async function getResultados() {
   return fetchAll(() => sb.from('brom_resultados_analisis')
-    .select('id, muestra_id, metodo_id, resultado, resultado_texto, cumple, analista_texto, created_at, brom_muestras!inner(id, lote, fecha_analisis, receta_id, dictamen_global)')
+    .select('id, muestra_id, metodo_id, resultado, resultado_texto, cumple, analista_texto, created_at, brom_muestras!inner(id, lote, fecha_analisis, receta_id, dictamen_global, liberado_en)')
     .order('created_at', { ascending: true }).order('id'));
 }
 
@@ -154,7 +200,9 @@ export async function getResultados() {
 const CONSTRAINT_MSG = {
   brom_recetas_codigo_key: 'Ya existe una receta con ese código.',
   brom_catalogo_metodos_metodo_key: 'Ya existe un método con ese nombre.',
-  brom_catalogo_metodos_parametro_referencia_check: 'El parámetro «Rango» todavía no está habilitado en la base de datos. Solicítalo al administrador del sistema.',
+  brom_recetas_nombre_especie_key: 'Ya existe una receta con ese nombre para la misma especie.',
+  brom_areas_analisis_nombre_key: 'Ya existe un área con ese nombre.',
+  brom_areas_analisis_pkey: 'Ya existe un área con esa clave.',
   brom_catalogo_metodos_rango_check: 'En un rango, el valor mínimo debe ser menor o igual al máximo.',
   brom_especificaciones_valores_check: 'Revisa los valores de la especificación: el rango requiere mínimo y máximo, y los demás límites un solo valor.',
   brom_especificaciones_receta_unique: 'Esa receta ya tiene una especificación para el método.',
@@ -355,7 +403,10 @@ export function errorState(err, retryAction = 'retry') {
 const charts = new Set();
 const chartConfigs = new WeakMap();
 export function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-export const PALETTE = ['#F58020', '#1BC7C7', '#0B2235', '#1BB56F', '#7A5BE6', '#E0464E', '#FFB020', '#5B8DEF'];
+// Colores distintos para cada barra o segmento (no se repiten mientras alcancen)
+export const PALETTE = ['#F58020', '#1BC7C7', '#7C3AED', '#16A34A', '#DB2777', '#2563EB', '#CA8A04', '#0891B2', '#DC2626', '#65A30D',
+  '#9333EA', '#0D9488', '#E8890C', '#4F46E5', '#BE185D', '#475569'];
+export const colorN = (i) => PALETTE[i % PALETTE.length];
 // Etiqueta de datos: el valor centrado dentro de cada barra o segmento de pastel
 // (se dibuja en el canvas, así que también aparece al copiar la gráfica)
 const etiquetasDatos = {
@@ -374,7 +425,10 @@ const etiquetasDatos = {
       meta.data.forEach((el, i) => {
         const v = Number(ds.data[i]);
         if (!v || el.hidden) return;
-        const label = new Intl.NumberFormat('es-MX').format(v);
+        // _porcentaje: el segmento muestra su proporción del total (gráficas de pastel)
+        const total = ds._porcentaje ? ds.data.reduce((s, n) => s + Number(n || 0), 0) : 0;
+        const label = ds._porcentaje ? `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 }).format((v / total) * 100)} %`
+          : `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 }).format(v)}${ds._sufijo || ''}`;
         let x, y, dentro = true;
         if (tipo === 'bar') {
           const p = el.getProps(['x', 'y', 'base'], true);
@@ -414,7 +468,7 @@ export function makeChart(canvas, config) {
         legend: { labels: { color: text, boxWidth: 12, boxHeight: 12, usePointStyle: true }, ...(config.options?.plugins?.legend || {}) },
         tooltip: { backgroundColor: '#102536', padding: 10, cornerRadius: 10, ...(config.options?.plugins?.tooltip || {}) },
       },
-      scales: config.type === 'doughnut' ? {} : {
+      scales: ['doughnut', 'pie'].includes(config.type) ? {} : {
         x: { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0 }, border: { display: false }, ...(config.options?.scales?.x || {}) },
         y: { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0 }, border: { display: false }, beginAtZero: true, ...(config.options?.scales?.y || {}) },
       },
@@ -424,6 +478,11 @@ export function makeChart(canvas, config) {
   });
   charts.add(c);
   chartConfigs.set(c, config);
+  // El recuadro de información se oculta al salir de la gráfica (no se queda fijo)
+  const ocultar = () => { try { c.setActiveElements([]); c.tooltip?.setActiveElements([], { x: 0, y: 0 }); c.update('none'); } catch { /* gráfica destruida */ } };
+  canvas.addEventListener('mouseleave', ocultar);
+  canvas.addEventListener('pointerleave', ocultar);
+  canvas.addEventListener('blur', ocultar);
   return c;
 }
 // Cambio de tema inmediato: re-colorea las gráficas sin volver a consultar datos
@@ -470,7 +529,7 @@ export function ampliarGrafica(canvas) {
         </div>
       </div>
       <div class="cz-body"><canvas data-zoom="1" role="img" aria-label="${esc(titulo)}"></canvas></div>
-      <div class="cz-pie"><span>Análisis Bromatológicos · Pet's Table</span><span class="cz-girar">${icon('smartphone')} Gira el teléfono para verla más grande</span></div>
+      <div class="cz-pie"><span>Liberación de producto · Pet's Table</span><span class="cz-girar">${icon('smartphone')} Gira el teléfono para verla más grande</span></div>
     </div>`;
   document.body.appendChild(ov);
   document.body.classList.add('modal-open');
@@ -543,6 +602,11 @@ document.addEventListener('click', (e) => {
   const cv = box?.querySelector('canvas');
   if (cv && !e.target.closest('.chart-zoom')) ampliarGrafica(cv);
 });
+// En pantallas táctiles, tocar fuera de una gráfica oculta su recuadro de información
+document.addEventListener('pointerdown', (e) => {
+  if (e.target.closest?.('canvas')) return;
+  charts.forEach((c) => { try { if (c.tooltip?.getActiveElements?.().length) { c.setActiveElements([]); c.tooltip.setActiveElements([], { x: 0, y: 0 }); c.update('none'); } } catch { /* destruida */ } });
+}, true);
 document.addEventListener('keydown', (e) => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('.chart-box')) { e.preventDefault(); const cv = e.target.querySelector('canvas'); if (cv) ampliarGrafica(cv); }
 });

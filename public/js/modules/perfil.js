@@ -11,9 +11,9 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); defe
 const instalada = () => window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || window.navigator.standalone === true;
 
 const PERMISOS = {
-  admin: 'Gestión completa: catálogos, especificaciones, usuarios, lotes y borrado',
-  analista: 'Registrar lotes y resultados; editar los lotes que registró',
-  calidad: 'Registrar lotes y resultados; editar los lotes que registró',
+  admin: 'Gestión completa: catálogos, especificaciones, usuarios, captura de todas las áreas, liberación y borrado de lotes',
+  analista: 'Registrar lotes y capturar los análisis bromatológicos; editar los lotes que registró',
+  calidad: 'Capturar los análisis fisicoquímicos, microbiológicos, sensoriales y bromatológicos; liberar lotes y emitir certificados',
 };
 
 export default {
@@ -65,7 +65,7 @@ export default {
           ${instalada() ? `<p class="hint">${icon('check-circle-2')} Ya estás usando la aplicación instalada.</p>` : `
           <button class="btn secondary hidden" id="install-btn">${icon('download')} Instalar aplicación</button>
           <p class="hint" style="margin:10px 0 6px"><b>iPhone / iPad (Safari):</b></p>
-          <ol class="steps"><li>Toca el botón <b>Compartir</b>.</li><li>Elige <b>Agregar a pantalla de inicio</b>.</li><li>Confirma el nombre “Bromatológicos” y toca <b>Agregar</b>.</li></ol>
+          <ol class="steps"><li>Toca el botón <b>Compartir</b>.</li><li>Elige <b>Agregar a pantalla de inicio</b>.</li><li>Confirma el nombre “Liberación” y toca <b>Agregar</b>.</li></ol>
           <p class="hint" style="margin:10px 0 6px"><b>Android (Chrome):</b></p>
           <ol class="steps"><li>Abre el menú <b>⋮</b>.</li><li>Elige <b>Instalar aplicación</b> o <b>Agregar a pantalla principal</b>.</li></ol>`}
         </div>
