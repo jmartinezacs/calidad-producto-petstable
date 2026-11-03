@@ -72,7 +72,7 @@ export function sanitizeSearch(q) { return String(q || '').replace(/[%,()*\\"'`;
 export function debounce(fn, ms = 300) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
 // ---------- Catálogos de negocio ----------
-export const ROLES = { admin: 'Administrador', analista: 'Analista de laboratorio', calidad: 'Jefatura de calidad' };
+export const ROLES = { admin: 'Administrador', usuario: 'Usuario' };
 export const roleLabel = (r) => ROLES[r] || r || '—';
 // Dictamen: true cumple, false no cumple, null pendiente (lo calculan los triggers de la base)
 export function dictamenPill(v) {
@@ -129,36 +129,74 @@ export const loteDesdeFecha = (iso) => (iso ? `${iso.slice(8, 10)}${iso.slice(5,
 export const UNIDADES = ['%', 'g', 'kg', 'mg', 'µg', 'ng', 'mg/kg', 'g/kg', 'g/100g', 'mg/100g', 'mL/100g', 'mg/L', 'g/L', 'µg/L', 'µg/mL', 'ng/mL',
   'mol', 'mmol', 'mol/L', 'mmol/L', 'meq/L', 'mL', 'L', 'µL', 'ppm', 'ppb', 'mg/m³', 'UFC/g', 'UFC/mL', 'UFC/cm²', 'pH', 'AW', '°Brix',
   '°C', '°F', 'kcal', 'kJ', 'kcal/100g', 'kJ/100g', 'mS/cm', 'µS/cm', 'NTU', 'Pa', 'kPa', 'bar', 'mmHg', 'rpm', 's', 'min', 'h', 'µm', 'mm', 'cm'];
-export const ESPECIES = ['Canino', 'Felino'];
+export const ESPECIES = [{ v: 'Perro', ico: 'dog' }, { v: 'Gato', ico: 'cat' }];
+export const especieIco = (e) => ESPECIES.find((x) => x.v === e)?.ico || 'paw-print';
+export const especieHTML = (e) => (e ? `<span class="especie">${icon(especieIco(e))}${esc(e)}</span>` : '—');
+// Mes abreviado con año para gráficas y ejes: «Nov 2026» (abreviatura estándar de tres letras)
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+export const mesCorto = (ym) => `${MESES_CORTOS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
 
-// Catálogos (áreas, recetas, métodos y especificaciones) en caché de sesión
+// Catálogos (áreas, recetas, métodos, especificaciones y puestos) en caché de sesión
 let catP = null;
 export function getCatalogos({ force = false } = {}) {
   if (!catP || force) {
     catP = Promise.all([
-      sb.from('brom_areas_analisis').select('id, nombre, descripcion, color, orden, roles_captura, activa').order('orden'),
+      sb.from('brom_areas_analisis').select('id, nombre, descripcion, color, orden, activa').order('orden'),
       sb.from('brom_recetas').select('id, codigo, nombre_receta, activa, especie, color').order('codigo'),
-      sb.from('brom_catalogo_metodos').select('id, metodo, referencia_normativa, unidades, activo, tipo_resultado, parametro_referencia, valor_referencia, valor_referencia_max, valor_referencia_texto, area, orden').order('orden').order('metodo'),
+      sb.from('brom_catalogo_metodos').select('id, metodo, referencia_normativa, unidades, activo, tipo_resultado, parametro_referencia, valor_referencia, valor_referencia_max, valor_referencia_texto, area, orden, recetas_aplica').order('orden').order('metodo'),
       sb.from('brom_especificaciones_receta').select('id, receta_id, metodo_id, tipo_limite, valor_referencia, valor_referencia_max, valor_referencia_texto, aplica'),
+      sb.from('brom_puestos').select('id, nombre, areas_captura, puede_liberar, firma_certificado, activo').order('nombre'),
     ]).then((rs) => {
       rs.forEach((r) => { if (r.error) throw r.error; });
-      const [areas, recetas, metodos0, specs] = rs.map((r) => r.data || []);
+      const [areas, recetas, metodos0, specs, puestos] = rs.map((r) => r.data || []);
       const ordenArea = new Map(areas.map((a) => [a.id, a.orden]));
       const metodos = [...metodos0].sort((a, b) => (ordenArea.get(a.area) ?? 99) - (ordenArea.get(b.area) ?? 99) || a.orden - b.orden || a.metodo.localeCompare(b.metodo, 'es'));
       const specMap = new Map(specs.map((s) => [`${s.receta_id}|${s.metodo_id}`, s]));
       const spec = (recetaId, metodoId) => specMap.get(`${recetaId}|${metodoId}`) || null;
-      const area = (id) => areas.find((a) => a.id === id) || { id, nombre: 'Sin área', color: '#64748B', roles_captura: [], orden: 99 };
+      const area = (id) => areas.find((a) => a.id === id) || { id, nombre: 'Sin área', color: '#64748B', orden: 99 };
+      // Puestos activos que capturan un área (los administradores siempre capturan)
+      const puestosArea = (id) => puestos.filter((p) => p.activo && (p.areas_captura || []).includes(id));
+      // ¿El método se evalúa en la receta? (lista del método y especificación «No aplica»)
+      const aplica = (m, recetaId) => (!m.recetas_aplica || m.recetas_aplica.includes(recetaId)) && spec(recetaId, m.id)?.aplica !== false;
       // Métodos que se exigen para liberar un lote de la receta (misma regla que brom_metodos_requeridos)
-      const requeridos = (recetaId) => metodos.filter((m) => m.activo && area(m.area).activa !== false && spec(recetaId, m.id)?.aplica !== false);
-      return { areas, recetas, metodos, specs, spec, area, requeridos };
+      const requeridos = (recetaId) => metodos.filter((m) => m.activo && area(m.area).activa !== false && aplica(m, recetaId));
+      return { areas, recetas, metodos, specs, puestos, spec, area, puestosArea, aplica, requeridos };
     }).catch((e) => { catP = null; throw e; });
   }
   return catP;
 }
-export function invalidarCatalogos() { catP = null; }
-export const puedeCapturar = (area) => state.isAdmin || (area?.roles_captura || []).includes(state.profile?.rol);
-export const puedeLiberar = () => ['admin', 'calidad'].includes(state.profile?.rol);
-export const recetaTxt = (r) => (r ? `${r.codigo} · ${r.nombre_receta}${r.especie ? ` (${r.especie})` : ''}` : 'Receta no disponible');
+export function invalidarCatalogos() { catP = null; dirP = null; }
+// Lo que cada quien captura depende de su puesto; el rol solo define qué administra
+export const puedeCapturar = (area) => state.isAdmin || (state.profile?.areas_captura || []).includes(area?.id);
+export const puedeLiberar = () => state.isAdmin || !!state.profile?.puede_liberar;
+export const puedeElegirFirmas = () => state.isAdmin || state.profile?.firma_certificado === 'jefe_calidad';
+export const recetaTxt = (r) => (r ? `${r.codigo} · ${r.nombre_receta}` : 'Receta no disponible');
+export const FIRMAS = { jefe_calidad: 'Jefe de calidad', inspector: 'Inspector de calidad' };
+// Casilla con el estilo del sistema (las casillas nativas se deforman dentro de .field)
+export function opcionCheck(name, value, label, checked, extra = '') {
+  return `<label class="opt-check"><input type="checkbox" name="${esc(name)}" value="${esc(value)}" ${checked ? 'checked' : ''}><span class="mc-box">${icon('check')}</span><span>${extra}${esc(label)}</span></label>`;
+}
+
+// Directorio de usuarios (nombre, puesto, área y foto) para mostrar quién registró o firmó
+let dirP = null;
+export function getDirectorio() {
+  if (!dirP) {
+    dirP = sb.rpc('brom_directorio').then(({ data, error }) => {
+      if (error) throw error;
+      const lista = (data || []).map((u) => ({ ...u, foto: fotoDe(u) }));
+      const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+      const porNombre = new Map(lista.map((u) => [norm(u.nombre_completo), u]));
+      return { lista, porId: (id) => lista.find((u) => u.id === id) || null, porNombre: (n) => porNombre.get(norm(n)) || null };
+    }).catch(() => { dirP = null; return { lista: [], porId: () => null, porNombre: () => null }; });
+  }
+  return dirP;
+}
+// Persona con foto: <foto> Nombre (para tablas y tarjetas)
+export function personaHTML(nombre, dir, cls = 'sm') {
+  if (!nombre) return '—';
+  const u = dir?.porNombre(nombre);
+  return `<span class="persona">${avatarHTML(nombre, u?.foto, cls)}<span>${esc(nombre)}</span></span>`;
+}
 
 // Estado de liberación de un lote:
 // liberado (con folio) · no_conforme (algún resultado no cumple) · listo (todos los análisis
@@ -208,7 +246,9 @@ const CONSTRAINT_MSG = {
   brom_especificaciones_receta_unique: 'Esa receta ya tiene una especificación para el método.',
   brom_resultados_muestra_metodo_unique: 'El lote ya tiene un resultado para ese método.',
   brom_resultados_analisis_metodo_id_fkey: 'El método tiene resultados registrados; desactívalo en lugar de eliminarlo.',
-  brom_usuarios_rol_check: 'El rol debe ser Administrador, Analista o Calidad.',
+  brom_usuarios_rol_check: 'El rol debe ser Administrador o Usuario.',
+  brom_usuarios_puesto_fkey: 'El puesto tiene personas asignadas; cámbialas de puesto antes de eliminarlo.',
+  brom_puestos_nombre_key: 'Ya existe un puesto con ese nombre.',
 };
 export function errMsg(err) {
   if (!err) return 'Ocurrió un error inesperado.';
@@ -272,6 +312,7 @@ export function openModal({ title, subtitle = '', body = '', submitText = 'Guard
     form.addEventListener('input', () => { dirty = true; });
 
     const finish = () => {
+      csCerrar();
       wrap.remove(); modalDepth--;
       document.removeEventListener('keydown', onKey);
       if (!root.children.length) document.body.classList.remove('modal-open');
@@ -457,6 +498,8 @@ export function makeChart(canvas, config) {
   const muted = cssVar('--muted') || '#687B8C', line = cssVar('--line') || '#E3EAEF', text = cssVar('--text') || '#172431';
   window.Chart.defaults.font.family = 'Inter, Segoe UI, system-ui, sans-serif';
   window.Chart.defaults.color = muted;
+  // Pastel y dona: la separación entre segmentos toma el color de la tarjeta (sin bordes blancos en modo oscuro)
+  if (['pie', 'doughnut'].includes(config.type)) config.data.datasets.forEach((d) => { if (d.borderWidth !== 0) { d.borderColor = cssVar('--card') || '#fff'; d._bordeTarjeta = true; } });
   const c = new window.Chart(canvas, {
     ...config,
     plugins: [...(config.plugins || []), etiquetasDatos],
@@ -492,6 +535,7 @@ export function restyleCharts() {
     try {
       const o = c.options;
       if (o.plugins?.legend?.labels) o.plugins.legend.labels.color = text;
+      c.data.datasets.forEach((d) => { if (d._bordeTarjeta) d.borderColor = cssVar('--card'); });
       for (const s of Object.values(o.scales || {})) {
         if (s.ticks) s.ticks.color = muted;
         if (s.grid) s.grid.color = line;
@@ -732,9 +776,10 @@ function csAbrir(anchor, items, onPick, { buscar = false } = {}) {
   panel.className = `cs-panel${buscar ? ' cs-con-buscador' : ''}`; panel.setAttribute('role', 'listbox');
   panel.innerHTML = (buscar ? `<div class="cs-buscar"><input type="search" placeholder="Buscar…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar en la lista"></div>` : '')
     + items.map((it, i) => `<div class="cs-opt ${it.selected ? 'sel' : ''} ${it.disabled ? 'dis' : ''} ${it.ph ? 'ph' : ''}" role="option" data-i="${i}" aria-selected="${it.selected ? 'true' : 'false'}" ${it.disabled ? 'aria-disabled="true"' : ''}>
-      <span>${esc(it.label)}</span>${it.selected ? CHECK : ''}</div>`).join('')
+      <span class="cs-lbl">${it.ico ? icon(it.ico) : ""}${esc(it.label)}</span>${it.selected ? CHECK : ''}</div>`).join('')
     + (buscar ? '<div class="cs-vacio hidden">Sin coincidencias.</div>' : '');
   document.body.appendChild(panel);
+  if (items.some((x) => x.ico)) refreshIcons();
   csUbicar(panel, anchor);
   anchor.setAttribute('aria-expanded', 'true');
   const opts = [...panel.querySelectorAll('.cs-opt')];
@@ -828,7 +873,8 @@ function mejorarSelect(sel) {
   wrap.appendChild(btn);
   const sync = () => {
     const o = sel.options[sel.selectedIndex];
-    btn.innerHTML = `<span class="cs-val ${!sel.value ? 'ph' : ''}">${esc(o ? o.textContent : '—')}</span>${CHEVRON}`;
+    btn.innerHTML = `<span class="cs-val ${!sel.value ? 'ph' : ''}">${o?.dataset.ico ? icon(o.dataset.ico) : ''}${esc(o ? o.textContent : '—')}</span>${CHEVRON}`;
+    if (o?.dataset.ico) refreshIcons();
     btn.disabled = sel.disabled;
   };
   // Reflejar cambios hechos por código (value / selectedIndex / opciones / disabled)
@@ -839,7 +885,7 @@ function mejorarSelect(sel) {
   btn.addEventListener('click', () => {
     if (csAbierto?.anchor === btn) { csCerrar(); return; }
     const items = [...sel.options].filter((o) => !o.hidden).map((o) => ({
-      value: o.value, label: o.textContent, disabled: o.disabled, selected: o.index === sel.selectedIndex, ph: o.value === '',
+      value: o.value, label: o.textContent, ico: o.dataset.ico, disabled: o.disabled, selected: o.index === sel.selectedIndex, ph: o.value === '',
     }));
     csAbrir(btn, items, (v) => {
       valueDesc.set.call(sel, v); sync();
@@ -861,8 +907,9 @@ function mejorarDatalist(inp) {
   inp.setAttribute('autocomplete', 'off');
   inp.setAttribute('aria-autocomplete', 'list'); inp.setAttribute('aria-expanded', 'false');
   inp.parentElement.classList.add('cs-dl');
-  const mostrar = () => {
-    const q = inp.value.trim().toLowerCase();
+  // Al entrar al campo se muestran todas las opciones; al escribir, solo las que coinciden
+  const mostrar = (todo = false) => {
+    const q = todo === true ? '' : inp.value.trim().toLowerCase();
     const items = [...dl.options].map((o) => ({ value: o.value, label: o.label && o.label !== o.value ? `${o.value} · ${o.label}` : o.value }))
       .filter((it) => !q || it.label.toLowerCase().includes(q));
     if (!items.length || (items.length === 1 && items[0].value.toLowerCase() === q)) { if (csAbierto?.anchor === inp) csCerrar(); return; }
@@ -873,9 +920,10 @@ function mejorarDatalist(inp) {
       setTimeout(() => csCerrar(), 0);
     });
   };
-  inp.addEventListener('focus', mostrar);
+  inp.addEventListener('focus', () => mostrar(true));
+  inp.addEventListener('click', () => { if (csAbierto?.anchor !== inp) mostrar(true); });
   inp.addEventListener('input', (e) => { if (e.isTrusted) mostrar(); });
-  inp.addEventListener('keydown', (e) => { if (!csAbierto && e.key === 'ArrowDown') { e.preventDefault(); mostrar(); } });
+  inp.addEventListener('keydown', (e) => { if (!csAbierto && e.key === 'ArrowDown') { e.preventDefault(); mostrar(true); } });
   inp._cs = { mostrar };
 }
 export function mejorarControles(root = document) {

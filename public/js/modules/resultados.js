@@ -7,11 +7,11 @@
 import {
   esc, icon, refreshIcons, toast, emptyState, errorState, fmtDate, fmtNum, todayISO, fechaLote,
   dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio, getCatalogos, getResultados, makeChart, destroyCharts,
-  toCSV, descargar, cssVar, fmtValor, prefs, mesLargo, recetaTxt,
+  toCSV, descargar, cssVar, fmtValor, prefs, mesLargo, recetaTxt, getDirectorio, personaHTML, especieIco,
 } from '../core.js';
 
 const POR_PAGINA = 20;
-let root = null, token = 0, filas = [], pagina = 1, cat = null;
+let root = null, token = 0, filas = [], pagina = 1, cat = null, dir = null;
 
 export default {
   async render(el, params = {}) {
@@ -50,9 +50,9 @@ async function cargar(params = {}) {
   const t = ++token;
   root.querySelector('#r-graficas').innerHTML = `<div class="trend-grid">${'<div class="card"><div class="skeleton" style="width:40%"></div><div class="skeleton mt" style="height:260px"></div></div>'.repeat(2)}</div>`;
   try {
-    const [c, rows] = await Promise.all([getCatalogos({ force: true }), getResultados()]);
+    const [c, rows, d] = await Promise.all([getCatalogos({ force: true }), getResultados(), getDirectorio()]);
     if (t !== token || !root) return;
-    cat = c;
+    cat = c; dir = d;
     filas = rows.map((r) => {
       const m = r.brom_muestras;
       return {
@@ -226,8 +226,8 @@ function graficas(datos) {
   const pendientes = [];
   box.innerHTML = grupos.map((g, gi) => {
     const metodos = [...g.metodos.values()].sort((a, b) => posMetodo(a[0].metodo_id) - posMetodo(b[0].metodo_id));
-    return `<div class="receta-sep" style="--rc:${esc(g.receta.color || '#F58020')}"><span class="rs-code">${esc(g.receta.codigo)}</span><b>${esc(g.receta.nombre_receta)}</b>
-        ${g.receta.especie ? `<span class="rs-especie">${esc(g.receta.especie)}</span>` : ''}
+    return `<div class="receta-sep" style="--rc:${esc(g.receta.color || '#F58020')}"><b>${esc(g.receta.nombre_receta)}</b><span class="rs-cod">${esc(g.receta.codigo)}</span>
+        ${g.receta.especie ? `<span class="rs-especie">${icon(especieIco(g.receta.especie))}${esc(g.receta.especie)}</span>` : ''}
         <span class="rs-count">${fmtNum(g.n)} ${g.n === 1 ? 'resultado' : 'resultados'} · ${metodos.length} ${metodos.length === 1 ? 'método' : 'métodos'}</span></div>
       <div class="trend-grid">${metodos.map((items, mi) => {
         const id = `tr-${gi}-${mi}`;
@@ -254,7 +254,7 @@ function tarjetaGrafica(id, items) {
       <span><small>Registros</small><b>${fmtNum(items.length)}</b></span>
       ${s ? `<span class="media"><small>Media</small><b>${fmtValor(s.media, 3)}${esc(u)}</b></span>
       <span><small>Desviación estándar</small><b>${fmtValor(s.de, 3)}</b></span>
-      <span><small>Mínimo y máximo</small><b>${fmtValor(s.min, 3)} y ${fmtValor(s.max, 3)}</b></span>` : `<span class="ok-stat"><small>Cumplen</small><b>${fmtNum(ok)}</b></span>`}
+      <span><small>Mínimo y máximo</small><b>${fmtValor(s.min, 3)} – ${fmtValor(s.max, 3)}</b></span>` : `<span class="ok-stat"><small>Cumplen</small><b>${fmtNum(ok)}</b></span>`}
       <span class="${no ? 'bad' : ''}"><small>Fuera de especificación</small><b>${fmtNum(no)}</b></span>
     </div>
     <div tabindex="0" title="Ampliar gráfica" class="chart-box ${num ? 'trend-box' : 'sm'}"><canvas id="${id}" role="img" aria-label="${num ? 'Tendencia' : 'Cumplimiento'} de ${esc(m.metodo)} en ${esc(items[0].receta.nombre_receta)}"></canvas></div>
@@ -355,18 +355,18 @@ function tabla(datos) {
   pagina = Math.min(Math.max(1, pagina), paginas);
   const desde = (pagina - 1) * POR_PAGINA;
   const vista = orden.slice(desde, desde + POR_PAGINA);
-  box.innerHTML = `<div class="table-wrap responsive"><table class="table"><thead><tr>
+  box.innerHTML = `<div class="table-wrap responsive"><table class="table tabla-una-linea"><thead><tr>
       <th>Fecha del lote</th><th>Lote</th><th>Receta</th><th>Área</th><th>Método</th><th>Resultado</th><th>Especificación</th><th>Dictamen</th><th>Registró</th></tr></thead>
     <tbody>${vista.map((d) => `<tr>
       <td data-label="Fecha del lote"><div class="td-in">${fmtDate(d.fecha)}</div></td>
       <td data-label="Lote"><div class="td-in cell-main">${esc(d.lote)}</div></td>
-      <td data-label="Receta"><div class="td-in"><span class="receta-chip" style="--rc:${esc(d.receta.color || '#64748B')}">${esc(d.receta.codigo)}</span> ${esc(d.receta.nombre_receta)}</div></td>
+      <td data-label="Receta"><div class="td-in"><span class="receta-nom"><span class="receta-dot" style="--rc:${esc(d.receta.color || '#64748B')}"></span>${esc(d.receta.nombre_receta)}</span></div></td>
       <td data-label="Área"><div class="td-in"><span class="area-dot" style="--ac:${esc(d.area.color)}"></span>${esc(d.area.nombre)}</div></td>
       <td data-label="Método"><div class="td-in">${esc(d.metodo.metodo)}</div></td>
       <td data-label="Resultado"><div class="td-in"><b>${esc(resultadoTxt(d, d.metodo))}</b></div></td>
       <td data-label="Especificación"><div class="td-in cell-sub">${esc(refLabel(d.metodo))}</div></td>
       <td data-label="Dictamen"><div class="td-in">${dictamenPill(d.cumple)}</div></td>
-      <td data-label="Registró"><div class="td-in">${esc(d.analista_texto || '—')}</div></td></tr>`).join('')}</tbody></table></div>
+      <td data-label="Registró"><div class="td-in">${personaHTML(d.analista_texto, dir)}</div></td></tr>`).join('')}</tbody></table></div>
     <div class="pager">
       <span>Mostrando <b>${fmtNum(desde + 1)} a ${fmtNum(desde + vista.length)}</b> de <b>${fmtNum(orden.length)}</b></span>
       <div class="pager-ctrl">

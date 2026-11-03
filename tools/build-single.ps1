@@ -13,7 +13,7 @@ function Read-Text($rel) { ([IO.File]::ReadAllText((Join-Path $Src $rel), [Text.
 
 # ---------- 1. Empaquetar módulos ES en un script clásico ----------
 $order = @('core', 'modules/pdf', 'modules/certificado', 'modules/lotes', 'modules/resultados', 'modules/dashboard', 'modules/catalogos',
-           'modules/usuarios', 'modules/perfil', 'modules/ayuda', 'app')
+           'modules/usuarios', 'modules/bitacora', 'modules/perfil', 'modules/ayuda', 'app')
 function Resolve-Key([string]$from, [string]$spec) {
   $s = $spec -replace '\.js$', ''
   if ($s.StartsWith('../')) { return $s.Substring(3) }

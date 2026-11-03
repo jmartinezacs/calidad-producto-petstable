@@ -9,14 +9,14 @@ import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, openModal, confirmDialog, emptyState, errorState,
   fmtDate, fmtDateTime, fmtNum, todayISO, fechaLote, loteDesdeFecha, mesLargo, dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio,
   getCatalogos, invalidarCatalogos, fetchAll, toCSV, descargar, debounce, sanitizeSearch, ganchos, estadoLote, estadoPill, ESTADOS_LOTE,
-  puedeCapturar, puedeLiberar, recetaTxt, roleLabel,
+  puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco,
 } from '../core.js';
 import { generarCertificado } from './certificado.js';
 
 const POR_PAGINA = 12;
-let root = null, token = 0, lotes = [], pagina = 1, cat = null;
+let root = null, token = 0, lotes = [], pagina = 1, cat = null, dir = null;
 
-const SELECT_LOTE = 'id, lote, fecha_analisis, dictamen_global, usuario_id, created_at, receta_id, folio_certificado, liberado_en, liberado_por_nombre, liberado_por_puesto, observaciones_liberacion, brom_resultados_analisis(id, metodo_id, resultado, resultado_texto, cumple, analista_texto, created_at)';
+const SELECT_LOTE = 'id, lote, fecha_analisis, dictamen_global, usuario_id, created_at, receta_id, folio_certificado, liberado_en, liberado_por_nombre, liberado_por_puesto, observaciones_liberacion, firma_jefe_id, firma_jefe_nombre, firma_jefe_puesto, firma_inspector_id, firma_inspector_nombre, firma_inspector_puesto, brom_resultados_analisis(id, metodo_id, resultado, resultado_texto, cumple, analista_texto, created_at)';
 
 export default {
   async render(el, params = {}) {
@@ -54,12 +54,13 @@ async function cargar() {
   if (!body) return;
   body.innerHTML = `<div class="lote-grid">${'<div class="card"><div class="skeleton" style="width:50%"></div><div class="skeleton mt" style="height:80px"></div></div>'.repeat(4)}</div>`;
   try {
-    const [c, data] = await Promise.all([
+    const [c, data, d] = await Promise.all([
       getCatalogos({ force: true }),
       fetchAll(() => sb.from('brom_muestras').select(SELECT_LOTE).order('fecha_analisis', { ascending: false }).order('created_at', { ascending: false })),
+      getDirectorio(),
     ]);
     if (t !== token || !root) return;
-    cat = c;
+    cat = c; dir = d;
     lotes = data.map((m) => {
       const res = m.brom_resultados_analisis || [];
       return { ...m, res, receta: cat.recetas.find((r) => r.id === m.receta_id) || null, fecha: fechaLote(m.fecha_analisis), ...estadoLote(m, res, cat) };
@@ -123,8 +124,18 @@ function pintar() {
 const esDueno = (l) => l.usuario_id === state.session?.user?.id;
 const capturaAlgo = () => cat.areas.some((a) => a.activa !== false && puedeCapturar(a));
 
+// Quién registró el lote y quiénes capturaron análisis, con su foto
+function personas(l) {
+  const reg = dir?.porId(l.usuario_id);
+  const otros = [...new Set(l.res.map((r) => r.analista_texto).filter(Boolean))].filter((n) => n !== reg?.nombre_completo);
+  const foto = (n, u) => avatarHTML(n, (u || dir?.porNombre(n))?.foto, 'sm');
+  return `<div class="lote-gente">
+    ${reg ? `<span class="persona" title="Registró el lote">${foto(reg.nombre_completo, reg)}<span><small>Registró</small><b>${esc(reg.nombre_completo)}</b></span></span>` : ''}
+    ${otros.length ? `<span class="persona" title="${esc(otros.join(', '))}"><span class="avatares">${otros.slice(0, 4).map((n) => foto(n)).join('')}</span><span><small>Capturó</small><b>${esc(otros.length === 1 ? otros[0] : `${otros[0]} y ${otros.length - 1} más`)}</b></span></span>` : ''}
+  </div>`;
+}
+
 function tarjeta(l) {
-  const quien = [...new Set(l.res.map((r) => r.analista_texto).filter(Boolean))].join(', ');
   const color = l.receta?.color || '#64748B';
   const filasArea = cat.areas.map((a) => {
     const rs = l.res.filter((r) => cat.metodos.find((m) => m.id === r.metodo_id)?.area === a.id)
@@ -139,20 +150,23 @@ function tarjeta(l) {
   return `<article class="card lote-card est-${l.estado}" style="--rc:${esc(color)}">
     <header class="lote-head">
       <div><span class="lote-num">${icon('package')} Lote ${esc(l.lote)}</span>
-        <p><span class="receta-chip" style="--rc:${esc(color)}">${esc(l.receta?.codigo || '—')}</span> ${esc(l.receta ? `${l.receta.nombre_receta} · ${l.receta.especie}` : 'Receta no disponible')}</p></div>
+        <p class="lote-receta"><span class="receta-dot" style="--rc:${esc(color)}"></span><b>${esc(l.receta?.nombre_receta || 'Receta no disponible')}</b>
+          ${l.receta ? `<span class="codigo">${esc(l.receta.codigo)}</span><span class="especie">${icon(especieIco(l.receta.especie))}${esc(l.receta.especie)}</span>` : ''}</p></div>
       ${estadoPill(l.estado)}
     </header>
-    <div class="lote-meta"><span>${icon('calendar')} ${fmtDate(l.fecha)}</span>${quien ? `<span>${icon('user')} ${esc(quien)}</span>` : ''}
+    <div class="lote-meta"><span>${icon('calendar')} ${fmtDate(l.fecha)}</span>
       <span>${icon('list-checks')} ${l.completos} de ${l.requeridos} análisis evaluados</span></div>
+    ${personas(l)}
     <div class="area-progreso">${l.porArea.map((p) => `<span class="ap ${p.noCumple ? 'bad' : p.pendientes ? 'warn' : 'ok'}" style="--ac:${esc(p.area.color)}" title="${esc(p.area.nombre)}: ${p.cumple} de ${p.total} cumplen${p.noCumple ? `, ${p.noCumple} no cumplen` : ''}">
       ${icon(p.noCumple ? 'x' : p.pendientes ? 'hourglass' : 'check')}<b>${esc(p.area.nombre)}</b><small>${p.cumple} de ${p.total}</small></span>`).join('')}</div>
-    ${l.liberado_en ? `<div class="liberado-info">${icon('badge-check')}<span>Liberado por <b>${esc(l.liberado_por_nombre || '—')}</b> el ${fmtDateTime(l.liberado_en)} · Folio <b>${esc(l.folio_certificado)}</b></span></div>` : ''}
+    ${l.liberado_en ? `<div class="liberado-info">${icon('badge-check')}<span>Liberado por <b>${esc(l.liberado_por_nombre || '—')}</b> el ${fmtDateTime(l.liberado_en)} · Folio <b>${esc(l.folio_certificado)}</b>${l.firma_jefe_id ? `<br>Firman: ${esc(l.firma_jefe_nombre)} y ${esc(l.firma_inspector_nombre)}` : '<br>Firmas del certificado pendientes de elegir'}</span></div>` : ''}
     ${filasArea ? `<details class="lote-det"><summary>${icon('chevron-down')} Ver los ${l.res.length} análisis capturados</summary><div class="table-wrap"><table class="table compact"><thead><tr><th>Método</th><th>Resultado</th><th>Especificación</th><th>Dictamen</th></tr></thead><tbody>${filasArea}</tbody></table></div></details>`
       : '<p class="cell-sub" style="margin:0">Sin análisis capturados.</p>'}
     <footer class="lote-acts">
       ${l.liberado_en ? `<button class="btn primary sm" data-l="certificado" data-id="${esc(l.id)}">${icon('file-check-2')} Certificado de calidad</button>` : ''}
       ${l.estado === 'listo' && puedeLiberar() ? `<button class="btn primary sm" data-l="liberar" data-id="${esc(l.id)}">${icon('badge-check')} Liberar lote</button>` : ''}
       ${editable ? `<button class="btn secondary sm" data-l="editar" data-id="${esc(l.id)}">${icon('pencil')} ${esDueno(l) || state.isAdmin ? 'Editar y capturar' : 'Capturar análisis'}</button>` : ''}
+      ${l.liberado_en && l.firma_jefe_id && state.isAdmin ? `<button class="btn ghost sm" data-l="firmas" data-id="${esc(l.id)}">${icon('pen-line')} Firmas</button>` : ''}
       ${l.liberado_en && state.isAdmin ? `<button class="btn ghost sm" data-l="revertir" data-id="${esc(l.id)}">${icon('rotate-ccw')} Revertir liberación</button>` : ''}
       ${state.isAdmin ? `<button class="btn ghost sm danger-txt" data-l="borrar" data-id="${esc(l.id)}">${icon('trash-2')} Borrar</button>` : ''}
     </footer>
@@ -176,9 +190,10 @@ async function onClick(e) {
   if (act === 'liberar') { if (await liberar(l)) cargar(); return; }
   if (act === 'certificado') {
     a.disabled = true;
-    try { await generarCertificado(l, l.res, cat); } catch (err) { console.error(err); toast(errMsg(err), 'error'); }
+    try { await certificado(l); } catch (err) { console.error(err); toast(errMsg(err), 'error'); }
     a.disabled = false; return;
   }
+  if (act === 'firmas') { if (await elegirFirmas(l, true)) cargar(); return; }
   if (act === 'revertir') {
     const r = await confirmDialog({
       title: `¿Revertir la liberación del lote ${l.lote}?`, danger: true, confirmText: 'Revertir liberación',
@@ -207,16 +222,37 @@ async function onClick(e) {
 // ---------------------------------------------------------------------
 // Liberación
 // ---------------------------------------------------------------------
+// Firmas del certificado: un Jefe de calidad y un Inspector de calidad (según su puesto)
+function camposFirmas(l = {}) {
+  const lista = (tipo) => (dir?.lista || []).filter((u) => u.activo && u.firma_certificado === tipo);
+  const jefes = lista('jefe_calidad'), insp = lista('inspector');
+  const yo = state.session?.user?.id;
+  const jefe0 = l.firma_jefe_id || (jefes.some((u) => u.id === yo) ? yo : jefes.length === 1 ? jefes[0].id : '');
+  const opc = (us, sel) => us.map((u) => `<option value="${esc(u.id)}" ${u.id === sel ? 'selected' : ''}>${esc(u.nombre_completo)}</option>`).join('');
+  if (!jefes.length || !insp.length) {
+    return `<div class="notice warn">${icon('triangle-alert')}<span>Para firmar el certificado se necesita al menos una persona activa con puesto que firme como <b>Jefe de calidad</b> y otra como <b>Inspector de calidad</b> (Usuarios → Puestos y permisos).</span></div>`;
+  }
+  return `<div class="firmas-pick">
+    <div class="field"><label for="fx-jefe">${icon('pen-line')} Firma del ${FIRMAS.jefe_calidad} <span class="req">*</span></label>
+      <select id="fx-jefe" name="jefe" required><option value="">Selecciona</option>${opc(jefes, jefe0)}</select></div>
+    <div class="field"><label for="fx-insp">${icon('pen-line')} Firma del ${FIRMAS.inspector} <span class="req">*</span></label>
+      <select id="fx-insp" name="inspector" required><option value="">Selecciona</option>${opc(insp, l.firma_inspector_id || '')}</select></div>
+  </div>`;
+}
+
 async function liberar(l) {
   const filas = l.porArea.map((p) => `<li><span class="area-dot" style="--ac:${esc(p.area.color)}"></span><b>${esc(p.area.nombre)}</b> ${p.cumple} de ${p.total} análisis cumplen</li>`).join('');
   const r = await openModal({
-    title: `Liberar el lote ${l.lote}`, subtitle: `${recetaTxt(l.receta)} · Lote del ${fmtDate(l.fecha)}`, size: 'sm', submitText: 'Liberar y emitir certificado', confirmDiscard: false,
+    title: `Liberar el lote ${l.lote}`, subtitle: `${recetaTxt(l.receta)} · Lote del ${fmtDate(l.fecha)}`, submitText: 'Liberar y emitir certificado', confirmDiscard: false,
     body: `<div class="notice">${icon('shield-check')}<span>Todos los análisis requeridos cumplen la especificación. Al liberar se asigna un folio y se emite el certificado de calidad.</span></div>
       <ul class="lib-areas">${filas}</ul>
+      ${camposFirmas()}
+      <p class="hint">${icon('info')} Las firmas quedan guardadas para este certificado.</p>
       <div class="field"><label for="lib-obs">Observaciones (opcional)</label><textarea id="lib-obs" name="obs" maxlength="400" data-counter placeholder="Aparecen en el certificado de calidad"></textarea></div>
       <p class="hint">Liberará: <b>${esc(state.profile.nombre)}</b> · ${esc(state.profile.puesto || roleLabel(state.profile.rol))}</p>`,
-    onSubmit: async ({ form }) => {
-      const { data, error } = await sb.rpc('brom_liberar_lote', { p_muestra_id: l.id, p_observaciones: form.obs.value.trim() || null });
+    onSubmit: async ({ form, setError }) => {
+      if (!form.jefe || !form.jefe.value || !form.inspector.value) { setError('Selecciona al Jefe de calidad y al Inspector de calidad que firman el certificado.'); return false; }
+      const { data, error } = await sb.rpc('brom_liberar_lote', { p_muestra_id: l.id, p_observaciones: form.obs.value.trim() || null, p_firma_jefe: form.jefe.value, p_firma_inspector: form.inspector.value });
       if (error) throw error;
       return data;
     },
@@ -228,6 +264,34 @@ async function liberar(l) {
     if (data) await generarCertificado(data, data.brom_resultados_analisis || [], cat);
   } catch (err) { console.error(err); toast(`Lote liberado. Descarga el certificado desde la tarjeta del lote. (${errMsg(err)})`, 'warning'); }
   return true;
+}
+
+// Elección (la primera vez) o cambio (administrador) de las firmas de un lote liberado
+async function elegirFirmas(l, cambio = false) {
+  const ok = await openModal({
+    title: cambio ? `Firmas del certificado ${l.folio_certificado}` : 'Firmas del certificado de calidad',
+    subtitle: `Lote ${l.lote} · ${recetaTxt(l.receta)}`, size: 'sm', submitText: cambio ? 'Guardar firmas' : 'Guardar y descargar', confirmDiscard: false,
+    body: `<p class="hint" style="margin-top:0">${cambio ? 'Solo un administrador puede cambiar las firmas ya asignadas.' : 'Elige quién firma este certificado. La elección queda guardada y ya no se vuelve a pedir.'}</p>${camposFirmas(l)}`,
+    onSubmit: async ({ form, setError }) => {
+      if (!form.jefe || !form.jefe.value || !form.inspector.value) { setError('Selecciona las dos firmas.'); return false; }
+      const { error } = await sb.rpc('brom_asignar_firmas', { p_muestra_id: l.id, p_firma_jefe: form.jefe.value, p_firma_inspector: form.inspector.value });
+      if (error) throw error;
+      return true;
+    },
+  });
+  if (ok) toast('Firmas del certificado guardadas.', 'success');
+  return ok;
+}
+
+async function certificado(l) {
+  if (!l.firma_jefe_id) {
+    if (!puedeElegirFirmas()) { toast('Este certificado aún no tiene firmas. Debe elegirlas el Jefe de calidad o un administrador.', 'warning', 6500); return; }
+    if (!(await elegirFirmas(l))) return;
+  }
+  const { data, error } = await sb.from('brom_muestras').select(SELECT_LOTE).eq('id', l.id).single();
+  if (error) throw error;
+  await generarCertificado(data, data.brom_resultados_analisis || [], cat);
+  if (!l.firma_jefe_id) cargar();
 }
 
 async function exportar() {
@@ -276,7 +340,7 @@ function prever(m, valor) {
   return true;
 }
 
-const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 function calendario(sel) {
   const hoy = todayISO();
   let cursor = (sel || hoy).slice(0, 7);
@@ -333,7 +397,7 @@ export async function openLoteForm(lote = null) {
   // Fecha, número de lote y receta: al registrar, o quien registró el lote, o un administrador
   const cabecera = !edit || state.isAdmin || lote.usuario_id === state.session?.user?.id;
   const fecha0 = lote?.fecha || '';
-  const rol = roleLabel(state.profile.rol);
+  const rol = state.profile.puesto || roleLabel(state.profile.rol);
   const body = `
     <div class="lote-form">
       <section class="lf-block">
@@ -397,7 +461,7 @@ export async function openLoteForm(lote = null) {
           return `<section class="area-sec ${puede ? '' : 'solo-lectura'}" style="--ac:${esc(a.color)}" data-area="${esc(a.id)}">
             <header class="area-head"><span class="area-dot"></span><b>${esc(a.nombre)}</b><small>${metodos.length} métodos</small>
               ${puede ? (metodos.some((m) => m.tipo_resultado === 'verificacion') ? `<button type="button" class="link-btn" data-todo-cumple>${icon('check-check')} Marcar todo como cumple</button>` : '')
-                : `<span class="pill gray">${icon('lock')} Lo captura: ${esc(a.roles_captura.map(roleLabel).join(' o '))}</span>`}</header>
+                : `<span class="pill gray">${icon('lock')} Lo captura: ${esc(c.puestosArea(a.id).map((p) => p.nombre).join(' o ') || 'un administrador')}</span>`}</header>
             <div class="metodo-grid">${metodos.map((m0) => {
               const m = criterio(m0, c.spec(recetaId, m0.id));
               const prev = previos.get(m0.id);

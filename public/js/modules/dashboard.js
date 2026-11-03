@@ -6,7 +6,7 @@
 import {
   sb, state, esc, icon, refreshIcons, todayISO, fmtDate, fmtDateTime, fmtNum, makeChart, destroyCharts, emptyState, errorState,
   navigate, prefs, avatarHTML, fechaLote, roleLabel, getCatalogos, getResultados, fetchAll, ganchos, mesLargo,
-  estadoLote, estadoPill, ESTADOS_LOTE, colorN, recetaTxt, puedeLiberar,
+  estadoLote, estadoPill, ESTADOS_LOTE, colorN, recetaTxt, puedeLiberar, mesCorto,
 } from '../core.js';
 
 let root, token = 0;
@@ -129,10 +129,10 @@ function contenido(cat, lotes, rs) {
   }).join('')}</div>` : vacio);
   return `
     <div class="grid grid-4">
-      ${kpi('i-blue', 'flask-conical', 'Lotes analizados', fmtNum(lotes.length), 'Registrados en el periodo', '#/lotes')}
-      ${kpi('c3 i-violet', 'badge-check', 'Lotes liberados', fmtNum(n('liberado')), `${pct(n('liberado'), lotes.length)} de los lotes del periodo`, '#/lotes?estado=liberado')}
-      ${kpi('c2 i-amber', 'percent', 'Cumplimiento', pct(ok, ok + no), `${fmtNum(ok)} de ${fmtNum(ok + no)} análisis evaluados cumplen`, '#/resultados')}
-      ${kpi(no ? 'danger i-pink' : 'c4 i-pink', 'triangle-alert', 'Fuera de especificación', fmtNum(no), 'Análisis que no cumplen', '#/lotes?estado=no_conforme')}
+      ${kpi('k-orange', 'flask-conical', 'Lotes analizados', fmtNum(lotes.length), 'Registrados en el periodo', '#/lotes')}
+      ${kpi('k-blue', 'badge-check', 'Lotes liberados', fmtNum(n('liberado')), `${pct(n('liberado'), lotes.length)} de los lotes del periodo`, '#/lotes?estado=liberado')}
+      ${kpi('k-green', 'percent', 'Cumplimiento', pct(ok, ok + no), `${fmtNum(ok)} de ${fmtNum(ok + no)} análisis evaluados cumplen`, '#/resultados')}
+      ${kpi(no ? 'k-red danger' : 'k-red', 'triangle-alert', 'Fuera de especificación', fmtNum(no), 'Análisis que no cumplen', '#/lotes?estado=no_conforme')}
     </div>
     <div class="grid grid-3 mt">
       ${statusCard(n('listo') ? 'ok' : '', 'Listos para liberar', puedeLiberar() ? 'Todos sus análisis cumplen: puedes liberarlos' : 'Esperan la liberación de la Jefatura de calidad', n('listo'), '#/lotes?estado=listo')}
@@ -194,12 +194,12 @@ const ejePct = { y: { min: 0, max: 100, ticks: { callback: (v) => `${v} %` } } }
 
 function drawCharts(cat, lotes, rs) {
   const estados = Object.entries(ESTADOS_LOTE);
-  // Lotes por mes, apilados por estado (mes completo, sin abreviar)
+  // Lotes por mes, apilados por estado («Nov 2026»)
   const meses = [...new Set(lotes.map((l) => l.fecha.slice(0, 7)))].sort();
   makeChart(document.getElementById('ch-mes'), {
     type: 'bar',
     data: {
-      labels: meses.map((m) => mesLargo(m)),
+      labels: meses.map((m) => mesCorto(m)),
       datasets: estados.map(([k, v]) => ({ label: v.label, data: meses.map((m) => lotes.filter((l) => l.fecha.startsWith(m) && l.estado === k).length), backgroundColor: v.color, borderRadius: 6, maxBarThickness: 38, stack: 'e' })),
     },
     options: { scales: { x: { stacked: true, ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true } }, y: { stacked: true } } },
@@ -209,14 +209,14 @@ function drawCharts(cat, lotes, rs) {
   const seg = [['Cumple', ok, '#16A34A'], ['No cumple', no, '#E0464E'], ['Pendiente', pend, '#F59E0B']].filter((s) => s[1] > 0);
   makeChart(document.getElementById('ch-pct'), {
     type: 'pie',
-    data: { labels: seg.map((s) => s[0]), datasets: [{ data: seg.map((s) => s[1]), backgroundColor: seg.map((s) => s[2]), borderWidth: 2, borderColor: '#fff', _porcentaje: true }] },
+    data: { labels: seg.map((s) => s[0]), datasets: [{ data: seg.map((s) => s[1]), backgroundColor: seg.map((s) => s[2]), borderWidth: 2, _porcentaje: true }] },
     options: { plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${fmtNum(c.raw)} análisis (${pct(c.raw, rs.length)})` } } } },
   });
   // Cumplimiento por receta (color característico de cada receta)
   const recetas = cat.recetas.filter((r) => rs.some((x) => x.brom_muestras.receta_id === r.id));
   makeChart(document.getElementById('ch-receta'), {
     type: 'bar',
-    data: { labels: recetas.map((r) => `${r.nombre_receta} (${r.especie})`), datasets: [{ label: 'Cumplimiento', data: recetas.map((r) => porcentaje(rs.filter((x) => x.brom_muestras.receta_id === r.id))), backgroundColor: recetas.map((r) => r.color), borderRadius: 6, maxBarThickness: 52, _sufijo: ' %' }] },
+    data: { labels: recetas.map((r) => r.nombre_receta), datasets: [{ label: 'Cumplimiento', data: recetas.map((r) => porcentaje(rs.filter((x) => x.brom_muestras.receta_id === r.id))), backgroundColor: recetas.map((r) => r.color), borderRadius: 6, maxBarThickness: 52, _sufijo: ' %' }] },
     options: { plugins: { legend: { display: false } }, scales: ejePct },
   });
   // Cumplimiento por área

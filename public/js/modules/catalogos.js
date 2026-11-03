@@ -7,7 +7,7 @@
 import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, openModal, confirmDialog, checkForm, emptyState, errorState, fmtNum,
   getCatalogos, invalidarCatalogos, refLabel, tipoLabel, criterio, PARAMETROS, PARAM_A_LIMITE, UNIDADES, prefs, fetchAll,
-  ESPECIES, ROLES, roleLabel, recetaTxt,
+  ESPECIES, especieHTML, recetaTxt, opcionCheck,
 } from '../core.js';
 
 let root = null, token = 0, tab = 'recetas', recetaSel = '';
@@ -73,31 +73,39 @@ async function recetasHTML(cat) {
   if (!cat.recetas.length) return emptyState({ ico: 'book-open', title: 'Sin recetas', text: 'Registra la primera receta del catálogo.' });
   const lotes = await fetchAll(() => sb.from('brom_muestras').select('receta_id')).catch(() => []);
   const n = (id) => lotes.filter((l) => l.receta_id === id).length;
-  return `<div class="table-wrap responsive"><table class="table"><thead><tr><th>Código</th><th>Receta</th><th>Especie</th><th>Color</th><th>Lotes</th><th>Especificaciones particulares</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
+  return `<div class="table-wrap responsive"><table class="table recetas-tabla"><thead><tr><th>Receta</th><th>Código</th><th>Especie</th><th>Lotes</th><th>Análisis requeridos</th><th>Especificaciones particulares</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
     ${cat.recetas.map((r) => `<tr>
-      <td data-label="Código"><div class="td-in"><span class="receta-chip" style="--rc:${esc(r.color)}">${esc(r.codigo)}</span></div></td>
-      <td data-label="Receta"><div class="td-in cell-main">${esc(r.nombre_receta)}</div></td>
-      <td data-label="Especie"><div class="td-in">${esc(r.especie)}</div></td>
-      <td data-label="Color"><div class="td-in"><span class="swatch" style="--rc:${esc(r.color)}"></span></div></td>
-      <td data-label="Lotes"><div class="td-in mono">${fmtNum(n(r.id))}</div></td>
+      <td data-label="Receta"><div class="td-in"><span class="receta-nom"><span class="receta-dot" style="--rc:${esc(r.color)}"></span><b>${esc(r.nombre_receta)}</b></span></div></td>
+      <td data-label="Código"><div class="td-in"><span class="codigo">${esc(r.codigo)}</span></div></td>
+      <td data-label="Especie"><div class="td-in">${especieHTML(r.especie)}</div></td>
+      <td data-label="Lotes"><div class="td-in num">${fmtNum(n(r.id))}</div></td>
+      <td data-label="Análisis requeridos"><div class="td-in num">${fmtNum(cat.requeridos(r.id).length)}</div></td>
       <td data-label="Especificaciones"><div class="td-in"><button class="link-btn" data-c="ver-esp" data-id="${esc(r.id)}">${fmtNum(cat.specs.filter((s) => s.receta_id === r.id).length)} configuradas</button></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(r.activa, true)}</div></td>
       ${acciones(`${editar('data-edit-receta', r.id)}<button class="icon-btn" data-dup-receta="${esc(r.id)}" aria-label="Duplicar para otra especie" title="Duplicar para otra especie">${icon('copy-plus')}</button>`)}</tr>`).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} Una misma receta puede existir para varias especies (por ejemplo, Meat Festival para canino y para felino), cada una con su código y sus especificaciones.</p>`;
+    <p class="hint">${icon('info')} Una misma receta puede existir para perro y para gato, cada una con su código, sus métodos y sus especificaciones. Usa ${icon('copy-plus')} para duplicarla.</p>`;
 }
 
 function metodosHTML(cat) {
   if (!cat.metodos.length) return emptyState({ ico: 'flask-round', title: 'Sin métodos', text: 'Registra el primer método analítico.' });
-  return `<div class="table-wrap responsive"><table class="table"><thead><tr><th>Área</th><th>Método</th><th>Tipo de resultado</th><th>Criterio general</th><th>Unidad</th><th>Referencia normativa</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
+  return `<div class="table-wrap responsive"><table class="table"><thead><tr><th>Área</th><th>Método</th><th>Tipo de resultado</th><th>Criterio general</th><th>Unidad</th><th>Aplica a</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
     ${cat.metodos.map((m) => `<tr>
       <td data-label="Área"><div class="td-in">${areaChip(cat.area(m.area))}</div></td>
-      <td data-label="Método"><div class="td-in cell-main">${esc(m.metodo)}</div></td>
+      <td data-label="Método"><div class="td-in cell-main" title="${esc(m.referencia_normativa || '')}">${esc(m.metodo)}</div></td>
       <td data-label="Tipo"><div class="td-in cell-sub">${esc(tipoLabel(m.tipo_resultado))}</div></td>
       <td data-label="Criterio general"><div class="td-in">${esc(refLabel(m))}</div></td>
       <td data-label="Unidad"><div class="td-in">${esc(m.unidades || '—')}</div></td>
-      <td data-label="Referencia normativa"><div class="td-in cell-sub">${esc(m.referencia_normativa || '—')}</div></td>
+      <td data-label="Aplica a"><div class="td-in">${aplicaHTML(cat, m)}</div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(m.activo)}</div></td>
-      ${acciones(editar('data-edit-metodo', m.id))}</tr>`).join('')}</tbody></table></div>`;
+      ${acciones(`${editar('data-edit-metodo', m.id)}<button class="icon-btn" data-dup-metodo="${esc(m.id)}" aria-label="Duplicar método" title="Duplicar método">${icon('copy')}</button>`)}</tr>`).join('')}</tbody></table></div>
+    <p class="hint">${icon('info')} Usa ${icon('copy')} para duplicar un método (por ejemplo, Humedad con otro criterio) y asignarlo solo a algunas recetas.</p>`;
+}
+// Recetas en las que se evalúa un método
+function aplicaHTML(cat, m) {
+  if (!m.recetas_aplica) return '<span class="pill gray">Todas las recetas</span>';
+  const rs = cat.recetas.filter((r) => m.recetas_aplica.includes(r.id));
+  if (!rs.length) return '<span class="pill bad">Ninguna receta</span>';
+  return `<span class="recetas-mini">${rs.map((r) => `<span class="receta-nom sm"><span class="receta-dot" style="--rc:${esc(r.color)}"></span>${esc(r.nombre_receta)}</span>`).join('')}</span>`;
 }
 
 function areasHTML(cat) {
@@ -107,10 +115,10 @@ function areasHTML(cat) {
       <td data-label="Área"><div class="td-in">${areaChip(a)}</div></td>
       <td data-label="Descripción"><div class="td-in cell-sub">${esc(a.descripcion || '—')}</div></td>
       <td data-label="Métodos"><div class="td-in mono">${fmtNum(cat.metodos.filter((m) => m.area === a.id && m.activo).length)}</div></td>
-      <td data-label="Captura"><div class="td-in">${a.roles_captura.map((r) => `<span class="pill info">${esc(roleLabel(r))}</span>`).join(' ')} <span class="pill gray">Administrador</span></div></td>
+      <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => `<span class="pill info">${esc(p.nombre)}</span>`).join('')}<span class="pill gray">Administrador</span></div></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(a.activa, true)}</div></td>
       ${acciones(editar('data-edit-area', a.id))}</tr>`).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} Un lote se libera cuando todos los métodos activos de las áreas activas que aplican a su receta cumplen. Los administradores pueden capturar cualquier área.</p>`;
+    <p class="hint">${icon('info')} Un lote se libera cuando todos los métodos activos de las áreas activas que aplican a su receta cumplen. Quién captura cada área se define por puesto (Usuarios → Puestos y permisos); los administradores capturan cualquier área.</p>`;
 }
 
 function especHTML(cat) {
@@ -125,13 +133,14 @@ function especHTML(cat) {
     ${metodos.length ? `<div class="table-wrap responsive"><table class="table"><thead><tr><th>Área</th><th>Método</th><th>Criterio general</th><th>Criterio aplicable a la receta</th><th>Origen</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
       ${metodos.map((m) => {
         const s = cat.spec(recetaSel, m.id);
-        const noAplica = s?.aplica === false;
+        const porMetodo = m.recetas_aplica && !m.recetas_aplica.includes(recetaSel);
+        const noAplica = porMetodo || s?.aplica === false;
         return `<tr class="${noAplica ? 'no-aplica' : ''}">
           <td data-label="Área"><div class="td-in">${areaChip(cat.area(m.area))}</div></td>
           <td data-label="Método"><div class="td-in cell-main">${esc(m.metodo)}</div></td>
           <td data-label="Criterio general"><div class="td-in cell-sub">${esc(refLabel(m))}</div></td>
           <td data-label="Criterio aplicable"><div class="td-in"><b>${noAplica ? 'No se evalúa en esta receta' : esc(refLabel(criterio(m, s)))}</b></div></td>
-          <td data-label="Origen"><div class="td-in">${noAplica ? '<span class="pill gray">No aplica</span>' : s ? '<span class="pill orange">Particular</span>' : '<span class="pill info">General</span>'}</div></td>
+          <td data-label="Origen"><div class="td-in">${porMetodo ? '<span class="pill gray">No aplica (método)</span>' : noAplica ? '<span class="pill gray">No aplica</span>' : s ? '<span class="pill orange">Particular</span>' : '<span class="pill info">General</span>'}</div></td>
           ${acciones(`${editar('data-edit-esp', m.id, 'Definir especificación')}
             ${s ? `<button class="icon-btn bad" data-del-esp="${esc(s.id)}" aria-label="Usar el criterio general" title="Usar el criterio general">${icon('rotate-ccw')}</button>` : ''}`)}</tr>`;
       }).join('')}</tbody></table></div>` : emptyState({ ico: 'flask-round', title: 'Sin métodos activos' })}`;
@@ -140,7 +149,7 @@ function especHTML(cat) {
 async function onClick(e) {
   const tb = e.target.closest('[data-tab]');
   if (tb) { tab = tb.dataset.tab; pintar(); return; }
-  const a = e.target.closest('[data-c], [data-edit-receta], [data-dup-receta], [data-edit-metodo], [data-edit-esp], [data-del-esp], [data-edit-area]');
+  const a = e.target.closest('[data-c], [data-edit-receta], [data-dup-receta], [data-edit-metodo], [data-dup-metodo], [data-edit-esp], [data-del-esp], [data-edit-area]');
   if (!a) return;
   const cat = await getCatalogos();
   let ok = false;
@@ -152,6 +161,7 @@ async function onClick(e) {
   else if (a.dataset.editReceta) ok = await recetaForm(cat, cat.recetas.find((r) => r.id === a.dataset.editReceta));
   else if (a.dataset.dupReceta) ok = await recetaForm(cat, null, cat.recetas.find((r) => r.id === a.dataset.dupReceta));
   else if (a.dataset.editMetodo) ok = await metodoForm(cat, cat.metodos.find((m) => m.id === a.dataset.editMetodo));
+  else if (a.dataset.dupMetodo) ok = await metodoForm(cat, null, cat.metodos.find((m) => m.id === a.dataset.dupMetodo));
   else if (a.dataset.editArea) ok = await areaForm(cat, cat.areas.find((x) => x.id === a.dataset.editArea));
   else if (a.dataset.editEsp) ok = await especForm(cat, recetaSel, cat.metodos.find((m) => m.id === a.dataset.editEsp));
   else if (a.dataset.delEsp) {
@@ -172,8 +182,8 @@ const siguienteCodigo = (cat) => {
 
 // r: receta a editar · base: receta a duplicar para otra especie (copia sus especificaciones)
 function recetaForm(cat, r = null, base = null) {
-  const v = r || (base ? { ...base, codigo: siguienteCodigo(cat), especie: ESPECIES.find((e) => e !== base.especie) || '', activa: true } : { codigo: siguienteCodigo(cat), nombre_receta: '', especie: 'Canino', color: COLORES_RECETA[cat.recetas.length % COLORES_RECETA.length][0], activa: true });
-  const especies = [...new Set([...ESPECIES, ...cat.recetas.map((x) => x.especie)])];
+  const v = r || (base ? { ...base, codigo: siguienteCodigo(cat), especie: ESPECIES.find((e) => e.v !== base.especie)?.v || 'Perro', activa: true } : { codigo: siguienteCodigo(cat), nombre_receta: '', especie: 'Perro', color: COLORES_RECETA[cat.recetas.length % COLORES_RECETA.length][0], activa: true });
+  const especies = [...ESPECIES, ...[...new Set(cat.recetas.map((x) => x.especie))].filter((e) => !ESPECIES.some((x) => x.v === e)).map((e) => ({ v: e, ico: 'paw-print' }))];
   return openModal({
     title: r ? 'Editar receta' : base ? `Duplicar ${base.nombre_receta} para otra especie` : 'Nueva receta',
     subtitle: base ? 'Se copian sus especificaciones particulares; después puedes ajustarlas para la nueva especie.' : '',
@@ -181,8 +191,8 @@ function recetaForm(cat, r = null, base = null) {
     body: `<div class="form-grid">
       <div class="field"><label for="rf-cod">Código <span class="req">*</span></label><input id="rf-cod" name="codigo" required maxlength="20" value="${esc(v.codigo)}" pattern="[A-Z]{2,5}-\\d{2,3}(-[A-Z0-9]{1,6})?" data-pattern-msg="Usa el formato REC-01."></div>
       <div class="field"><label for="rf-nom">Nombre de la receta <span class="req">*</span></label><input id="rf-nom" name="nombre" required maxlength="120" value="${esc(v.nombre_receta)}" placeholder="Nombre comercial"></div>
-      <div class="field"><label for="rf-esp">Especie <span class="req">*</span></label><input id="rf-esp" name="especie" required maxlength="40" list="rf-especies" value="${esc(v.especie)}">
-        <datalist id="rf-especies">${especies.map((x) => `<option value="${esc(x)}">`).join('')}</datalist></div>
+      <div class="field"><label for="rf-esp">Especie <span class="req">*</span></label><select id="rf-esp" name="especie" required>
+        ${especies.map((x) => `<option value="${esc(x.v)}" data-ico="${esc(x.ico)}" ${x.v === v.especie ? 'selected' : ''}>${esc(x.v)}</option>`).join('')}</select></div>
       <div class="field"><label for="rf-act">Estado</label><select id="rf-act" name="activa"><option value="true">Activa</option><option value="false" ${v.activa ? '' : 'selected'}>Inactiva</option></select></div>
       <div class="field full"><label>Color característico</label><input type="hidden" name="color" value="${esc(v.color)}">
         <div class="color-pick">${COLORES_RECETA.map(([c, n]) => `<button type="button" class="${c.toLowerCase() === String(v.color).toLowerCase() ? 'on' : ''}" data-color="${c}" style="--rc:${c}" title="${n}"><span></span>${n}</button>`).join('')}</div>
@@ -201,8 +211,7 @@ function recetaForm(cat, r = null, base = null) {
     onSubmit: async ({ form }) => {
       form.codigo.value = form.codigo.value.trim().toUpperCase();
       if (!checkForm(form)) return false;
-      const esp = form.especie.value.trim().replace(/\s+/g, ' ');
-      const fila = { codigo: form.codigo.value, nombre_receta: form.nombre.value.trim().replace(/\s+/g, ' '), especie: esp.charAt(0).toUpperCase() + esp.slice(1), color: form.color.value, activa: form.activa.value === 'true' };
+      const fila = { codigo: form.codigo.value, nombre_receta: form.nombre.value.trim().replace(/\s+/g, ' '), especie: form.especie.value, color: form.color.value, activa: form.activa.value === 'true' };
       if (r) {
         const { error } = await sb.from('brom_recetas').update(fila).eq('id', r.id);
         if (error) throw error;
@@ -214,6 +223,11 @@ function recetaForm(cat, r = null, base = null) {
       if (base) {
         const copia = cat.specs.filter((s) => s.receta_id === base.id).map(({ id, receta_id, ...s }) => ({ ...s, receta_id: data.id }));
         if (copia.length) { const q = await sb.from('brom_especificaciones_receta').insert(copia); if (q.error) throw q.error; }
+        // Los métodos asignados solo a algunas recetas también se asignan a la copia
+        for (const m of cat.metodos.filter((x) => x.recetas_aplica?.includes(base.id))) {
+          const q = await sb.from('brom_catalogo_metodos').update({ recetas_aplica: [...m.recetas_aplica, data.id] }).eq('id', m.id);
+          if (q.error) throw q.error;
+        }
         toast(`Receta ${fila.codigo} creada con ${copia.length} especificaciones copiadas.`, 'success');
         recetaSel = data.id;
       } else toast('Receta registrada.', 'success');
@@ -252,52 +266,84 @@ function criterioValores(form, tipo) {
   return { p, v, mx, txt: !num && p === 'exacto' ? form.valor_texto.value : null };
 }
 
-function metodoForm(cat, m = null) {
-  const tipo0 = m?.tipo_resultado || 'numerico';
-  const unidades = m?.unidades && !UNIDADES.includes(m.unidades) ? [m.unidades, ...UNIDADES] : UNIDADES;
+// m: método a editar · base: método a duplicar (se copian sus campos; cambias solo lo necesario)
+function metodoForm(cat, m = null, base = null) {
+  const v = m || base || null;
+  const tipo0 = v?.tipo_resultado || 'numerico';
+  const unidades = v?.unidades && !UNIDADES.includes(v.unidades) ? [v.unidades, ...UNIDADES] : UNIDADES;
+  const recetas = cat.recetas.filter((r) => r.activa || v?.recetas_aplica?.includes(r.id));
+  const todas = !v?.recetas_aplica;
   return openModal({
-    title: m ? 'Editar método' : 'Nuevo método', subtitle: 'Define el área, el tipo de resultado y su criterio general de aceptación.', submitText: m ? 'Guardar cambios' : 'Registrar método',
+    title: m ? 'Editar método' : base ? `Duplicar ${base.metodo}` : 'Nuevo método',
+    subtitle: base ? 'Se copian todos sus datos: cambia solo lo necesario (por ejemplo, las recetas o el criterio).' : 'Define el área, el tipo de resultado, su criterio general y a qué recetas aplica.',
+    submitText: m ? 'Guardar cambios' : base ? 'Crear copia' : 'Registrar método',
     body: `<div class="form-grid">
-      <div class="field"><label for="mf-nom">Método <span class="req">*</span></label><input id="mf-nom" name="metodo" required maxlength="80" value="${esc(m?.metodo || '')}" placeholder="Por ejemplo: Humedad"></div>
+      <div class="field"><label for="mf-nom">Método <span class="req">*</span></label><input id="mf-nom" name="metodo" required maxlength="80" value="${esc(v?.metodo || '')}" placeholder="Por ejemplo: Humedad"></div>
       <div class="field"><label for="mf-area">Área de análisis <span class="req">*</span></label><select id="mf-area" name="area" required>
-        ${cat.areas.map((a) => `<option value="${esc(a.id)}" ${a.id === (m?.area || 'bromatologico') ? 'selected' : ''}>${esc(a.nombre)}</option>`).join('')}</select></div>
+        ${cat.areas.map((a) => `<option value="${esc(a.id)}" ${a.id === (v?.area || 'bromatologico') ? 'selected' : ''}>${esc(a.nombre)}</option>`).join('')}</select></div>
       <div class="field"><label for="mf-tipo">Tipo de resultado</label><select id="mf-tipo" name="tipo">
         ${['numerico', 'verificacion', 'positivo_negativo'].map((t) => `<option value="${t}" ${t === tipo0 ? 'selected' : ''}>${esc(tipoLabel(t))}</option>`).join('')}
         ${tipo0 === 'texto' ? '<option value="texto" selected>Texto</option>' : ''}</select></div>
-      <div class="field"><label for="mf-orden">Orden dentro del área</label><input id="mf-orden" name="orden" type="number" min="0" max="999" step="1" value="${esc(m?.orden ?? 0)}"></div>
+      <div class="field"><label for="mf-orden">Orden dentro del área</label><input id="mf-orden" name="orden" type="number" min="0" max="999" step="1" value="${esc(v?.orden ?? 0)}"></div>
       <div data-crit class="full form-grid" style="padding:0"></div>
-      <div class="field" data-unid><label for="mf-uni">Unidad</label><select id="mf-uni" name="unidades" data-buscar><option value="">Sin unidad</option>${unidades.map((u) => `<option ${u === m?.unidades ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></div>
-      <div class="field"><label for="mf-act">Estado</label><select id="mf-act" name="activo"><option value="true">Activo</option><option value="false" ${m && !m.activo ? 'selected' : ''}>Inactivo</option></select></div>
-      <div class="field full"><label for="mf-norma">Referencia normativa</label><input id="mf-norma" name="norma" maxlength="160" value="${esc(m?.referencia_normativa || '')}" placeholder="Por ejemplo: NOM-116-SSA1-1994 o criterio interno"></div>
+      <div class="field" data-unid><label for="mf-uni">Unidad</label><select id="mf-uni" name="unidades" data-buscar><option value="">Sin unidad</option>${unidades.map((u) => `<option ${u === v?.unidades ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></div>
+      <div class="field"><label for="mf-act">Estado</label><select id="mf-act" name="activo"><option value="true">Activo</option><option value="false" ${v && !v.activo ? 'selected' : ''}>Inactivo</option></select></div>
+      <div class="field full"><label for="mf-norma">Referencia normativa</label><input id="mf-norma" name="norma" maxlength="160" value="${esc(v?.referencia_normativa || '')}" placeholder="Por ejemplo: NOM-116-SSA1-1994 o criterio interno"></div>
+      <div class="field full"><label for="mf-alc">¿A qué recetas aplica? <span class="req">*</span></label>
+        <select id="mf-alc" name="alcance"><option value="todas" ${todas && !base ? 'selected' : ''}>A todas las recetas (también a las nuevas)</option><option value="algunas" ${!todas || base ? 'selected' : ''}>Solo a las recetas que elija</option></select>
+        <div class="opt-list recetas-opt" data-recetas>${recetas.map((r) => opcionCheck('recetas', r.id, `${r.nombre_receta} · ${r.especie}`, base ? false : todas || v.recetas_aplica.includes(r.id), `<span class="receta-dot" style="--rc:${esc(r.color)}"></span>`)).join('')}</div>
+        ${base ? `<div class="opt-list" style="margin-top:8px">${opcionCheck('quitar', '1', `Quitar las recetas elegidas del método original «${base.metodo}» (para que no se exijan los dos)`, true)}</div>` : ''}</div>
     </div>
-    <p class="hint" data-hint-ver>${icon('info')} En un método de verificación, la Jefatura de calidad marca «Cumple» o «No cumple» para cada lote.</p>
+    <p class="hint" data-hint-ver>${icon('info')} En un método de verificación se marca «Cumple» o «No cumple» para cada lote.</p>
     ${m ? `<div class="notice warn">${icon('info')}<span>Un cambio de criterio aplica a los resultados que se registren o editen después; los dictámenes ya calculados no se modifican.</span></div>` : ''}`,
     onOpen: ({ form }) => {
       const crit = form.querySelector('[data-crit]');
       const montar = (param) => {
         const tipo = form.tipo.value;
-        crit.innerHTML = tipo === 'verificacion' ? '' : criterioCampos('mf', tipo, param, m || {});
+        crit.innerHTML = tipo === 'verificacion' ? '' : criterioCampos('mf', tipo, param, v || {});
         form.querySelector('[data-unid]').classList.toggle('hidden', tipo !== 'numerico');
         form.querySelector('[data-hint-ver]').classList.toggle('hidden', tipo !== 'verificacion');
         criterioVisibilidad(form, tipo);
         form.param?.addEventListener('change', () => criterioVisibilidad(form, form.tipo.value));
       };
-      montar(m?.parametro_referencia || 'ninguno');
+      montar(v?.parametro_referencia || 'ninguno');
       form.tipo.addEventListener('change', () => montar('ninguno'));
+      const alc = () => form.querySelector('[data-recetas]').classList.toggle('hidden', form.alcance.value === 'todas');
+      form.alcance.addEventListener('change', alc); alc();
     },
-    onSubmit: async ({ form }) => {
+    onSubmit: async ({ form, setError }) => {
       if (!checkForm(form)) return false;
       const tipo = form.tipo.value;
       const c = criterioValores(form, tipo);
+      const elegidas = [...form.querySelectorAll('[name="recetas"]:checked')].map((x) => x.value);
+      if (form.alcance.value === 'algunas' && !elegidas.length) { setError('Elige al menos una receta.'); return false; }
       const fila = {
         metodo: form.metodo.value.trim().replace(/\s+/g, ' '), tipo_resultado: tipo, parametro_referencia: c.p, area: form.area.value, orden: Number(form.orden.value) || 0,
         valor_referencia: c.v, valor_referencia_max: c.mx, valor_referencia_texto: c.txt,
         unidades: tipo === 'numerico' ? form.unidades.value || null : null,
         referencia_normativa: form.norma.value.trim() || null, activo: form.activo.value === 'true',
+        recetas_aplica: form.alcance.value === 'todas' ? null : elegidas,
       };
-      const { error } = m ? await sb.from('brom_catalogo_metodos').update(fila).eq('id', m.id) : await sb.from('brom_catalogo_metodos').insert(fila);
+      if (m) {
+        const { error } = await sb.from('brom_catalogo_metodos').update(fila).eq('id', m.id);
+        if (error) throw error;
+        toast('Método actualizado.', 'success'); return true;
+      }
+      const { data, error } = await sb.from('brom_catalogo_metodos').insert(fila).select('id').single();
       if (error) throw error;
-      toast(m ? 'Método actualizado.' : 'Método registrado.', 'success');
+      if (base) {
+        // Copia las especificaciones particulares del original para las recetas elegidas
+        const aplicaEn = fila.recetas_aplica || cat.recetas.map((r) => r.id);
+        const copia = cat.specs.filter((s) => s.metodo_id === base.id && aplicaEn.includes(s.receta_id)).map(({ id, metodo_id, ...s }) => ({ ...s, metodo_id: data.id }));
+        if (copia.length) { const q = await sb.from('brom_especificaciones_receta').insert(copia); if (q.error) throw q.error; }
+        if (form.querySelector('[name="quitar"]')?.checked && fila.recetas_aplica) {
+          const resto = (base.recetas_aplica || cat.recetas.map((r) => r.id)).filter((id) => !fila.recetas_aplica.includes(id));
+          const q = await sb.from('brom_catalogo_metodos').update({ recetas_aplica: resto }).eq('id', base.id);
+          if (q.error) throw q.error;
+        }
+        toast(`Se creó la copia de ${base.metodo}.`, 'success');
+      } else toast('Método registrado.', 'success');
+      return true;
     },
   });
 }
@@ -353,9 +399,9 @@ function areaForm(cat, a = null) {
     body: `${a ? '' : `<div class="field"><label for="af-id">Clave <span class="req">*</span></label><input id="af-id" name="id" required maxlength="30" pattern="[a-z_]+" data-pattern-msg="Solo letras minúsculas sin acentos y guion bajo." placeholder="por_ejemplo_nutricional"></div>`}
       <div class="field"><label for="af-nom">Nombre <span class="req">*</span></label><input id="af-nom" name="nombre" required maxlength="60" value="${esc(a?.nombre || '')}"></div>
       <div class="field"><label for="af-desc">Descripción</label><textarea id="af-desc" name="descripcion" maxlength="300">${esc(a?.descripcion || '')}</textarea></div>
-      <div class="field"><label>¿Quién captura esta área?</label>
-        <div class="check-list">${Object.entries(ROLES).filter(([k]) => k !== 'admin').map(([k, v]) => `<label class="check"><input type="checkbox" name="roles" value="${k}" ${(a?.roles_captura || ['calidad']).includes(k) ? 'checked' : ''}> ${esc(v)}</label>`).join('')}</div>
-        <small class="hint">Los administradores siempre pueden capturar.</small></div>
+      <div class="field"><label>¿Qué puestos capturan esta área?</label>
+        <div class="opt-list">${cat.puestos.filter((p) => p.activo).map((p) => opcionCheck('puestos', p.id, p.nombre, a ? (p.areas_captura || []).includes(a.id) : false)).join('')}</div>
+        <small class="hint">Los administradores siempre pueden capturar. También se configura en Usuarios → Puestos y permisos.</small></div>
       <div class="form-grid">
         <div class="field"><label for="af-color">Color</label><input id="af-color" name="color" type="color" value="${esc(a?.color || '#2563EB')}"></div>
         <div class="field"><label for="af-orden">Orden</label><input id="af-orden" name="orden" type="number" min="0" max="99" value="${esc(a?.orden ?? cat.areas.length + 1)}"></div>
@@ -366,10 +412,19 @@ function areaForm(cat, a = null) {
       const fila = {
         nombre: form.nombre.value.trim(), descripcion: form.descripcion.value.trim() || null, color: form.color.value.toUpperCase(),
         orden: Number(form.orden.value) || 0, activa: form.activa.value === 'true',
-        roles_captura: [...form.querySelectorAll('[name="roles"]:checked')].map((x) => x.value),
       };
       const { error } = a ? await sb.from('brom_areas_analisis').update(fila).eq('id', a.id) : await sb.from('brom_areas_analisis').insert({ ...fila, id: form.elements.id.value.trim() });
       if (error) throw error;
+      // Puestos que capturan el área (se guarda en cada puesto)
+      const areaId = a ? a.id : form.elements.id.value.trim();
+      const marcados = new Set([...form.querySelectorAll('[name="puestos"]:checked')].map((x) => x.value));
+      for (const p of cat.puestos.filter((x) => x.activo)) {
+        const tiene = (p.areas_captura || []).includes(areaId);
+        if (tiene === marcados.has(p.id)) continue;
+        const areas = tiene ? p.areas_captura.filter((x) => x !== areaId) : [...(p.areas_captura || []), areaId];
+        const q = await sb.from('brom_puestos').update({ areas_captura: areas }).eq('id', p.id);
+        if (q.error) throw q.error;
+      }
       toast(a ? 'Área actualizada.' : 'Área registrada.', 'success');
     },
   });

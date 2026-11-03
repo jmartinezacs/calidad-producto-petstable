@@ -10,11 +10,13 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
 const instalada = () => window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || window.navigator.standalone === true;
 
-const PERMISOS = {
-  admin: 'Gestión completa: catálogos, especificaciones, usuarios, captura de todas las áreas, liberación y borrado de lotes',
-  analista: 'Registrar lotes y capturar los análisis bromatológicos; editar los lotes que registró',
-  calidad: 'Capturar los análisis fisicoquímicos, microbiológicos, sensoriales y bromatológicos; liberar lotes y emitir certificados',
-};
+// Permisos: el rol define qué se administra; el puesto, qué se captura, si libera y si firma
+function permisosTxt(p) {
+  if (p.rol === 'admin') return 'Administración completa: recetas, métodos, usuarios, puestos y bitácora; captura de todas las áreas, liberación y borrado de lotes';
+  const areas = (p.areas_captura || []).map((a) => ({ bromatologico: 'bromatológico', fisicoquimico: 'fisicoquímico', microbiologico: 'microbiológico', sensorial: 'sensorial' }[a] || a));
+  return ['Registrar lotes', areas.length ? `capturar análisis ${areas.join(', ')}` : 'consultar análisis', p.puede_liberar ? 'liberar lotes y emitir certificados' : '',
+    p.firma_certificado === 'jefe_calidad' ? 'firmar certificados como Jefe de calidad' : p.firma_certificado === 'inspector' ? 'firmar certificados como Inspector de calidad' : ''].filter(Boolean).join('; ');
+}
 
 export default {
   async render(el) {
@@ -36,7 +38,7 @@ export default {
       </section>
       <div class="profile-tiles mt">
         <div class="p-tile"><span class="ti">${icon('briefcase')}</span><small>Puesto</small><b>${esc(p.puesto || 'Sin puesto registrado')}</b></div>
-        <div class="p-tile"><span class="ti">${icon('shield-check')}</span><small>Permisos</small><b>${esc(PERMISOS[p.rol] || '')}</b></div>
+        <div class="p-tile"><span class="ti">${icon('shield-check')}</span><small>Permisos</small><b>${esc(permisosTxt(p))}</b></div>
         <div class="p-tile"><span class="ti">${icon('clock')}</span><small>Último acceso</small><b>${fmtDateTime(user?.last_sign_in_at)}</b></div>
         <div class="p-tile"><span class="ti">${icon('info')}</span><small>Versión del sistema</small><b>${esc(APP_VERSION)}</b></div>
       </div>

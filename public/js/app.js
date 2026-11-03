@@ -12,14 +12,16 @@ import catalogos from './modules/catalogos.js';
 import usuarios from './modules/usuarios.js';
 import perfil from './modules/perfil.js';
 import ayuda from './modules/ayuda.js';
+import bitacora from './modules/bitacora.js';
 
-const TODOS = ['admin', 'analista', 'calidad'];
+const TODOS = ['admin', 'usuario'];
 const ROUTES = {
   panel:      { mod: dashboard,  icon: 'layout-dashboard', label: 'Panel',               roles: TODOS, mobile: true },
   lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes y liberación',  roles: TODOS, mobile: true },
   resultados: { mod: resultados, icon: 'line-chart',       label: 'Resultados',          roles: TODOS, mobile: true },
   catalogos:  { mod: catalogos,  icon: 'book-open-check',  label: 'Recetas y métodos',   roles: TODOS, mobile: true },
   usuarios:   { mod: usuarios,   icon: 'user-cog',         label: 'Usuarios',            roles: ['admin'] },
+  bitacora:   { mod: bitacora,   icon: 'history',          label: 'Bitácora',            roles: ['admin'] },
   perfil:     { mod: perfil,     icon: 'circle-user',      label: 'Mi perfil',           roles: TODOS, mobile: true },
   ayuda:      { mod: ayuda,      icon: 'circle-help',      label: 'Preguntas frecuentes', roles: TODOS },
 };
@@ -215,8 +217,11 @@ async function route() {
     // El título de la pestaña permanece fijo al navegar
     document.title = 'Liberación de producto';
     closeMenu();
-    const view = $('#view');
-    view.innerHTML = '';
+    // Contenedor nuevo en cada vista: los eventos de la vista anterior no se acumulan
+    // (antes se abrían dos ventanas iguales y al guardar quedaba una abierta)
+    const viejo = $('#view');
+    const view = viejo.cloneNode(false);
+    viejo.replaceWith(view);
     window.scrollTo(0, 0);
     await r.mod.render(view, params);
     refreshIcons();

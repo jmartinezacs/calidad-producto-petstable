@@ -25,3 +25,24 @@ export const pdfTxt = (s) => String(s ?? '').replace(/→/g, '>').replace(/⋮/g
 export const RGB = { navy: [11, 30, 45], navy2: [29, 66, 96], orange: [245, 128, 32], orangeSoft: [255, 240, 226], turq: [15, 163, 166], turqSoft: [225, 246, 246],
   txt: [38, 50, 62], muted: [110, 125, 140], line: [218, 226, 233], bg: [246, 248, 250], ok: [21, 138, 87], okSoft: [221, 246, 234], bad: [196, 47, 55], badSoft: [255, 227, 228] };
 export const hexRGB = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0xF58020; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+
+// Logotipo naranja de Pet's Table (el mismo del encabezado del sitio): se toma del
+// estilo .brand-logo y se convierte a PNG para jsPDF. Devuelve null si no está disponible.
+let logoN = null;
+export function logoNaranja() {
+  logoN ||= new Promise((ok) => {
+    const el = document.querySelector('.brand-logo');
+    const m = el && /url\(["']?(.*?)["']?\)/.exec(getComputedStyle(el).backgroundImage);
+    if (!m) { ok(null); return; }
+    const img = new Image();
+    img.onload = () => {
+      const w = 600, h = Math.round((img.naturalHeight / img.naturalWidth) * w);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      try { ok({ data: cv.toDataURL('image/png'), ratio: h / w }); } catch { ok(null); }
+    };
+    img.onerror = () => ok(null);
+    img.src = m[1];
+  });
+  return logoN;
+}

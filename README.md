@@ -2,6 +2,19 @@
 
 Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
+## Versión 8.0
+
+- **Puestos y permisos:** lo que cada persona captura, si libera lotes y si firma el certificado depende de su puesto. Roles: solo Usuario y Administrador.
+- **Usuarios** con el diseño de Servicio médico: foto, correo, puesto y área, rol, último acceso, estado; puesto y área se eligen de la lista o se escriben nuevos.
+- **Bitácora de cambios** (administradores): quién registró, capturó, liberó, firmó o modificó qué, con su foto y el detalle de antes y después.
+- **Certificado de calidad** ejecutivo: encabezado verde azulado con el logotipo naranja, tablas centradas y firmas del Jefe de calidad y de un Inspector de calidad (se eligen una vez y quedan guardadas).
+- **Métodos** que aplican a todas las recetas o solo a algunas, y botón para duplicar un método.
+- **Recetas** para perro o gato (con ícono), vista más sobria; en las gráficas solo el nombre de la receta.
+- Panel: KPIs con ícono y barra del mismo color, pastel sin bordes blancos en modo oscuro, meses «Nov 2026». Resultados: recuadros de estadística centrados y tabla de detalle en una sola línea con la foto de quien registró. Lotes con la foto de quien registró y capturó.
+- Corrección: las ventanas de edición ya se cierran al guardar (se abrían duplicadas).
+
+Base de datos: migración `supabase/migrations/20261104_brom_v8_puestos_bitacora.sql`.
+
 ## Versión 7.0
 
 - **Nuevo nombre:** Liberación de producto.
