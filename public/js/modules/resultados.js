@@ -20,7 +20,7 @@ export default {
       <section class="page-intro">
         <div><span class="eyebrow">Calidad de producto</span><h1>Resultados</h1>
           <p>Tendencia histórica por receta, área y método, con límites de especificación y media del periodo filtrado.</p></div>
-        <div class="page-actions"><button class="btn s-green" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
+        <div class="page-actions"><button class="btn c-sheets" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
       </section>
       <div class="card filtros-card">
         <div class="filtros">

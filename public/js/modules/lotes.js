@@ -26,12 +26,12 @@ export default {
         <div><span class="eyebrow">Calidad de producto</span><h1>Lotes y liberación</h1>
           <p>Cada lote se libera cuando sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales cumplen la especificación.</p></div>
         <div class="page-actions">
-          <button class="btn s-green" data-l="csv">${icon('file-spreadsheet')} Exportar</button>
+          <button class="btn c-sheets" data-l="csv">${icon('file-spreadsheet')} Exportar</button>
           <button class="btn primary" data-l="nuevo">${icon('plus')} Nuevo lote</button>
         </div>
       </section>
       <div class="toolbar">
-        <div class="search">${icon('search')}<input id="l-q" type="search" placeholder="Buscar por número de lote o folio" aria-label="Buscar lote" autocomplete="off"></div>
+        <div class="search lote-search">${icon('search')}<input id="l-q" type="search" placeholder="Buscar por número de lote o folio" aria-label="Buscar lote" autocomplete="off"></div>
         <label class="sr-only" for="l-receta">Receta</label><select id="l-receta"><option value="">Todas las recetas</option></select>
         <label class="sr-only" for="l-estado">Estado</label>
         <select id="l-estado"><option value="">Todos los estados</option>${Object.entries(ESTADOS_LOTE).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select>
@@ -97,8 +97,12 @@ function pintar() {
   const lista = filtrados();
   const body = root.querySelector('#l-body');
   const n = (e) => lotes.filter((l) => l.estado === e).length;
-  root.querySelector('#l-resumen').innerHTML = lotes.length ? `<span class="chip-stat">${icon('layers')} <b>${fmtNum(lista.length)}</b> de ${fmtNum(lotes.length)} lotes</span>`
-    + Object.entries(ESTADOS_LOTE).map(([k, v]) => `<button class="chip-stat est-${k}" data-filtro="${k}">${icon(v.ico)} <b>${fmtNum(n(k))}</b> ${esc(v.label.toLowerCase())}</button>`).join('') : '';
+  // Resumen en recuadros: lotes mostrados y uno por estado (al tocarlo filtra)
+  const estSel = root.querySelector('#l-estado').value;
+  root.querySelector('#l-resumen').innerHTML = lotes.length ? `<button class="rs-tile ${estSel ? '' : 'on'}" data-filtro="" style="--ec:#F58020">
+      <span class="rs-ico">${icon('layers')}</span><span class="rs-txt"><b>${fmtNum(lista.length)}<small> de ${fmtNum(lotes.length)}</small></b><span>Lotes mostrados</span></span></button>`
+    + Object.entries(ESTADOS_LOTE).map(([k, v]) => `<button class="rs-tile ${estSel === k ? 'on' : ''}" data-filtro="${k}" style="--ec:${esc(v.color)}">
+      <span class="rs-ico">${icon(v.ico)}</span><span class="rs-txt"><b>${fmtNum(n(k))}</b><span>${esc(v.label)}</span></span></button>`).join('') : '';
   if (!lotes.length) {
     body.innerHTML = emptyState({ ico: 'flask-conical', title: 'Aún no hay lotes registrados', text: 'Registra el primer lote con sus análisis.', action: `<button class="btn primary" data-l="nuevo">${icon('plus')} Nuevo lote</button>` });
     refreshIcons(); return;
@@ -377,7 +381,7 @@ const fmtDateLarga = (iso) => new Intl.DateTimeFormat('es-MX', { timeZone: 'UTC'
 
 function entrada(m, val, on) {
   const aria = `aria-label="Resultado de ${esc(m.metodo)}"`;
-  if (m.tipo_resultado === 'numerico') return `<input type="number" step="any" data-val value="${esc(val)}" placeholder="Resultado${m.unidades ? ` en ${esc(m.unidades)}` : ''}" ${aria} ${on ? '' : 'disabled'}>`;
+  if (m.tipo_resultado === 'numerico') return `<span class="mc-num"><input type="number" step="any" data-val value="${esc(val)}" placeholder="Resultado" ${aria} ${on ? '' : 'disabled'}>${m.unidades ? `<span class="mc-unit">${esc(m.unidades)}</span>` : ''}</span>`;
   if (m.tipo_resultado === 'verificacion') {
     return `<input type="hidden" data-val value="${esc(val)}"><div class="seg-check" role="group" ${aria}>
       <button type="button" class="${val === 'Cumple' ? 'on ok' : ''}" data-ver="Cumple">${icon('check')} Cumple</button>
@@ -403,7 +407,7 @@ export async function openLoteForm(lote = null) {
   const body = `
     <div class="lote-form">
       <section class="lf-block">
-        <div class="lf-title">${icon('calendar-days')} Fecha y lote</div>
+        <div class="lf-title"><span class="lf-step">1</span>${icon('calendar-days')} Fecha y lote</div>
         <div class="field"><label>Fecha del lote <span class="req">*</span></label>
           <input type="hidden" name="fecha" value="${esc(fecha0)}">
           <button type="button" class="date-btn" data-date-btn aria-haspopup="dialog" ${cabecera ? '' : 'disabled'}>${icon('calendar')}<span>${fecha0 ? esc(fmtDateLarga(fecha0)) : 'Selecciona una fecha'}</span></button>
@@ -413,14 +417,16 @@ export async function openLoteForm(lote = null) {
           <small class="hint">Se genera con la fecha: 27/09/2026 se convierte en 270926.</small></div>
       </section>
       <section class="lf-block">
-        <div class="lf-title">${icon('book-open')} Receta</div>
+        <div class="lf-title"><span class="lf-step">2</span>${icon('book-open')} Receta</div>
         <div class="field"><label for="lf-receta">Receta <span class="req">*</span></label>
           <select id="lf-receta" name="receta" data-buscar required ${cabecera ? '' : 'disabled'}><option value="">Selecciona una receta</option>
           ${recetas.map((r) => `<option value="${esc(r.id)}" ${r.id === lote?.receta_id ? 'selected' : ''}>${esc(recetaTxt(r))}${r.activa ? '' : ' (inactiva)'}</option>`).join('')}</select></div>
+        <div class="lf-receta-info" data-receta-info></div>
         ${cabecera ? '' : `<p class="hint">${icon('lock')} Solo quien registró el lote o un administrador cambian la fecha y la receta.</p>`}
       </section>
-      <section class="lf-block full">
-        <div class="lf-title">${icon('list-checks')} Análisis por área <span class="pill info">Dictamen automático</span></div>
+      <section class="lf-block full lf-analisis">
+        <div class="lf-title"><span class="lf-step">3</span>${icon('list-checks')} Análisis por área <span class="pill info">${icon('sparkles')} Dictamen automático</span></div>
+        <div class="lf-progreso hidden" data-progreso><div class="lfp-txt"><b data-prog-n>0</b> de <b data-prog-t>0</b> análisis con resultado</div><div class="lfp-bar"><span data-prog-bar></span></div></div>
         <p class="hint" style="margin-top:0">Marca los métodos realizados y captura su resultado. Capturas como <b>${esc(rol)}</b>; las áreas que no te corresponden se muestran solo para consulta.</p>
         <div data-metodos>${emptyState({ ico: 'book-open', title: 'Selecciona una receta', text: 'Se mostrarán los análisis que requiere con su especificación.' })}</div>
       </section>
@@ -451,9 +457,41 @@ export async function openLoteForm(lote = null) {
       form.addEventListener('mousedown', (e) => { if (!pop.classList.contains('hidden') && !e.target.closest('[data-cal-pop], [data-date-btn]')) pop.classList.add('hidden'); });
 
       const box = form.querySelector('[data-metodos]');
+      // Avance de la captura: análisis marcados con resultado / análisis mostrados
+      const progreso = () => {
+        const cards = [...box.querySelectorAll('.metodo-card')];
+        const n = cards.filter((k) => k.querySelector('[data-chk]').checked && String(k.querySelector('[data-val]').value).trim()).length;
+        const p = form.querySelector('[data-progreso]');
+        p.classList.toggle('hidden', !cards.length);
+        p.querySelector('[data-prog-n]').textContent = n;
+        p.querySelector('[data-prog-t]').textContent = cards.length;
+        p.querySelector('[data-prog-bar]').style.width = `${cards.length ? Math.round((n / cards.length) * 100) : 0}%`;
+        p.classList.toggle('completo', !!cards.length && n === cards.length);
+        box.querySelectorAll('.area-sec').forEach((sec) => {
+          const ks = [...sec.querySelectorAll('.metodo-card')];
+          const h = ks.filter((k) => k.querySelector('[data-chk]').checked && String(k.querySelector('[data-val]').value).trim()).length;
+          const el = sec.querySelector('[data-area-n]');
+          if (el) { el.textContent = `${h} de ${ks.length}`; el.classList.toggle('ok', h === ks.length); }
+        });
+      };
+      // Resumen de la receta elegida: color, código, especie y análisis requeridos por área
+      const infoReceta = () => {
+        const r = c.recetas.find((x) => x.id === form.elements.receta.value);
+        const el = form.querySelector('[data-receta-info]');
+        if (!r) { el.innerHTML = `<div class="lri-vacio">${icon('chef-hat')} Elige la receta para ver los análisis que requiere.</div>`; refreshIcons(); return; }
+        const req = c.requeridos(r.id);
+        const porArea = c.areas.map((a) => [a, req.filter((m) => m.area === a.id).length]).filter(([, n]) => n);
+        el.innerHTML = `<div class="lri" style="--rc:${esc(r.color || '#64748B')}">
+          <span class="lri-ico">${icon('chef-hat')}</span>
+          <div class="lri-main"><b>${esc(r.nombre_receta)}</b><span><span class="codigo">${esc(r.codigo)}</span>${especieHTML(r.especie)}</span></div>
+          <div class="lri-num"><b>${req.length}</b><small>análisis</small></div></div>
+          <div class="lri-areas">${porArea.map(([a, n]) => `<span style="--ac:${esc(a.color)}"><i></i>${esc(a.nombre)} <b>${n}</b></span>`).join('')}</div>`;
+        refreshIcons();
+      };
       const pintarMetodos = () => {
+        infoReceta();
         const recetaId = form.elements.receta.value;
-        if (!recetaId) return;
+        if (!recetaId) { progreso(); return; }
         const capt = new Map([...box.querySelectorAll('.metodo-card')].map((k) => [k.dataset.id, { on: k.querySelector('[data-chk]').checked, v: k.querySelector('[data-val]').value }]));
         const req = new Set(c.requeridos(recetaId).map((m) => m.id));
         box.innerHTML = c.areas.filter((a) => a.activa !== false || c.metodos.some((m) => m.area === a.id && previos.has(m.id))).map((a) => {
@@ -461,7 +499,7 @@ export async function openLoteForm(lote = null) {
           if (!metodos.length) return '';
           const puede = puedeCapturar(a);
           return `<section class="area-sec ${puede ? '' : 'solo-lectura'}" style="--ac:${esc(a.color)}" data-area="${esc(a.id)}">
-            <header class="area-head"><span class="area-dot"></span><b>${esc(a.nombre)}</b><small>${metodos.length} métodos</small>
+            <header class="area-head"><span class="area-ico">${icon(puede ? 'flask-conical' : 'lock')}</span><b>${esc(a.nombre)}</b><span class="area-n" data-area-n>0 de ${metodos.length}</span>
               ${puede ? (metodos.some((m) => m.tipo_resultado === 'verificacion') ? `<button type="button" class="link-btn" data-todo-cumple>${icon('check-check')} Marcar todo como cumple</button>` : '')
                 : `<span class="pill gray">${icon('lock')} Lo captura: ${esc(c.puestosArea(a.id).map((p) => p.nombre).join(' o ') || 'un administrador')}</span>`}</header>
             <div class="metodo-grid">${metodos.map((m0) => {
@@ -479,6 +517,7 @@ export async function openLoteForm(lote = null) {
             }).join('')}</div></section>`;
         }).join('') || emptyState({ ico: 'book-x', title: 'Sin análisis configurados', text: 'Registra métodos en Recetas y métodos.' });
         box.querySelectorAll('.metodo-card').forEach(previa);
+        progreso();
         refreshIcons();
       };
       const previa = (card) => {
@@ -518,8 +557,10 @@ export async function openLoteForm(lote = null) {
           if (e.target.checked && card.dataset.tipo !== 'verificacion') card.querySelector('[data-val]').focus();
         }
         previa(card);
+        progreso();
       });
-      box.addEventListener('input', (e) => { const card = e.target.closest('.metodo-card'); if (card && e.target.matches('[data-val]')) previa(card); });
+      box.addEventListener('input', (e) => { const card = e.target.closest('.metodo-card'); if (card && e.target.matches('[data-val]')) { previa(card); progreso(); } });
+      box.addEventListener('click', (e) => { if (e.target.closest('[data-ver], [data-todo-cumple]')) progreso(); });
       form.elements.receta.addEventListener('change', pintarMetodos);
       pintarMetodos();
     },

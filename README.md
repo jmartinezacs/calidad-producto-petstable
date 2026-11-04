@@ -2,6 +2,14 @@
 
 Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
+## Versión 9.1
+
+- **Campana dorada** como botón flotante sobre «Nuevo lote» (ya no en el encabezado), con el panel de avisos a su lado.
+- **Nuevo lote** rediseñado: pasos numerados, tarjeta de la receta elegida con sus análisis por área, barra de avance de la captura, áreas con encabezado de color y campos con su unidad.
+- **Lotes:** resumen en recuadros centrados por estado (filtran al tocarlos), búsqueda más ancha, áreas del lote en cuadrícula simétrica de dos columnas, perro (círculo azul) y gato (gato negro, círculo rosa) con colores distintos, botón Exportar verde de Google Sheets.
+- **Métodos:** tipos «Cuantitativo», «Verificación» y «Cualitativo»; «A todas las recetas»; selector de recetas en tarjetas, sin la especie.
+- **Áreas de análisis:** puestos en etiquetas de color fuerte con letra blanca.
+
 ## Versión 9.0
 
 - **Notificaciones y correos:** campana en el encabezado, notificaciones push en celular y computadora, y correos (misma cuenta de Gmail que Servicio médico). Avisan cuando te toca capturar un área de un lote nuevo, cuando alguien más completa un área que también capturas, cuando un lote queda listo para liberar o no conforme y cuando se libera. En Mi perfil: activar en el dispositivo, recibir o no correos, y botones de notificación de prueba, vista previa del correo y correo de prueba.

@@ -80,7 +80,7 @@ export function dictamenPill(v) {
   if (v === false) return `<span class="pill bad">${icon('x')} No cumple</span>`;
   return `<span class="pill warn">${icon('hourglass')} Pendiente</span>`;
 }
-export const TIPOS_RESULTADO = { numerico: 'Cuantitativo', positivo_negativo: 'Cualitativo (positivo o negativo)', verificacion: 'Verificación (cumple o no cumple)', texto: 'Texto' };
+export const TIPOS_RESULTADO = { numerico: 'Cuantitativo', positivo_negativo: 'Cualitativo', verificacion: 'Verificación', texto: 'Texto' };
 export const tipoLabel = (t) => TIPOS_RESULTADO[t] || 'Cuantitativo';
 export const PARAMETROS = { ninguno: 'Sin parámetro', minimo: 'Mínimo', maximo: 'Máximo', exacto: 'Valor exacto', rango: 'Rango' };
 // Especificación por receta (brom_especificaciones_receta.tipo_limite) → parámetro del método

@@ -263,6 +263,7 @@ function pintarAvisos() {
   c.textContent = n > 99 ? '99+' : String(n);
   c.classList.toggle('hidden', !n);
   $('.notif-btn').setAttribute('aria-label', n ? `Notificaciones: ${n} sin leer` : 'Notificaciones');
+  $('.notif-btn').classList.toggle('has', !!n);
   const panel = $('#notif-panel');
   if (panel.classList.contains('hidden')) return;
   const hace = (iso) => {

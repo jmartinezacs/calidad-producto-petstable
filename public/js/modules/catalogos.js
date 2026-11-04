@@ -255,8 +255,8 @@ function metodoForm(cat, m = null, base = null) {
       <div class="field"><label for="mf-act">Estado</label><select id="mf-act" name="activo"><option value="true">Activo</option><option value="false" ${v && !v.activo ? 'selected' : ''}>Inactivo</option></select></div>
       <div class="field full"><label for="mf-norma">Referencia normativa</label><input id="mf-norma" name="norma" maxlength="160" value="${esc(v?.referencia_normativa || '')}" placeholder="Por ejemplo: NOM-116-SSA1-1994 o criterio interno"></div>
       <div class="field full"><label for="mf-alc">¿A qué recetas aplica? <span class="req">*</span></label>
-        <select id="mf-alc" name="alcance"><option value="todas" ${todas && !base ? 'selected' : ''}>A todas las recetas (también a las nuevas)</option><option value="algunas" ${!todas || base ? 'selected' : ''}>Solo a las recetas que elija</option></select>
-        <div class="opt-list recetas-opt" data-recetas>${recetas.map((r) => opcionCheck('recetas', r.id, `${r.nombre_receta} · ${r.especie}`, base ? false : todas || v.recetas_aplica.includes(r.id), `<span class="receta-dot" style="--rc:${esc(r.color)}"></span>`)).join('')}</div>
+        <select id="mf-alc" name="alcance"><option value="todas" ${todas && !base ? 'selected' : ''}>A todas las recetas</option><option value="algunas" ${!todas || base ? 'selected' : ''}>Solo a las recetas que elija</option></select>
+        <div class="receta-pick-grid" data-recetas>${recetas.map((r) => recetaPick(r, base ? false : todas || v.recetas_aplica.includes(r.id))).join('')}</div>
         ${base ? `<div class="opt-list" style="margin-top:8px">${opcionCheck('quitar', '1', `Quitar las recetas elegidas del método original «${base.metodo}» (para que no se exijan los dos)`, true)}</div>` : ''}</div>
     </div>
     <p class="hint" data-hint-ver>${icon('info')} En un método de verificación se marca «Cumple» o «No cumple» para cada lote.</p>
@@ -308,6 +308,13 @@ function metodoForm(cat, m = null, base = null) {
     },
   });
 }
+
+// Tarjeta seleccionable de una receta (selector de recetas de un método)
+const recetaPick = (r, on) => `<label class="receta-pick" style="--rc:${esc(r.color || '#64748B')}">
+  <input type="checkbox" name="recetas" value="${esc(r.id)}" ${on ? 'checked' : ''}>
+  <span class="rp-color" aria-hidden="true">${icon('chef-hat')}</span>
+  <span class="rp-txt"><b>${esc(r.nombre_receta)}</b><small>${esc(r.codigo)}</small></span>
+  <span class="rp-check" aria-hidden="true">${icon('check')}</span></label>`;
 
 function areaForm(cat, a = null) {
   return openModal({
