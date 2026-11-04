@@ -136,6 +136,9 @@ export const especieImg = (e, cls = "") => (e === "Perro" || e === "Gato" ? `<sp
 // Ícono de una opción de selector: dog/cat usan la imagen 3D
 const icoOpcion = (ico) => (ico === "dog" ? especieImg("Perro", "sm") : ico === "cat" ? especieImg("Gato", "sm") : icon(ico));
 export const especieHTML = (e, cls = "") => (e ? `<span class="especie">${especieImg(e, cls)}${esc(e)}</span>` : "—");
+// Proteína base de la receta, con su ícono
+export const PROTEINAS = { res: { label: 'Res', ico: 'beef' }, pollo: { label: 'Pollo', ico: 'drumstick' }, cerdo: { label: 'Cerdo', ico: 'ham' }, pescado: { label: 'Pescado', ico: 'fish' }, cordero: { label: 'Cordero', ico: 'beef' }, otra: { label: 'Otra', ico: 'utensils' } };
+export const proteinaHTML = (p) => (PROTEINAS[p] ? `<span class="proteina p-${p}">${icon(PROTEINAS[p].ico)}${esc(PROTEINAS[p].label)}</span>` : '');
 // Mes abreviado con año para gráficas y ejes: «Nov 2026» (abreviatura estándar de tres letras)
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 export const mesCorto = (ym) => `${MESES_CORTOS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
@@ -146,7 +149,7 @@ export function getCatalogos({ force = false } = {}) {
   if (!catP || force) {
     catP = Promise.all([
       sb.from('brom_areas_analisis').select('id, nombre, descripcion, color, orden, activa').order('orden'),
-      sb.from('brom_recetas').select('id, codigo, nombre_receta, activa, especie, color').order('codigo'),
+      sb.from('brom_recetas').select('id, codigo, nombre_receta, activa, especie, color, proteina').order('codigo'),
       sb.from('brom_catalogo_metodos').select('id, metodo, referencia_normativa, unidades, activo, tipo_resultado, parametro_referencia, valor_referencia, valor_referencia_max, valor_referencia_texto, area, orden, recetas_aplica').order('orden').order('metodo'),
       sb.from('brom_especificaciones_receta').select('id, receta_id, metodo_id, tipo_limite, valor_referencia, valor_referencia_max, valor_referencia_texto, aplica'),
       sb.from('brom_puestos').select('id, nombre, areas_captura, puede_liberar, firma_certificado, activo').order('nombre'),

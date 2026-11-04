@@ -54,7 +54,7 @@ async function cargar() {
   root.querySelector('#u-body').innerHTML = '<div class="skeleton" style="height:160px"></div>';
   try {
     const [u, ac, c] = await Promise.all([
-      sb.from('brom_usuarios').select('id, correo, nombre_completo, puesto, area, rol, activo, foto_url').order('nombre_completo'),
+      sb.from('brom_usuarios').select('id, correo, nombre_completo, puesto, area, rol, activo, foto_url, correos_admin').order('nombre_completo'),
       sb.rpc('brom_estado_cuentas'),
       getCatalogos({ force: true }),
     ]);
@@ -114,13 +114,14 @@ function pintar() {
       const yo = u.id === state.session?.user?.id;
       return `<tr class="${u.activo ? '' : 'inactivo'}">
       <td class="col-user" data-label="Usuario"><div class="td-in"><div class="user-cell">${avatarHTML(u.nombre_completo, fotoDe(u))}
-        <span class="user-txt"><b>${esc(u.nombre_completo)}${yo ? ' <small class="tu">(tú)</small>' : ''}</b><small>${esc(u.correo)}</small></span></div></div></td>
+        <span class="user-txt"><b>${esc(u.nombre_completo)}${yo ? ' <small class="tu">(tú)</small>' : ''}</b><small>${esc(u.correo)}${u.correos_admin === false ? ` <span class="sin-correo" title="No recibe correos de avisos">${icon('mail-x')} sin correos</span>` : ''}</small></span></div></div></td>
       <td data-label="Puesto"><div class="td-in"><span class="puesto-txt"><b>${esc(u.puesto || '—')}</b><small>${esc(u.area || 'Sin área')}</small></span></div></td>
       <td data-label="Rol"><div class="td-in">${u.rol === 'admin' ? '<span class="pill orange">Administrador</span>' : '<span class="pill info">Usuario</span>'}</div></td>
       <td data-label="Último acceso"><div class="td-in">${ultimoAcceso(u)}</div></td>
       <td data-label="Estado"><div class="td-in">${u.activo ? '<span class="pill ok">Activo</span>' : '<span class="pill gray">Inactivo</span>'}</div></td>
       <td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">
         <button class="icon-btn" data-edit="${esc(u.id)}" aria-label="Editar" title="Editar">${icon('pencil')}</button>
+        <button class="icon-btn ${u.correos_admin === false ? 'warn' : 'ok'}" data-correos="${esc(u.id)}" aria-label="${u.correos_admin === false ? 'Activar sus correos de avisos' : 'Desactivar sus correos de avisos'}" title="${u.correos_admin === false ? 'No recibe correos: toca para activarlos' : 'Recibe correos: toca para desactivarlos'}">${icon(u.correos_admin === false ? 'mail-x' : 'mail-check')}</button>
         ${yo ? '' : `<button class="icon-btn ${u.activo ? 'warn' : 'ok'}" data-toggle="${esc(u.id)}" aria-label="${u.activo ? 'Desactivar' : 'Activar'}" title="${u.activo ? 'Desactivar' : 'Activar'}">${icon(u.activo ? 'user-x' : 'user-check')}</button>`}
       </div></div></td></tr>`;
     }).join('')}</tbody></table></div>
@@ -145,6 +146,21 @@ async function onClick(e) {
     const { error } = await sb.from('brom_puestos').delete().eq('id', p.id);
     if (error) throw error;
     toast('Puesto eliminado.', 'success'); invalidarCatalogos(); cargar(); return;
+  }
+  // Correos de avisos: control del administrador, aparte de la preferencia de cada persona
+  const mc = e.target.closest('[data-correos]');
+  if (mc) {
+    const u = usuarios.find((x) => x.id === mc.dataset.correos);
+    if (!u) return;
+    const activar = u.correos_admin === false;
+    const ok = await confirmDialog({
+      title: activar ? 'Activar correos de avisos' : 'Desactivar correos de avisos', confirmText: activar ? 'Activar' : 'Desactivar', danger: !activar,
+      message: activar ? `${u.nombre_completo} volverá a recibir por correo los avisos de lotes (si también los tiene activados en su perfil).` : `${u.nombre_completo} dejará de recibir correos de avisos, aunque los tenga activados en su perfil. Los avisos le seguirán llegando a la campana y como notificación.`,
+    });
+    if (!ok) return;
+    const { error } = await sb.from('brom_usuarios').update({ correos_admin: activar }).eq('id', u.id);
+    if (error) throw error;
+    toast(activar ? 'Correos activados.' : 'Correos desactivados para esta persona.', 'success'); cargar(); return;
   }
   const tg = e.target.closest('[data-toggle]');
   if (tg) {
@@ -221,6 +237,8 @@ function usuarioForm(u) {
         ${rolSelect(u.rol, yo)}
         <div class="field"><label for="uf-act">Estado</label><select id="uf-act" name="activo" ${yo ? 'disabled' : ''}><option value="true">Activo</option><option value="false" ${u.activo ? '' : 'selected'}>Inactivo</option></select></div>
       </div>
+      <label class="switch-row" style="margin-top:12px"><span><b>${icon('mail')} Enviar correos de avisos</b><small class="hint" style="display:block;margin:2px 0 0">Si lo desactivas, no recibe correos aunque los tenga activados en su perfil. La campana y las notificaciones siguen llegando.</small></span>
+        <input type="checkbox" name="correos" ${u.correos_admin === false ? '' : 'checked'}></label>
       ${yo ? `<p class="hint">${icon('lock')} No puedes cambiar tu propio rol ni desactivarte.</p>` : ''}`,
     onOpen: ({ form, wrap }) => {
       montarPermisos(form);
@@ -238,7 +256,7 @@ function usuarioForm(u) {
     },
     onSubmit: async ({ form }) => {
       if (!checkForm(form)) return false;
-      const fila = { nombre_completo: limpio(form.nombre.value), puesto: await asegurarPuesto(form.puesto.value), area: areaNormal(form.area.value) || null };
+      const fila = { nombre_completo: limpio(form.nombre.value), puesto: await asegurarPuesto(form.puesto.value), area: areaNormal(form.area.value) || null, correos_admin: form.querySelector('[name="correos"]').checked };
       if (!yo) {
         fila.rol = form.rol.value; fila.activo = form.activo.value === 'true';
         const quedan = usuarios.filter((x) => x.id !== u.id && x.rol === 'admin' && x.activo).length;

@@ -9,7 +9,7 @@ import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, openModal, confirmDialog, emptyState, errorState,
   fmtDate, fmtDateTime, fmtNum, todayISO, fechaLote, loteDesdeFecha, mesLargo, dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio,
   getCatalogos, invalidarCatalogos, fetchAll, toCSV, descargar, debounce, sanitizeSearch, ganchos, estadoLote, estadoPill, ESTADOS_LOTE,
-  puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco, especieHTML, avisar,
+  puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco, especieHTML, avisar, PROTEINAS, proteinaHTML,
 } from '../core.js';
 import { generarCertificado } from './certificado.js';
 
@@ -482,8 +482,8 @@ export async function openLoteForm(lote = null) {
         const req = c.requeridos(r.id);
         const porArea = c.areas.map((a) => [a, req.filter((m) => m.area === a.id).length]).filter(([, n]) => n);
         el.innerHTML = `<div class="lri" style="--rc:${esc(r.color || '#64748B')}">
-          <span class="lri-ico">${icon('chef-hat')}</span>
-          <div class="lri-main"><b>${esc(r.nombre_receta)}</b><span><span class="codigo">${esc(r.codigo)}</span>${especieHTML(r.especie)}</span></div>
+          <span class="lri-ico">${icon(PROTEINAS[r.proteina]?.ico || 'chef-hat')}</span>
+          <div class="lri-main"><b>${esc(r.nombre_receta)}</b><span><span class="codigo">${esc(r.codigo)}</span>${especieHTML(r.especie, 'sm')}${proteinaHTML(r.proteina)}</span></div>
           <div class="lri-num"><b>${req.length}</b><small>análisis</small></div></div>
           <div class="lri-areas">${porArea.map(([a, n]) => `<span style="--ac:${esc(a.color)}"><i></i>${esc(a.nombre)} <b>${n}</b></span>`).join('')}</div>`;
         refreshIcons();

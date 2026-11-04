@@ -30,7 +30,7 @@ const b64u = (buf: ArrayBuffer) =>
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const SITE = () => (Deno.env.get('BROM_SITE_URL') || 'https://calidad-producto-petstable.vercel.app').replace(/\/$/, '');
 
-type Dest = { id: string; correo: string; nombre_completo: string; recibe_correos?: boolean };
+type Dest = { id: string; correo: string; nombre_completo: string; recibe_correos?: boolean; correos_admin?: boolean };
 type Aviso = { id: string; usuario_id: string; tipo: string; titulo: string; mensaje: string; muestra_id: string | null; area: string | null };
 
 // deno-lint-ignore no-explicit-any
@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
     await admin.from('brom_notificaciones').update({ enviada: true }).in('id', ids);
 
     const usuarios = [...new Set(avisos.map((a: Aviso) => a.usuario_id))];
-    const { data: dest } = await admin.from('brom_usuarios').select('id, correo, nombre_completo, recibe_correos, activo').in('id', usuarios);
+    const { data: dest } = await admin.from('brom_usuarios').select('id, correo, nombre_completo, recibe_correos, correos_admin, activo').in('id', usuarios);
     const porId = new Map((dest || []).filter((d: Dest & { activo: boolean }) => d.activo).map((d: Dest) => [d.id, d]));
     const muestras = [...new Set(avisos.map((a: Aviso) => a.muestra_id).filter(Boolean))];
     const { data: lotes } = muestras.length
@@ -267,7 +267,8 @@ Deno.serve(async (req) => {
       const l: any = a.muestra_id ? lotePor.get(a.muestra_id) : null;
       const ruta = l ? `#/lotes?q=${encodeURIComponent(l.lote)}` : '#/lotes';
       push += await enviarPush(admin, d.id, { title: a.titulo, body: a.mensaje, url: `/${ruta}`, tag: `${a.muestra_id || 'brom'}-${a.tipo}-${a.area || ''}`, foto });
-      if (d.recibe_correos !== false) {
+      // Correo: solo si la persona lo quiere y el administrador no lo desactivó
+      if (d.recibe_correos !== false && d.correos_admin !== false) {
         const det: Detalle[] = l ? [['Lote', l.lote], ['Receta', [l.brom_recetas?.nombre_receta, l.brom_recetas?.especie].filter(Boolean).join(' · ') || '—'],
           ...(l.folio_certificado && a.tipo === 'liberado' ? [['Folio del certificado', l.folio_certificado] as Detalle] : []), ['Aviso de', nombreYo]] : [];
         if (await enviarCorreo(d, a.titulo, a.mensaje, ruta, a.tipo, det)) correo++;

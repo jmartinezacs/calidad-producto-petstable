@@ -75,10 +75,11 @@ async function pintarPush(box) {
 async function pintarCorreo(box) {
   if (!box) return;
   const p = state.profile;
-  const { data } = await sb.from('brom_usuarios').select('recibe_correos').eq('id', p.id).maybeSingle();
+  const { data } = await sb.from('brom_usuarios').select('recibe_correos, correos_admin').eq('id', p.id).maybeSingle();
   const recibe = data?.recibe_correos !== false;
-  box.innerHTML = `<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
-      <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data ? '' : 'disabled'}></label>
+  const bloqueado = data?.correos_admin === false;
+  box.innerHTML = `${bloqueado ? `<div class="notice warn" style="margin-bottom:10px">${icon('mail-x')}<span>Un administrador desactivó los correos de avisos para tu cuenta. Los avisos te siguen llegando a la campana y como notificación.</span></div>` : ''}<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
+      <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data && !bloqueado ? '' : 'disabled'}></label>
     <div class="page-actions notif-acts" style="margin-top:12px">
       <button class="btn s-blue" data-mail="vista">${icon('eye')} Vista previa del correo</button>
       <button class="btn c-teal" data-mail="enviar">${icon('send')} Enviarme un correo de prueba</button></div>`;

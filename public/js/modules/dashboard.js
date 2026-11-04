@@ -149,7 +149,7 @@ function contenido(cat, lotes, rs) {
     </div>
     <div class="grid grid-2 mt">
       ${chartCard('ch-metodo', 'Fuera de especificación por método', 'Número de análisis que no cumplen', 'sm', `Total: <b>${fmtNum(no)}</b>`, Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24), 'triangle-alert', '#DC2626')}
-      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} lotes en el periodo`, 'sm', '', 0, 'pie-chart', '#0891B2')}
+      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} ${lotes.length === 1 ? 'lote' : 'lotes'} en el periodo`, 'sm', '', Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24) + 34, 'pie-chart', '#0891B2')}
     </div>
     <div class="grid grid-2 mt">
       <div class="card">${cardHead('Listos para liberar', 'Todos sus análisis cumplen', `<button class="btn s-green" data-dash="#/lotes?estado=listo">${icon('badge-check')} Ver lotes</button>`)}

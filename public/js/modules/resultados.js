@@ -28,9 +28,9 @@ export default {
           <div class="field"><label for="r-receta">Receta</label><select id="r-receta"><option value="">Todas las recetas</option></select></div>
           <div class="field"><label for="r-area">Área de análisis</label><select id="r-area"><option value="">Todas las áreas</option></select></div>
           <div class="field"><label for="r-metodo">Método</label><select id="r-metodo"><option value="">Todos los métodos</option></select></div>
-          <button class="btn ghost" data-r="limpiar">${icon('filter-x')} Limpiar filtros</button>
         </div>
-        <div class="filtros-resumen" id="r-resumen"></div>
+        <div class="filtros-pie"><span></span><div class="filtros-resumen" id="r-resumen"></div>
+          <button class="btn s-red sm" data-r="limpiar">${icon('filter-x')} Limpiar filtros</button></div>
       </div>
       <div id="r-graficas" class="mt"></div>
       <section class="card mt">

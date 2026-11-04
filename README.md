@@ -2,6 +2,15 @@
 
 Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
+## Versión 9.2
+
+- **Correos por persona:** en Usuarios, el administrador activa o desactiva los correos de avisos de cada persona (botón del sobre o Editar), sin importar lo que ella elija en su perfil. La campana y las notificaciones siguen llegando.
+- **Recetas:** código asignado en automático, **proteína base** (res, pollo, cerdo…) con ícono, vista previa y selector de color con tonalidad, intensidad y luminosidad.
+- **Métodos:** formulario por secciones y orden dentro del área automático. **Áreas:** sin clave (se genera del nombre), con vista previa y puestos en tarjetas.
+- Perro y gato de frente (gato gris). Recuadros del resumen de lotes más compactos. Resultados: resumen centrado y «Limpiar filtros» abajo a la derecha; tabla de detalle más compacta. Gráfica de lotes por estado sin espacio en blanco.
+
+Base de datos: migración `supabase/migrations/20261104_brom_v10_correos_proteina.sql`.
+
 ## Versión 9.1
 
 - **Campana dorada** como botón flotante sobre «Nuevo lote» (ya no en el encabezado), con el panel de avisos a su lado.
