@@ -9,7 +9,7 @@ import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, openModal, confirmDialog, emptyState, errorState,
   fmtDate, fmtDateTime, fmtNum, todayISO, fechaLote, loteDesdeFecha, mesLargo, dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio,
   getCatalogos, invalidarCatalogos, fetchAll, toCSV, descargar, debounce, sanitizeSearch, ganchos, estadoLote, estadoPill, ESTADOS_LOTE,
-  puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco,
+  puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco, especieHTML, avisar,
 } from '../core.js';
 import { generarCertificado } from './certificado.js';
 
@@ -26,7 +26,7 @@ export default {
         <div><span class="eyebrow">Calidad de producto</span><h1>Lotes y liberación</h1>
           <p>Cada lote se libera cuando sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales cumplen la especificación.</p></div>
         <div class="page-actions">
-          <button class="btn secondary" data-l="csv">${icon('file-spreadsheet')} Exportar</button>
+          <button class="btn s-green" data-l="csv">${icon('file-spreadsheet')} Exportar</button>
           <button class="btn primary" data-l="nuevo">${icon('plus')} Nuevo lote</button>
         </div>
       </section>
@@ -40,6 +40,7 @@ export default {
       <div id="l-resumen" class="lote-resumen"></div>
       <div id="l-body"></div>`;
     if (params.estado) el.querySelector('#l-estado').value = params.estado;
+    if (params.q) el.querySelector('#l-q').value = params.q;
     el.addEventListener('click', onClick);
     el.querySelector('#l-q').addEventListener('input', debounce(() => { pagina = 1; pintar(); }, 250));
     el.querySelectorAll('#l-receta, #l-estado, #l-mes').forEach((s) => s.addEventListener('change', () => { pagina = 1; pintar(); }));
@@ -151,7 +152,7 @@ function tarjeta(l) {
     <header class="lote-head">
       <div><span class="lote-num">${icon('package')} Lote ${esc(l.lote)}</span>
         <p class="lote-receta"><span class="receta-dot" style="--rc:${esc(color)}"></span><b>${esc(l.receta?.nombre_receta || 'Receta no disponible')}</b>
-          ${l.receta ? `<span class="codigo">${esc(l.receta.codigo)}</span><span class="especie">${icon(especieIco(l.receta.especie))}${esc(l.receta.especie)}</span>` : ''}</p></div>
+          ${l.receta ? `<span class="codigo">${esc(l.receta.codigo)}</span>${especieHTML(l.receta.especie)}` : ''}</p></div>
       ${estadoPill(l.estado)}
     </header>
     <div class="lote-meta"><span>${icon('calendar')} ${fmtDate(l.fecha)}</span>
@@ -163,12 +164,12 @@ function tarjeta(l) {
     ${filasArea ? `<details class="lote-det"><summary>${icon('chevron-down')} Ver los ${l.res.length} análisis capturados</summary><div class="table-wrap"><table class="table compact"><thead><tr><th>Método</th><th>Resultado</th><th>Especificación</th><th>Dictamen</th></tr></thead><tbody>${filasArea}</tbody></table></div></details>`
       : '<p class="cell-sub" style="margin:0">Sin análisis capturados.</p>'}
     <footer class="lote-acts">
-      ${l.liberado_en ? `<button class="btn primary sm" data-l="certificado" data-id="${esc(l.id)}">${icon('file-check-2')} Certificado de calidad</button>` : ''}
-      ${l.estado === 'listo' && puedeLiberar() ? `<button class="btn primary sm" data-l="liberar" data-id="${esc(l.id)}">${icon('badge-check')} Liberar lote</button>` : ''}
-      ${editable ? `<button class="btn secondary sm" data-l="editar" data-id="${esc(l.id)}">${icon('pencil')} ${esDueno(l) || state.isAdmin ? 'Editar y capturar' : 'Capturar análisis'}</button>` : ''}
-      ${l.liberado_en && l.firma_jefe_id && state.isAdmin ? `<button class="btn ghost sm" data-l="firmas" data-id="${esc(l.id)}">${icon('pen-line')} Firmas</button>` : ''}
-      ${l.liberado_en && state.isAdmin ? `<button class="btn ghost sm" data-l="revertir" data-id="${esc(l.id)}">${icon('rotate-ccw')} Revertir liberación</button>` : ''}
-      ${state.isAdmin ? `<button class="btn ghost sm danger-txt" data-l="borrar" data-id="${esc(l.id)}">${icon('trash-2')} Borrar</button>` : ''}
+      ${l.liberado_en ? `<button class="btn c-teal sm" data-l="certificado" data-id="${esc(l.id)}">${icon('file-check-2')} Certificado de calidad</button>` : ''}
+      ${l.estado === 'listo' && puedeLiberar() ? `<button class="btn c-green sm" data-l="liberar" data-id="${esc(l.id)}">${icon('badge-check')} Liberar lote</button>` : ''}
+      ${editable ? `<button class="btn c-blue sm" data-l="editar" data-id="${esc(l.id)}">${icon('pencil')} ${esDueno(l) || state.isAdmin ? 'Editar y capturar' : 'Capturar análisis'}</button>` : ''}
+      ${l.liberado_en && l.firma_jefe_id && state.isAdmin ? `<button class="btn s-purple sm" data-l="firmas" data-id="${esc(l.id)}">${icon('pen-line')} Firmas</button>` : ''}
+      ${l.liberado_en && state.isAdmin ? `<button class="btn s-amber sm" data-l="revertir" data-id="${esc(l.id)}">${icon('rotate-ccw')} Revertir liberación</button>` : ''}
+      ${state.isAdmin ? `<button class="btn s-red sm" data-l="borrar" data-id="${esc(l.id)}">${icon('trash-2')} Borrar</button>` : ''}
     </footer>
   </article>`;
 }
@@ -254,6 +255,7 @@ async function liberar(l) {
       if (!form.jefe || !form.jefe.value || !form.inspector.value) { setError('Selecciona al Jefe de calidad y al Inspector de calidad que firman el certificado.'); return false; }
       const { data, error } = await sb.rpc('brom_liberar_lote', { p_muestra_id: l.id, p_observaciones: form.obs.value.trim() || null, p_firma_jefe: form.jefe.value, p_firma_inspector: form.inspector.value });
       if (error) throw error;
+      avisar();
       return data;
     },
   });
@@ -556,12 +558,14 @@ export async function openLoteForm(lote = null) {
           p_lote: loteNum, p_receta_id: recetaId, p_usuario_id: state.session.user.id, p_resultados: resultados, p_fecha_lote: fecha,
         });
         if (error) throw error;
+        avisar();
         toast(`Lote ${loteNum} registrado.`, 'success');
       } else {
         const { error } = await sb.rpc('brom_actualizar_muestra_con_resultados', {
           p_muestra_id: lote.id, p_lote: loteNum, p_receta_id: recetaId, p_fecha_lote: fecha, p_resultados: resultados,
         });
         if (error) throw error;
+        avisar();
         toast(`Lote ${loteNum} actualizado.`, 'success');
       }
       invalidarCatalogos();

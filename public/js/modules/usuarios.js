@@ -78,7 +78,7 @@ function mostrarTab() {
   root.querySelectorAll('[data-pane]').forEach((p) => p.classList.toggle('hidden', p.dataset.pane !== tab));
   root.querySelector('#u-acts').innerHTML = tab === 'usuarios'
     ? `<button class="btn primary" data-u="agregar">${icon('user-plus')} Nuevo usuario</button>`
-    : `<button class="btn primary" data-u="nuevo-puesto">${icon('plus')} Nuevo puesto</button>`;
+    : `<button class="btn c-purple" data-u="nuevo-puesto">${icon('plus')} Nuevo puesto</button>`;
   if (tab === 'usuarios') pintar(); else pintarPuestos();
   refreshIcons();
 }

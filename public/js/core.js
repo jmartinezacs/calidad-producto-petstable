@@ -131,7 +131,11 @@ export const UNIDADES = ['%', 'g', 'kg', 'mg', 'µg', 'ng', 'mg/kg', 'g/kg', 'g/
   '°C', '°F', 'kcal', 'kJ', 'kcal/100g', 'kJ/100g', 'mS/cm', 'µS/cm', 'NTU', 'Pa', 'kPa', 'bar', 'mmHg', 'rpm', 's', 'min', 'h', 'µm', 'mm', 'cm'];
 export const ESPECIES = [{ v: 'Perro', ico: 'dog' }, { v: 'Gato', ico: 'cat' }];
 export const especieIco = (e) => ESPECIES.find((x) => x.v === e)?.ico || 'paw-print';
-export const especieHTML = (e) => (e ? `<span class="especie">${icon(especieIco(e))}${esc(e)}</span>` : '—');
+// Imagen 3D del perro o del gato (otras especies: huella)
+export const especieImg = (e, cls = "") => (e === "Perro" || e === "Gato" ? `<span class="especie-img ${e === "Perro" ? "perro" : "gato"} ${cls}" role="img" aria-label="${esc(e)}"></span>` : icon("paw-print"));
+// Ícono de una opción de selector: dog/cat usan la imagen 3D
+const icoOpcion = (ico) => (ico === "dog" ? especieImg("Perro", "sm") : ico === "cat" ? especieImg("Gato", "sm") : icon(ico));
+export const especieHTML = (e, cls = "") => (e ? `<span class="especie">${especieImg(e, cls)}${esc(e)}</span>` : "—");
 // Mes abreviado con año para gráficas y ejes: «Nov 2026» (abreviatura estándar de tres letras)
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 export const mesCorto = (ym) => `${MESES_CORTOS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
@@ -477,19 +481,89 @@ const etiquetasDatos = {
           const ancho = ctx.measureText(label).width + 6;
           dentro = largo >= (horiz ? ancho : 16);
           if (dentro) { x = horiz ? (p.x + p.base) / 2 : p.x; y = horiz ? p.y : (p.y + p.base) / 2; }
-          else { x = horiz ? p.x + ancho / 2 + 2 : p.x; y = horiz ? p.y : p.y - 9; }
+          else { x = horiz ? p.x + ancho / 2 + 8 : p.x; y = horiz ? p.y : p.y - 13; }
         } else {
           if (el.circumference < 0.12) return;
+          // Dona con cifra al centro: el segmento dominante no repite la cifra
+          if (ds._centro && el.circumference > Math.PI * 1.6) return;
           ({ x, y } = el.tooltipPosition(true));
         }
         if (dentro) {
-          ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(9, 13, 18, .45)'; ctx.lineJoin = 'round';
-          ctx.strokeText(label, x, y);
+          ctx.shadowColor = 'rgba(9, 13, 18, .45)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
           ctx.fillStyle = '#FFFFFF';
-        } else ctx.fillStyle = cssVar('--text') || '#172431';
-        ctx.fillText(label, x, y);
+          ctx.fillText(label, x, y);
+          ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        } else {
+          // Fuera de la barra: píldora con el color de la tarjeta y borde del color de la barra
+          const w = ctx.measureText(label).width + 12, h = chart.canvas.dataset.zoom ? 22 : 18;
+          const col = Array.isArray(ds._color) ? ds._color[i] : (ds._color || cssVar('--muted'));
+          ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2);
+          ctx.fillStyle = cssVar('--card') || '#fff'; ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = typeof col === 'string' ? col : '#94A3B8'; ctx.stroke();
+          ctx.fillStyle = cssVar('--text') || '#172431';
+          ctx.fillText(label, x, y + .5);
+        }
       });
     });
+    ctx.restore();
+  },
+};
+// Color hexadecimal → rgba (para degradados); otros formatos se devuelven igual
+export function rgba(hex, a = 1) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+// Mezcla con blanco (0–1): tono claro del mismo color para el degradado de las barras
+function aclarar(hex, k) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16), f = (c) => Math.round(c + (255 - c) * k);
+  return `rgb(${f((n >> 16) & 255)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
+}
+const colorDe = (col, i) => (Array.isArray(col) ? col[i % col.length] : col);
+// Barras: degradado del color pleno (extremo de la barra) a un tono más claro (base)
+function degradadoBarra(c, col, horiz) {
+  const base = colorDe(col, c.dataIndex);
+  const area = c.chart.chartArea;
+  if (!area || typeof base !== 'string' || !base.startsWith('#')) return base;
+  const g = horiz ? c.chart.ctx.createLinearGradient(area.left, 0, area.right, 0) : c.chart.ctx.createLinearGradient(0, area.bottom, 0, area.top);
+  g.addColorStop(0, aclarar(base, 0.4));
+  g.addColorStop(1, base);
+  return g;
+}
+// Líneas: área bajo la curva que se desvanece hacia abajo
+function degradadoArea(c, col) {
+  const area = c.chart.chartArea;
+  if (!area || typeof col !== 'string') return rgba(col, 0.12);
+  const g = c.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+  g.addColorStop(0, rgba(col, 0.26));
+  g.addColorStop(1, rgba(col, 0));
+  return g;
+}
+// Dona: cifra principal al centro (dataset._centro = { valor, etiqueta, color })
+const centroDona = {
+  id: 'bromCentro',
+  afterDatasetsDraw(chart) {
+    const ds = chart.data.datasets[0];
+    if (chart.config.type !== 'doughnut' || !ds?._centro) return;
+    const arco = chart.getDatasetMeta(0).data.find((a) => a && !a.hidden);
+    if (!arco) return;
+    const { x, y, innerRadius } = arco.getProps(['x', 'y', 'innerRadius'], true);
+    const zoom = !!chart.canvas.dataset.zoom;
+    const t = Math.max(14, Math.min(innerRadius * 0.42, zoom ? 46 : 30));
+    const { ctx } = chart;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `900 ${t}px Inter, Segoe UI, system-ui, sans-serif`;
+    ctx.fillStyle = ds._centro.color || cssVar('--text') || '#172431';
+    ctx.fillText(ds._centro.valor, x, y - (ds._centro.etiqueta ? t * 0.3 : 0));
+    if (ds._centro.etiqueta) {
+      ctx.font = `700 ${Math.max(10, t * 0.38)}px Inter, Segoe UI, system-ui, sans-serif`;
+      ctx.fillStyle = cssVar('--muted') || '#687B8C';
+      ctx.fillText(ds._centro.etiqueta, x, y + t * 0.6);
+    }
     ctx.restore();
   },
 };
@@ -498,25 +572,62 @@ export function makeChart(canvas, config) {
   const muted = cssVar('--muted') || '#687B8C', line = cssVar('--line') || '#E3EAEF', text = cssVar('--text') || '#172431';
   window.Chart.defaults.font.family = 'Inter, Segoe UI, system-ui, sans-serif';
   window.Chart.defaults.color = muted;
-  // Pastel y dona: la separación entre segmentos toma el color de la tarjeta (sin bordes blancos en modo oscuro)
-  if (['pie', 'doughnut'].includes(config.type)) config.data.datasets.forEach((d) => { if (d.borderWidth !== 0) { d.borderColor = cssVar('--card') || '#fff'; d._bordeTarjeta = true; } });
+  const horiz = config.options?.indexAxis === 'y';
+  const tipo = config.type;
+  config.data.datasets.forEach((d) => {
+    // Pastel y dona: la separación entre segmentos toma el color de la tarjeta (sin bordes blancos en modo oscuro)
+    if (['pie', 'doughnut'].includes(tipo)) {
+      d.borderColor = cssVar('--card') || '#fff'; d._bordeTarjeta = true;
+      d.borderWidth = 3; d.hoverOffset = 8;
+      if (tipo === 'doughnut') d.borderRadius = 6;
+      return;
+    }
+    // Barras con degradado (el color base se guarda en _color: la gráfica ampliada copia los datos como JSON)
+    if ((d.type || tipo) === 'bar') {
+      if (d._color === undefined) d._color = d.backgroundColor;
+      const col = d._color;
+      d.backgroundColor = (c) => degradadoBarra(c, col, horiz);
+      d.hoverBackgroundColor = (c) => colorDe(col, c.dataIndex);
+      d.borderRadius = d.stack ? 4 : 8;
+      d.borderSkipped = d.stack ? 'middle' : 'start';
+      return;
+    }
+    // Línea principal: área sombreada bajo la curva y puntos con aro del color de la tarjeta
+    if ((d.type || tipo) === 'line' && d._area) {
+      if (d._color === undefined) d._color = d.borderColor;
+      const col = d._color;
+      d.fill = 'start';
+      d.backgroundColor = (c) => degradadoArea(c, col);
+      d.pointBorderColor = cssVar('--card') || '#fff'; d._bordeTarjeta = true;
+      d.pointBorderWidth = 2;
+    }
+  });
+  const ejes = { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0, padding: 8, font: { size: 11, weight: '600' } }, border: { display: false, dash: [4, 4] } };
+  const ox = config.options?.scales?.x || {}, oy = config.options?.scales?.y || {};
   const c = new window.Chart(canvas, {
     ...config,
-    plugins: [...(config.plugins || []), etiquetasDatos],
+    plugins: [...(config.plugins || []), etiquetasDatos, centroDona],
     options: {
-      responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
       ...(config.options?.interaction ? { interaction: config.options.interaction } : {}),
-      ...(config.options?.layout ? { layout: config.options.layout } : {}),
+      layout: config.options?.layout || { padding: { top: 12, right: 10, bottom: 2, left: 4 } },
       plugins: {
-        legend: { labels: { color: text, boxWidth: 12, boxHeight: 12, usePointStyle: true }, ...(config.options?.plugins?.legend || {}) },
-        tooltip: { backgroundColor: '#102536', padding: 10, cornerRadius: 10, ...(config.options?.plugins?.tooltip || {}) },
+        legend: { labels: { color: text, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11.5, weight: '600' } }, ...(config.options?.plugins?.legend || {}) },
+        tooltip: {
+          backgroundColor: 'rgba(11, 34, 53, .95)', titleColor: '#FFFFFF', bodyColor: '#E2E8F0',
+          titleFont: { size: 12.5, weight: '800' }, bodyFont: { size: 12, weight: '500' },
+          padding: 12, cornerRadius: 12, caretSize: 6, boxPadding: 6, usePointStyle: true,
+          borderColor: 'rgba(255, 255, 255, .14)', borderWidth: 1,
+          ...(config.options?.plugins?.tooltip || {}),
+        },
       },
-      scales: ['doughnut', 'pie'].includes(config.type) ? {} : {
-        x: { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0 }, border: { display: false }, ...(config.options?.scales?.x || {}) },
-        y: { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0 }, border: { display: false }, beginAtZero: true, ...(config.options?.scales?.y || {}) },
+      scales: ['doughnut', 'pie'].includes(tipo) ? {} : {
+        x: { ...ejes, ...ox, grid: { ...ejes.grid, display: horiz || tipo === 'line', ...(ox.grid || {}) }, ticks: { ...ejes.ticks, ...(ox.ticks || {}) } },
+        y: { ...ejes, beginAtZero: true, ...oy, grid: { ...ejes.grid, display: !horiz, ...(oy.grid || {}) }, ticks: { ...ejes.ticks, ...(oy.ticks || {}) } },
       },
       ...(config.options?.indexAxis ? { indexAxis: config.options.indexAxis } : {}),
-      ...(config.type === 'doughnut' ? { cutout: '64%' } : {}),
+      ...(tipo === 'doughnut' ? { cutout: '66%' } : {}),
     },
   });
   charts.add(c);
@@ -535,7 +646,7 @@ export function restyleCharts() {
     try {
       const o = c.options;
       if (o.plugins?.legend?.labels) o.plugins.legend.labels.color = text;
-      c.data.datasets.forEach((d) => { if (d._bordeTarjeta) d.borderColor = cssVar('--card'); });
+      c.data.datasets.forEach((d) => { if (!d._bordeTarjeta) return; if (['pie', 'doughnut'].includes(c.config.type)) d.borderColor = cssVar('--card'); else d.pointBorderColor = cssVar('--card'); });
       for (const s of Object.values(o.scales || {})) {
         if (s.ticks) s.ticks.color = muted;
         if (s.grid) s.grid.color = line;
@@ -776,7 +887,7 @@ function csAbrir(anchor, items, onPick, { buscar = false } = {}) {
   panel.className = `cs-panel${buscar ? ' cs-con-buscador' : ''}`; panel.setAttribute('role', 'listbox');
   panel.innerHTML = (buscar ? `<div class="cs-buscar"><input type="search" placeholder="Buscar…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar en la lista"></div>` : '')
     + items.map((it, i) => `<div class="cs-opt ${it.selected ? 'sel' : ''} ${it.disabled ? 'dis' : ''} ${it.ph ? 'ph' : ''}" role="option" data-i="${i}" aria-selected="${it.selected ? 'true' : 'false'}" ${it.disabled ? 'aria-disabled="true"' : ''}>
-      <span class="cs-lbl">${it.ico ? icon(it.ico) : ""}${esc(it.label)}</span>${it.selected ? CHECK : ''}</div>`).join('')
+      <span class="cs-lbl">${it.ico ? icoOpcion(it.ico) : ""}${esc(it.label)}</span>${it.selected ? CHECK : ''}</div>`).join('')
     + (buscar ? '<div class="cs-vacio hidden">Sin coincidencias.</div>' : '');
   document.body.appendChild(panel);
   if (items.some((x) => x.ico)) refreshIcons();
@@ -873,7 +984,7 @@ function mejorarSelect(sel) {
   wrap.appendChild(btn);
   const sync = () => {
     const o = sel.options[sel.selectedIndex];
-    btn.innerHTML = `<span class="cs-val ${!sel.value ? 'ph' : ''}">${o?.dataset.ico ? icon(o.dataset.ico) : ''}${esc(o ? o.textContent : '—')}</span>${CHEVRON}`;
+    btn.innerHTML = `<span class="cs-val ${!sel.value ? 'ph' : ''}">${o?.dataset.ico ? icoOpcion(o.dataset.ico) : ''}${esc(o ? o.textContent : '—')}</span>${CHEVRON}`;
     if (o?.dataset.ico) refreshIcons();
     btn.disabled = sel.disabled;
   };
@@ -946,4 +1057,90 @@ document.addEventListener('click', (e) => {
 });
 
 
+
+// ---------- Avisos (campana del sistema, notificaciones push y correo) ----------
+// Los avisos se generan en la base de datos al guardar; después de guardar, el
+// sitio pide a la Edge Function notificar_brom que los envíe por push y correo.
+// Si falla, el aviso igual queda en la campana.
+export function avisar() {
+  try { sb.functions.invoke('notificar_brom', { body: { accion: 'enviar' } }).then(() => ganchos.refrescarAvisos?.()).catch(() => {}); } catch { /* sin conexión */ }
+}
+function b64uToUint8(s) {
+  const pad = '='.repeat((4 - (s.length % 4)) % 4);
+  const raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+export const push = {
+  soportado: () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext,
+  esIOS: () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+  instalada: () => window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || window.navigator.standalone === true,
+  async suscripcion() {
+    if (!push.soportado()) return null;
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    return reg ? reg.pushManager.getSubscription() : null;
+  },
+  // 'no-soportado' | 'instalar' (iOS sin instalar) | 'bloqueado' | 'activo' | 'inactivo'
+  async estado() {
+    if (push.esIOS() && !push.instalada()) return 'instalar';
+    if (!push.soportado()) return 'no-soportado';
+    if (Notification.permission === 'denied') return 'bloqueado';
+    await push._sync;
+    return (await push.suscripcion()) && Notification.permission === 'granted' ? 'activo' : 'inactivo';
+  },
+  // Vincula la suscripción del dispositivo a la cuenta con sesión
+  async guardar(sub) {
+    const j = sub.toJSON();
+    const { error } = await sb.rpc('brom_vincular_push', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_dispositivo: navigator.userAgent.slice(0, 200) });
+    if (error) throw error;
+  },
+  async activar() {
+    if (!push.soportado()) throw new Error('Este navegador no admite notificaciones.');
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') throw new Error('No se concedió el permiso de notificaciones.');
+    prefs.del('brom.push.off');
+    await push.suscribir();
+  },
+  async suscribir() {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready;
+    let { data: pub } = await sb.rpc('brom_vapid_publica');
+    if (!pub) {
+      const r = await sb.functions.invoke('notificar_brom', { body: { accion: 'init' } });
+      pub = r.data?.publica;
+    }
+    if (!pub) throw new Error('No se pudo obtener la clave de notificaciones. Intenta más tarde.');
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToUint8(pub) });
+    await push.guardar(sub);
+  },
+  async desactivar() {
+    prefs.set('brom.push.off', '1');
+    const sub = await push.suscripcion();
+    if (sub) {
+      await sb.from('brom_push_subs').delete().eq('endpoint', sub.endpoint);
+      await sub.unsubscribe().catch(() => {});
+    }
+  },
+  // Al iniciar sesión: si ya se concedió el permiso, vincula el dispositivo a quien entra
+  sincronizar() {
+    push._sync = (async () => {
+      try {
+        if (!push.soportado() || Notification.permission !== 'granted' || prefs.get('brom.push.off') === '1') return;
+        if (push.esIOS() && !push.instalada()) return;
+        const sub = await push.suscripcion();
+        if (sub) await push.guardar(sub); else await push.suscribir();
+      } catch { /* silencioso */ }
+    })();
+    return push._sync;
+  },
+};
+// Ícono y color de cada tipo de aviso (campana)
+export const TIPOS_AVISO = {
+  captura_pendiente: { ico: 'clipboard-pen', color: '#F59E0B', label: 'Captura pendiente' },
+  area_capturada: { ico: 'clipboard-check', color: '#0891B2', label: 'Área capturada' },
+  listo_liberar: { ico: 'badge-check', color: '#16A34A', label: 'Listo para liberar' },
+  no_conforme: { ico: 'triangle-alert', color: '#DC2626', label: 'No conforme' },
+  liberado: { ico: 'file-check-2', color: '#2563EB', label: 'Lote liberado' },
+  prueba: { ico: 'bell-ring', color: '#7C3AED', label: 'Prueba' },
+};
 export function navigate(hash) { if (location.hash !== hash) location.hash = hash; else window.dispatchEvent(new HashChangeEvent('hashchange')); }

@@ -1,9 +1,10 @@
 // =====================================================================
-// Perfil del usuario: datos, fotografía, cambio de contraseña, tema e instalación.
+// Perfil del usuario: datos, notificaciones y correos (con pruebas), fotografía,
+// cambio de contraseña, tema e instalación.
 // =====================================================================
 import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, checkForm, prefs, fmtDateTime, APP_VERSION, avatarHTML, roleLabel,
-  prepararFoto, subirFoto, borrarFotoPropia,
+  prepararFoto, subirFoto, borrarFotoPropia, push, pill, openModal, ganchos,
 } from '../core.js';
 
 let deferredPrompt = null;
@@ -18,6 +19,109 @@ function permisosTxt(p) {
     p.firma_certificado === 'jefe_calidad' ? 'firmar certificados como Jefe de calidad' : p.firma_certificado === 'inspector' ? 'firmar certificados como Inspector de calidad' : ''].filter(Boolean).join('; ');
 }
 
+
+// ---------- Notificaciones push de este dispositivo ----------
+const QUE_AVISA = 'Te avisamos cuando se registra un lote y te toca capturar un área, cuando alguien más completa un área que tú también capturas, cuando un lote queda listo para liberar o no conforme, y cuando se libera un lote que registraste o capturaste.';
+async function pintarPush(box) {
+  if (!box) return;
+  const est = await push.estado().catch(() => 'no-soportado');
+  const prueba = `<button class="btn c-purple" data-n="test">${icon('bell-ring')} Enviar notificación de prueba</button>`;
+  const txt = {
+    activo: [pill('Activadas en este dispositivo', 'ok'), 'Quedan activas aunque cierres sesión; los avisos llegan a la última cuenta que inició sesión aquí.', `<div class="page-actions notif-acts">
+        ${prueba}<button class="btn s-red" data-n="off">${icon('bell-off')} Desactivar en este dispositivo</button></div>
+      <details class="notif-ajustes"><summary>${icon('smartphone')} ¿No suena o no aparece en la pantalla bloqueada?</summary>
+        <p><b>Android (Chrome):</b> mantén presionado el aviso de prueba → Configuración, o ve a Ajustes → Aplicaciones → Chrome → Notificaciones → busca este sitio y activa <b>Mostrar en pantalla emergente</b>, <b>Sonido</b> y <b>Pantalla de bloqueo</b>.</p>
+        <p><b>iPhone:</b> Ajustes → Notificaciones → Liberación → activa <b>Permitir notificaciones</b>, <b>Pantalla bloqueada</b> y <b>Sonidos</b>.</p>
+        <p><b>Windows:</b> Configuración → Sistema → Notificaciones → activa las de Chrome o Edge y revisa que «No molestar» esté apagado.</p>
+      </details>`],
+    inactivo: [pill('Desactivadas en este dispositivo', 'gray'), 'Actívalas para recibir los avisos aunque no tengas el sistema abierto. Mientras tanto, los avisos aparecen en la campana del encabezado.', `<div class="page-actions notif-acts">
+        <button class="btn c-green" data-n="on">${icon('bell')} Activar notificaciones</button>${prueba}</div>`],
+    bloqueado: [pill('Bloqueadas', 'bad'), 'Las notificaciones están bloqueadas para este sitio. Permítelas desde la configuración del navegador (ícono del candado junto a la dirección) y vuelve a intentarlo.', `<div class="page-actions notif-acts">${prueba}</div>`],
+    instalar: [pill('Requiere instalar', 'warn'), 'En iPhone y iPad las notificaciones solo funcionan con la app instalada: toca Compartir → «Agregar a pantalla de inicio», ábrela desde ese ícono y regresa aquí para activarlas.', `<div class="page-actions notif-acts">${prueba}</div>`],
+    'no-soportado': [pill('No disponibles', 'gray'), 'Este navegador no admite notificaciones web. Usa Chrome, Edge o Safari actualizados. Los avisos siguen apareciendo en la campana.', `<div class="page-actions notif-acts">${prueba}</div>`],
+  }[est];
+  box.innerHTML = `<p style="margin:0 0 8px">${txt[0]}</p><p class="hint" style="margin:0 0 12px">${esc(txt[1])}</p>${txt[2]}`;
+  refreshIcons();
+  box.querySelector('[data-n="test"]')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      // Crea un aviso de prueba en la campana y lo envía por push a tus dispositivos
+      const { data, error } = await sb.functions.invoke('notificar_brom', { body: { accion: 'prueba' } });
+      if (error) throw error;
+      ganchos.refrescarAvisos?.();
+      if (data?.push) toast('Notificación de prueba enviada. Revisa la campana y la notificación de este dispositivo.', 'success', 6000);
+      else {
+        toast(est === 'activo' ? 'La notificación de prueba quedó en la campana. Si no ves la notificación del dispositivo, desactiva y vuelve a activar.' : 'La notificación de prueba quedó en la campana. Activa las notificaciones para recibirlas también en este dispositivo.', 'info', 7000);
+        // Aviso local, con la misma apariencia que los reales
+        if (est === 'activo') {
+          const reg = await navigator.serviceWorker.ready;
+          reg.active?.postMessage({ tipo: 'aviso-prueba', title: 'Aviso de prueba · Liberación de producto', body: 'Así se verán los avisos de lotes en este dispositivo.', foto: state.profile.foto_url || null });
+        }
+      }
+    } catch (err) { toast(/function|fetch|non-2xx|404/i.test(String(err?.message)) ? 'El servicio de notificaciones aún no está disponible. Inténtalo más tarde.' : errMsg(err), 'error'); }
+    b.disabled = false;
+  });
+  box.querySelector('[data-n="on"], [data-n="off"]')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      if (b.dataset.n === 'on') { await push.activar(); toast('Notificaciones activadas en este dispositivo.', 'success'); }
+      else { await push.desactivar(); toast('Notificaciones desactivadas en este dispositivo.', 'success'); }
+    } catch (err) { toast(errMsg(err), 'error'); }
+    pintarPush(box);
+  });
+}
+
+// ---------- Correos ----------
+async function pintarCorreo(box) {
+  if (!box) return;
+  const p = state.profile;
+  const { data } = await sb.from('brom_usuarios').select('recibe_correos').eq('id', p.id).maybeSingle();
+  const recibe = data?.recibe_correos !== false;
+  box.innerHTML = `<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
+      <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data ? '' : 'disabled'}></label>
+    <div class="page-actions notif-acts" style="margin-top:12px">
+      <button class="btn s-blue" data-mail="vista">${icon('eye')} Vista previa del correo</button>
+      <button class="btn c-teal" data-mail="enviar">${icon('send')} Enviarme un correo de prueba</button></div>`;
+  refreshIcons();
+  box.querySelector('#pf-correos').addEventListener('change', async (e) => {
+    const on = e.target.checked;
+    const { error } = await sb.rpc('brom_mis_avisos', { p_correos: on });
+    if (error) { e.target.checked = !on; toast(errMsg(error), 'error'); return; }
+    toast(on ? 'Recibirás los avisos también por correo.' : 'Ya no recibirás los avisos por correo; seguirán en la campana.', 'success');
+  });
+  box.querySelectorAll('[data-mail]').forEach((b) => b.addEventListener('click', () => correoPrueba(b)));
+}
+// Vista previa con datos de ejemplo (misma plantilla que los correos reales) o envío solo a tu correo
+async function correoPrueba(btn) {
+  const vista = btn.dataset.mail === 'vista';
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.functions.invoke('notificar_brom', { body: { accion: 'correo_prueba', vista } });
+    if (error) throw error;
+    if (vista) {
+      let logo = '';
+      try {
+        const b = await (await fetch('/logo-correo.png')).blob();
+        logo = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); });
+      } catch { /* sin logo: se muestra el nombre en texto */ }
+      const html = String(data.html).replace('__LOGO__', /^data:image\/png/.test(logo) ? logo : '');
+      await openModal({
+        title: 'Vista previa del correo', size: 'lg', submitText: 'Cerrar', onSubmit: () => true,
+        subtitle: `Asunto: ${data.asunto} · De: Liberación de producto · Pet's Table`,
+        body: `${data.configurado ? '' : `<div class="notice warn">${icon('info')}<span>El envío de correos aún no está configurado (falta la contraseña de aplicación de Gmail en Supabase). Esta es solo la vista previa.</span></div>`}
+          <iframe class="mail-preview" title="Vista previa del correo" sandbox="" srcdoc="${esc(html)}"></iframe>
+          <p class="hint" style="margin-top:8px">Datos de ejemplo de un lote listo para liberar.</p>`,
+      });
+    } else if (!data?.configurado) {
+      toast('El envío de correos aún no está configurado: falta la contraseña de aplicación de Gmail en Supabase.', 'warning', 7000);
+    } else if (data.ok) {
+      toast(`Correo de prueba enviado a ${data.para}. Revisa tu bandeja (y Spam).`, 'success', 7000);
+    } else {
+      toast('No se pudo enviar el correo de prueba. Revisa la configuración del correo en Supabase.', 'error', 7000);
+    }
+  } catch (err) { toast(/function|fetch|non-2xx|404/i.test(String(err?.message)) ? 'El servicio de correos aún no está disponible. Inténtalo más tarde.' : errMsg(err), 'error'); }
+  btn.disabled = false;
+}
 export default {
   async render(el) {
     const p = state.profile;
@@ -38,9 +142,18 @@ export default {
       </section>
       <div class="profile-tiles mt">
         <div class="p-tile"><span class="ti">${icon('briefcase')}</span><small>Puesto</small><b>${esc(p.puesto || 'Sin puesto registrado')}</b></div>
-        <div class="p-tile"><span class="ti">${icon('shield-check')}</span><small>Permisos</small><b>${esc(permisosTxt(p))}</b></div>
+        <div class="p-tile"><span class="ti">${icon('building-2')}</span><small>Área</small><b>${esc(p.area || 'Sin área registrada')}</b></div>
+        <div class="p-tile"><span class="ti">${icon('mail')}</span><small>Correo</small><b class="p-mail">${esc(p.email || '—')}</b></div>
+        <div class="p-tile"><span class="ti">${icon('shield-check')}</span><small>Permisos</small><b class="p-perm">${esc(permisosTxt(p))}</b></div>
         <div class="p-tile"><span class="ti">${icon('clock')}</span><small>Último acceso</small><b>${fmtDateTime(user?.last_sign_in_at)}</b></div>
         <div class="p-tile"><span class="ti">${icon('info')}</span><small>Versión del sistema</small><b>${esc(APP_VERSION)}</b></div>
+      </div>
+      <div class="card mt notif-card">
+        <div class="card-head"><div><h3>${icon('bell-ring')} Notificaciones y correos</h3><p>${esc(QUE_AVISA)}</p></div></div>
+        <div class="grid grid-2">
+          <div class="notif-col"><div class="section-title">${icon('smartphone')} En este dispositivo</div><div id="pf-push"><div class="skeleton" style="height:60px"></div></div></div>
+          <div class="notif-col"><div class="section-title">${icon('mail')} Por correo</div><div id="pf-correo"><div class="skeleton" style="height:60px"></div></div></div>
+        </div>
       </div>
       <div class="grid grid-2 mt">
         <div class="card">
@@ -53,7 +166,7 @@ export default {
               <input id="pw2" name="p2" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
             <p class="hint">Mínimo 8 caracteres. Combina mayúsculas, minúsculas, números y símbolos.</p>
             <div class="form-error" role="alert"></div>
-            <button type="submit" class="btn primary">${icon('key-round')} Actualizar contraseña</button>
+            <button type="submit" class="btn c-blue">${icon('key-round')} Actualizar contraseña</button>
           </form>
         </div>
         <div class="card">
@@ -73,6 +186,8 @@ export default {
         </div>
       </div>`;
     refreshIcons();
+    pintarPush(el.querySelector('#pf-push'));
+    pintarCorreo(el.querySelector('#pf-correo'));
 
     el.querySelectorAll('[data-theme-opt]').forEach((b) => b.addEventListener('click', () => {
       window.__bromSetTheme?.(b.dataset.themeOpt);

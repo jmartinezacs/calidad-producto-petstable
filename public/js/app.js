@@ -3,7 +3,7 @@
 // =====================================================================
 import {
   sb, state, prefs, esc, icon, refreshIcons, toast, errMsg, openModal, checkForm,
-  destroyCharts, APP_VERSION, TZ, navigate, avatarHTML, restyleCharts, roleLabel, fotoDe, ganchos,
+  destroyCharts, APP_VERSION, TZ, navigate, avatarHTML, restyleCharts, roleLabel, fotoDe, ganchos, push, TIPOS_AVISO,
 } from './core.js';
 import dashboard from './modules/dashboard.js';
 import lotes from './modules/lotes.js';
@@ -169,7 +169,14 @@ function startApp() {
     document.addEventListener('visibilitychange', revisarVersion);
     // Service worker: permite instalar el portal como aplicación (no guarda caché)
     if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+    // Avisos: se revisan cada minuto y al volver a la pestaña
+    setInterval(() => cargarAvisos(), 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) cargarAvisos(); });
+    ganchos.refrescarAvisos = () => setTimeout(() => cargarAvisos(), 1500);
   }
+  avisosVistos = null;
+  cargarAvisos();
+  push.sincronizar();
   closeMenu();
   montarPantallaCompleta();
   route();
@@ -234,6 +241,77 @@ async function route() {
   }
 }
 
+// ---------------- Avisos (campana) ----------------
+let avisos = [];
+let avisosVistos = null; // ids conocidos: los nuevos se anuncian con un mensaje
+async function cargarAvisos() {
+  if (!state.profile || document.hidden && avisosVistos) return;
+  const { data, error } = await sb.from('brom_notificaciones')
+    .select('id, tipo, titulo, mensaje, leida, created_at, muestra_id, actor_nombre, brom_muestras(lote)')
+    .eq('usuario_id', state.profile.id).order('created_at', { ascending: false }).limit(40);
+  if (error) { if (!/brom_notificaciones/.test(error.message || '')) console.warn(error); return; }
+  const nuevos = avisosVistos ? data.filter((x) => !x.leida && !avisosVistos.has(x.id)) : [];
+  avisosVistos = new Set(data.map((x) => x.id));
+  avisos = data;
+  pintarAvisos();
+  if (nuevos.length === 1) toast(`${nuevos[0].titulo}. ${nuevos[0].mensaje}`, 'info', 7000);
+  else if (nuevos.length > 1) toast(`Tienes ${nuevos.length} avisos nuevos.`, 'info', 6000);
+}
+function pintarAvisos() {
+  const n = avisos.filter((x) => !x.leida).length;
+  const c = $('#notif-count');
+  c.textContent = n > 99 ? '99+' : String(n);
+  c.classList.toggle('hidden', !n);
+  $('.notif-btn').setAttribute('aria-label', n ? `Notificaciones: ${n} sin leer` : 'Notificaciones');
+  const panel = $('#notif-panel');
+  if (panel.classList.contains('hidden')) return;
+  const hace = (iso) => {
+    const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (min < 1) return 'Ahora';
+    if (min < 60) return `Hace ${min} min`;
+    if (min < 24 * 60) return `Hace ${Math.round(min / 60)} h`;
+    return new Intl.DateTimeFormat('es-MX', { timeZone: TZ, day: 'numeric', month: 'long' }).format(new Date(iso));
+  };
+  panel.innerHTML = `<div class="np-head"><b>${icon('bell')} Notificaciones</b>${n ? `<button class="link-btn" data-action="aviso-todas">Marcar todas como leídas</button>` : ''}</div>
+    ${avisos.length ? `<div class="np-list">${avisos.map((x) => {
+      const t = TIPOS_AVISO[x.tipo] || TIPOS_AVISO.prueba;
+      return `<button class="np-item ${x.leida ? '' : 'nueva'}" data-action="aviso-abrir" data-id="${esc(x.id)}" style="--tc:${t.color}">
+        <span class="np-ico">${icon(t.ico)}</span>
+        <span class="np-txt"><b>${esc(x.titulo)}</b><span>${esc(x.mensaje)}</span><small>${esc(t.label)} · ${esc(hace(x.created_at))}</small></span>
+        ${x.leida ? '' : '<span class="np-dot" aria-label="Sin leer"></span>'}</button>`;
+    }).join('')}</div>` : `<div class="np-vacio">${icon('bell-off')}<b>Sin notificaciones</b><span>Aquí aparecerán los lotes por capturar, las áreas capturadas y los lotes listos para liberar.</span></div>`}
+    <button class="np-pie" data-action="aviso-config">${icon('settings')} Configurar notificaciones y correos</button>`;
+  refreshIcons();
+}
+function alternarAvisos() {
+  const panel = $('#notif-panel');
+  const abrir = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !abrir);
+  $('.notif-btn').setAttribute('aria-expanded', String(abrir));
+  if (abrir) { pintarAvisos(); cargarAvisos(); }
+}
+function cerrarAvisos() {
+  const panel = $('#notif-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+  panel.classList.add('hidden');
+  $('.notif-btn').setAttribute('aria-expanded', 'false');
+}
+async function marcarAvisos(ids = avisos.filter((x) => !x.leida).map((x) => x.id)) {
+  if (!ids.length) return;
+  const { error } = await sb.from('brom_notificaciones').update({ leida: true }).in('id', ids);
+  if (error) { toast(errMsg(error), 'error'); return; }
+  avisos.forEach((x) => { if (ids.includes(x.id)) x.leida = true; });
+  pintarAvisos();
+}
+async function abrirAviso(id) {
+  const x = avisos.find((a) => a.id === id);
+  if (!x) return;
+  if (!x.leida) await marcarAvisos([id]);
+  cerrarAvisos();
+  const lote = x.brom_muestras?.lote;
+  navigate(x.tipo === 'prueba' ? '#/perfil' : lote ? `#/lotes?q=${encodeURIComponent(lote)}` : '#/lotes');
+}
+
 // ---------------- Eventos globales ----------------
 function bindGlobalEvents() {
   document.addEventListener('click', async (e) => {
@@ -258,9 +336,16 @@ function bindGlobalEvents() {
       case 'update-later': $('#update-bar').classList.add('hidden'); break;
       case 'toggle-pw': togglePw(a); break;
       case 'forgot': await forgotPassword(); break;
+      case 'toggle-notif': alternarAvisos(); break;
+      case 'aviso-todas': await marcarAvisos(); break;
+      case 'aviso-abrir': await abrirAviso(a.dataset.id); break;
+      case 'aviso-config': cerrarAvisos(); navigate('#/perfil'); break;
       default: break;
     }
   });
+  // La campana se cierra al hacer clic fuera o con Esc
+  document.addEventListener('click', (e) => { if (!e.composedPath().some((n) => n.classList?.contains('notif-wrap'))) cerrarAvisos(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarAvisos(); });
   $('#login-form').addEventListener('submit', login);
   window.addEventListener('online', updateNet);
   window.addEventListener('offline', updateNet);
@@ -374,6 +459,7 @@ async function logout() {
   // scope "local": cierra solo esta sesión (otras apps de Pet's Table comparten la cuenta)
   await sb.auth.signOut({ scope: 'local' });
   state.profile = null; state.session = null;
+  avisos = []; avisosVistos = null; cerrarAvisos(); pintarAvisos();
   history.replaceState(null, '', location.pathname);
   showLogin();
   toast('Sesión cerrada.', 'success');

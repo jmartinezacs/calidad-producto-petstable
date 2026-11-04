@@ -1,6 +1,6 @@
 // =====================================================================
-// Recetas y métodos: recetas por especie, métodos por área de análisis,
-// especificaciones por receta y áreas (quién captura cada una).
+// Recetas y métodos: recetas por especie, métodos por área de análisis (con su
+// criterio y las recetas a las que aplican) y áreas (quién captura cada una).
 // Consulta para todos; alta y edición solo para administradores
 // (las políticas RLS de las tablas brom_ lo imponen en la base de datos).
 // =====================================================================
@@ -10,8 +10,8 @@ import {
   ESPECIES, especieHTML, recetaTxt, opcionCheck,
 } from '../core.js';
 
-let root = null, token = 0, tab = 'recetas', recetaSel = '';
-const TABS = ['recetas', 'metodos', 'especificaciones', 'areas'];
+let root = null, token = 0, tab = 'recetas';
+const TABS = ['recetas', 'metodos', 'areas'];
 const COLORES_RECETA = [['#F58020', 'Naranja'], ['#1BC7C7', 'Turquesa'], ['#16A34A', 'Verde'], ['#7C3AED', 'Violeta'], ['#DB2777', 'Rosa'], ['#2563EB', 'Azul'], ['#CA8A04', 'Mostaza'], ['#DC2626', 'Rojo']];
 
 export default {
@@ -27,7 +27,6 @@ export default {
       <div class="tabs" role="tablist">
         <button data-tab="recetas" role="tab">${icon('book-open')} Recetas</button>
         <button data-tab="metodos" role="tab">${icon('flask-round')} Métodos</button>
-        <button data-tab="especificaciones" role="tab">${icon('sliders-horizontal')} Especificaciones por receta</button>
         <button data-tab="areas" role="tab">${icon('layers')} Áreas de análisis</button>
       </div>
       ${state.isAdmin ? '' : `<div class="notice">${icon('info')}<span>Consulta de solo lectura. La creación y edición de catálogos corresponde a un administrador.</span></div>`}
@@ -44,8 +43,8 @@ async function pintar() {
   prefs.set('brom.cat.tab', tab);
   root.querySelectorAll('[data-tab]').forEach((b) => { b.classList.toggle('active', b.dataset.tab === tab); b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
   root.querySelector('#cat-acts').innerHTML = !state.isAdmin ? '' : tab === 'recetas' ? `<button class="btn primary" data-c="nueva-receta">${icon('plus')} Nueva receta</button>`
-    : tab === 'metodos' ? `<button class="btn primary" data-c="nuevo-metodo">${icon('plus')} Nuevo método</button>`
-    : tab === 'areas' ? `<button class="btn primary" data-c="nueva-area">${icon('plus')} Nueva área</button>` : '';
+    : tab === 'metodos' ? `<button class="btn c-blue" data-c="nuevo-metodo">${icon('plus')} Nuevo método</button>`
+    : tab === 'areas' ? `<button class="btn c-purple" data-c="nueva-area">${icon('plus')} Nueva área</button>` : '';
   const body = root.querySelector('#cat-body');
   body.innerHTML = '<div class="skeleton" style="height:180px"></div>';
   try {
@@ -53,9 +52,7 @@ async function pintar() {
     if (t !== token || !root) return;
     if (tab === 'recetas') body.innerHTML = await recetasHTML(cat);
     else if (tab === 'metodos') body.innerHTML = metodosHTML(cat);
-    else if (tab === 'areas') body.innerHTML = areasHTML(cat);
-    else body.innerHTML = especHTML(cat);
-    body.querySelector('#esp-receta')?.addEventListener('change', (e) => { recetaSel = e.target.value; pintar(); });
+    else body.innerHTML = areasHTML(cat);
   } catch (err) {
     if (t !== token) return;
     console.error(err);
@@ -67,23 +64,28 @@ async function pintar() {
 const estadoPill = (v, f = false) => (v ? `<span class="pill ok">${f ? 'Activa' : 'Activo'}</span>` : `<span class="pill gray">${f ? 'Inactiva' : 'Inactivo'}</span>`);
 const acciones = (botones) => (state.isAdmin ? `<td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">${botones}</div></div></td>` : '');
 const editar = (attr, id, t = 'Editar') => `<button class="icon-btn" ${attr}="${esc(id)}" aria-label="${t}" title="${t}">${icon('pencil')}</button>`;
+// Cada puesto con su propio color (el mismo en todas las áreas)
+const COLORES_PUESTO = ['#2563EB', '#16A34A', '#7C3AED', '#DB2777', '#0891B2', '#CA8A04', '#DC2626', '#0D9488', '#4F46E5', '#E8890C'];
+const puestoChip = (cat, p) => {
+  const i = [...cat.puestos].sort((x, y) => String(x.nombre).localeCompare(String(y.nombre), 'es')).findIndex((x) => x.nombre === p.nombre);
+  return `<span class="puesto-chip" style="--pc:${COLORES_PUESTO[Math.max(0, i) % COLORES_PUESTO.length]}">${icon('id-card')}${esc(p.nombre)}</span>`;
+};
 const areaChip = (a) => `<span class="area-chip" style="--ac:${esc(a.color)}"><span class="area-dot"></span>${esc(a.nombre)}</span>`;
 
 async function recetasHTML(cat) {
   if (!cat.recetas.length) return emptyState({ ico: 'book-open', title: 'Sin recetas', text: 'Registra la primera receta del catálogo.' });
   const lotes = await fetchAll(() => sb.from('brom_muestras').select('receta_id')).catch(() => []);
   const n = (id) => lotes.filter((l) => l.receta_id === id).length;
-  return `<div class="table-wrap responsive"><table class="table recetas-tabla"><thead><tr><th>Receta</th><th>Código</th><th>Especie</th><th>Lotes</th><th>Análisis requeridos</th><th>Especificaciones particulares</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
+  return `<div class="table-wrap responsive"><table class="table recetas-tabla"><thead><tr><th>Receta</th><th>Código</th><th>Especie</th><th>Lotes</th><th>Análisis requeridos</th><th>Estado</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
     ${cat.recetas.map((r) => `<tr>
       <td data-label="Receta"><div class="td-in"><span class="receta-nom"><span class="receta-dot" style="--rc:${esc(r.color)}"></span><b>${esc(r.nombre_receta)}</b></span></div></td>
       <td data-label="Código"><div class="td-in"><span class="codigo">${esc(r.codigo)}</span></div></td>
       <td data-label="Especie"><div class="td-in">${especieHTML(r.especie)}</div></td>
       <td data-label="Lotes"><div class="td-in num">${fmtNum(n(r.id))}</div></td>
       <td data-label="Análisis requeridos"><div class="td-in num">${fmtNum(cat.requeridos(r.id).length)}</div></td>
-      <td data-label="Especificaciones"><div class="td-in"><button class="link-btn" data-c="ver-esp" data-id="${esc(r.id)}">${fmtNum(cat.specs.filter((s) => s.receta_id === r.id).length)} configuradas</button></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(r.activa, true)}</div></td>
       ${acciones(`${editar('data-edit-receta', r.id)}<button class="icon-btn" data-dup-receta="${esc(r.id)}" aria-label="Duplicar para otra especie" title="Duplicar para otra especie">${icon('copy-plus')}</button>`)}</tr>`).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} Una misma receta puede existir para perro y para gato, cada una con su código, sus métodos y sus especificaciones. Usa ${icon('copy-plus')} para duplicarla.</p>`;
+    <p class="hint">${icon('info')} Una misma receta puede existir para perro y para gato, cada una con su código y sus métodos. Usa ${icon('copy-plus')} para duplicarla.</p>`;
 }
 
 function metodosHTML(cat) {
@@ -115,46 +117,20 @@ function areasHTML(cat) {
       <td data-label="Área"><div class="td-in">${areaChip(a)}</div></td>
       <td data-label="Descripción"><div class="td-in cell-sub">${esc(a.descripcion || '—')}</div></td>
       <td data-label="Métodos"><div class="td-in mono">${fmtNum(cat.metodos.filter((m) => m.area === a.id && m.activo).length)}</div></td>
-      <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => `<span class="pill info">${esc(p.nombre)}</span>`).join('')}<span class="pill gray">Administrador</span></div></div></td>
+      <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => puestoChip(cat, p)).join('')}<span class="puesto-chip admin">${icon('crown')}Administrador</span></div></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(a.activa, true)}</div></td>
       ${acciones(editar('data-edit-area', a.id))}</tr>`).join('')}</tbody></table></div>
     <p class="hint">${icon('info')} Un lote se libera cuando todos los métodos activos de las áreas activas que aplican a su receta cumplen. Quién captura cada área se define por puesto (Usuarios → Puestos y permisos); los administradores capturan cualquier área.</p>`;
 }
 
-function especHTML(cat) {
-  if (!cat.recetas.length) return emptyState({ ico: 'book-open', title: 'Sin recetas', text: 'Registra una receta para definir sus especificaciones.' });
-  if (!cat.recetas.some((r) => r.id === recetaSel)) recetaSel = cat.recetas[0].id;
-  const metodos = cat.metodos.filter((m) => m.activo || cat.spec(recetaSel, m.id));
-  return `<div class="esp-head">
-      <div class="field" style="max-width:420px;flex:1"><label for="esp-receta">Receta</label>
-        <select id="esp-receta">${cat.recetas.map((r) => `<option value="${esc(r.id)}" ${r.id === recetaSel ? 'selected' : ''}>${esc(recetaTxt(r))}</option>`).join('')}</select></div>
-      <div class="notice" style="flex:2">${icon('info')}<span>La especificación particular tiene prioridad sobre el criterio general del método. Un método marcado como «No aplica» no se exige para liberar los lotes de esta receta. Los cambios se aplican a los resultados que se registren o editen después.</span></div>
-    </div>
-    ${metodos.length ? `<div class="table-wrap responsive"><table class="table"><thead><tr><th>Área</th><th>Método</th><th>Criterio general</th><th>Criterio aplicable a la receta</th><th>Origen</th>${state.isAdmin ? '<th>Acciones</th>' : ''}</tr></thead><tbody>
-      ${metodos.map((m) => {
-        const s = cat.spec(recetaSel, m.id);
-        const porMetodo = m.recetas_aplica && !m.recetas_aplica.includes(recetaSel);
-        const noAplica = porMetodo || s?.aplica === false;
-        return `<tr class="${noAplica ? 'no-aplica' : ''}">
-          <td data-label="Área"><div class="td-in">${areaChip(cat.area(m.area))}</div></td>
-          <td data-label="Método"><div class="td-in cell-main">${esc(m.metodo)}</div></td>
-          <td data-label="Criterio general"><div class="td-in cell-sub">${esc(refLabel(m))}</div></td>
-          <td data-label="Criterio aplicable"><div class="td-in"><b>${noAplica ? 'No se evalúa en esta receta' : esc(refLabel(criterio(m, s)))}</b></div></td>
-          <td data-label="Origen"><div class="td-in">${porMetodo ? '<span class="pill gray">No aplica (método)</span>' : noAplica ? '<span class="pill gray">No aplica</span>' : s ? '<span class="pill orange">Particular</span>' : '<span class="pill info">General</span>'}</div></td>
-          ${acciones(`${editar('data-edit-esp', m.id, 'Definir especificación')}
-            ${s ? `<button class="icon-btn bad" data-del-esp="${esc(s.id)}" aria-label="Usar el criterio general" title="Usar el criterio general">${icon('rotate-ccw')}</button>` : ''}`)}</tr>`;
-      }).join('')}</tbody></table></div>` : emptyState({ ico: 'flask-round', title: 'Sin métodos activos' })}`;
-}
-
 async function onClick(e) {
   const tb = e.target.closest('[data-tab]');
   if (tb) { tab = tb.dataset.tab; pintar(); return; }
-  const a = e.target.closest('[data-c], [data-edit-receta], [data-dup-receta], [data-edit-metodo], [data-dup-metodo], [data-edit-esp], [data-del-esp], [data-edit-area]');
+  const a = e.target.closest('[data-c], [data-edit-receta], [data-dup-receta], [data-edit-metodo], [data-dup-metodo], [data-edit-area]');
   if (!a) return;
   const cat = await getCatalogos();
   let ok = false;
   if (a.dataset.c === 'retry') { pintar(); return; }
-  if (a.dataset.c === 'ver-esp') { recetaSel = a.dataset.id; tab = 'especificaciones'; pintar(); return; }
   if (a.dataset.c === 'nueva-receta') ok = await recetaForm(cat);
   else if (a.dataset.c === 'nuevo-metodo') ok = await metodoForm(cat);
   else if (a.dataset.c === 'nueva-area') ok = await areaForm(cat);
@@ -163,14 +139,6 @@ async function onClick(e) {
   else if (a.dataset.editMetodo) ok = await metodoForm(cat, cat.metodos.find((m) => m.id === a.dataset.editMetodo));
   else if (a.dataset.dupMetodo) ok = await metodoForm(cat, null, cat.metodos.find((m) => m.id === a.dataset.dupMetodo));
   else if (a.dataset.editArea) ok = await areaForm(cat, cat.areas.find((x) => x.id === a.dataset.editArea));
-  else if (a.dataset.editEsp) ok = await especForm(cat, recetaSel, cat.metodos.find((m) => m.id === a.dataset.editEsp));
-  else if (a.dataset.delEsp) {
-    if (await confirmDialog({ title: '¿Usar el criterio general?', message: 'Se quitará la configuración particular de esta receta para el método.', confirmText: 'Usar criterio general', danger: true })) {
-      const { error } = await sb.from('brom_especificaciones_receta').delete().eq('id', a.dataset.delEsp);
-      if (error) { toast(errMsg(error), 'error'); return; }
-      toast('Especificación eliminada.', 'success'); ok = true;
-    }
-  }
   if (ok) { invalidarCatalogos(); pintar(); }
 }
 
@@ -180,13 +148,13 @@ const siguienteCodigo = (cat) => {
   return `REC-${String(n + 1).padStart(2, '0')}`;
 };
 
-// r: receta a editar · base: receta a duplicar para otra especie (copia sus especificaciones)
+// r: receta a editar · base: receta a duplicar para otra especie (copia sus métodos asignados)
 function recetaForm(cat, r = null, base = null) {
   const v = r || (base ? { ...base, codigo: siguienteCodigo(cat), especie: ESPECIES.find((e) => e.v !== base.especie)?.v || 'Perro', activa: true } : { codigo: siguienteCodigo(cat), nombre_receta: '', especie: 'Perro', color: COLORES_RECETA[cat.recetas.length % COLORES_RECETA.length][0], activa: true });
   const especies = [...ESPECIES, ...[...new Set(cat.recetas.map((x) => x.especie))].filter((e) => !ESPECIES.some((x) => x.v === e)).map((e) => ({ v: e, ico: 'paw-print' }))];
   return openModal({
     title: r ? 'Editar receta' : base ? `Duplicar ${base.nombre_receta} para otra especie` : 'Nueva receta',
-    subtitle: base ? 'Se copian sus especificaciones particulares; después puedes ajustarlas para la nueva especie.' : '',
+    subtitle: base ? 'Los métodos asignados a la receta original también se asignan a la copia.' : '',
     submitText: r ? 'Guardar cambios' : 'Registrar receta',
     body: `<div class="form-grid">
       <div class="field"><label for="rf-cod">Código <span class="req">*</span></label><input id="rf-cod" name="codigo" required maxlength="20" value="${esc(v.codigo)}" pattern="[A-Z]{2,5}-\\d{2,3}(-[A-Z0-9]{1,6})?" data-pattern-msg="Usa el formato REC-01."></div>
@@ -221,22 +189,19 @@ function recetaForm(cat, r = null, base = null) {
       const { data, error } = await sb.from('brom_recetas').insert(fila).select('id').single();
       if (error) throw error;
       if (base) {
-        const copia = cat.specs.filter((s) => s.receta_id === base.id).map(({ id, receta_id, ...s }) => ({ ...s, receta_id: data.id }));
-        if (copia.length) { const q = await sb.from('brom_especificaciones_receta').insert(copia); if (q.error) throw q.error; }
         // Los métodos asignados solo a algunas recetas también se asignan a la copia
         for (const m of cat.metodos.filter((x) => x.recetas_aplica?.includes(base.id))) {
           const q = await sb.from('brom_catalogo_metodos').update({ recetas_aplica: [...m.recetas_aplica, data.id] }).eq('id', m.id);
           if (q.error) throw q.error;
         }
-        toast(`Receta ${fila.codigo} creada con ${copia.length} especificaciones copiadas.`, 'success');
-        recetaSel = data.id;
+        toast(`Receta ${fila.codigo} creada para ${fila.especie.toLowerCase()}.`, 'success');
       } else toast('Receta registrada.', 'success');
       return true;
     },
   });
 }
 
-// Campos de criterio compartidos por método y especificación
+// Campos del criterio de un método
 function criterioCampos(prefijo, tipo, param, m = {}) {
   const opts = Object.entries(PARAMETROS).filter(([k]) => tipo === 'numerico' || ['ninguno', 'exacto'].includes(k));
   return `<div class="field"><label for="${prefijo}-param">Parámetro de referencia</label>
@@ -332,10 +297,6 @@ function metodoForm(cat, m = null, base = null) {
       const { data, error } = await sb.from('brom_catalogo_metodos').insert(fila).select('id').single();
       if (error) throw error;
       if (base) {
-        // Copia las especificaciones particulares del original para las recetas elegidas
-        const aplicaEn = fila.recetas_aplica || cat.recetas.map((r) => r.id);
-        const copia = cat.specs.filter((s) => s.metodo_id === base.id && aplicaEn.includes(s.receta_id)).map(({ id, metodo_id, ...s }) => ({ ...s, metodo_id: data.id }));
-        if (copia.length) { const q = await sb.from('brom_especificaciones_receta').insert(copia); if (q.error) throw q.error; }
         if (form.querySelector('[name="quitar"]')?.checked && fila.recetas_aplica) {
           const resto = (base.recetas_aplica || cat.recetas.map((r) => r.id)).filter((id) => !fila.recetas_aplica.includes(id));
           const q = await sb.from('brom_catalogo_metodos').update({ recetas_aplica: resto }).eq('id', base.id);
@@ -344,51 +305,6 @@ function metodoForm(cat, m = null, base = null) {
         toast(`Se creó la copia de ${base.metodo}.`, 'success');
       } else toast('Método registrado.', 'success');
       return true;
-    },
-  });
-}
-
-function especForm(cat, recetaId, m) {
-  const r = cat.recetas.find((x) => x.id === recetaId);
-  const s = cat.spec(recetaId, m.id);
-  const base = s ? criterio(m, s) : m;
-  const num = m.tipo_resultado === 'numerico';
-  return openModal({
-    title: `Especificación de ${m.metodo}`, subtitle: `${recetaTxt(r)} · Criterio general: ${refLabel(m)}`, size: 'sm',
-    submitText: 'Guardar especificación',
-    body: `<div class="field"><label for="ef-aplica">¿Se evalúa en esta receta?</label><select id="ef-aplica" name="aplica">
-        <option value="true">Sí, se exige para liberar el lote</option><option value="false" ${s?.aplica === false ? 'selected' : ''}>No aplica a esta receta</option></select></div>
-      <div data-crit></div>${num && m.unidades ? `<p class="hint">Unidad del método: <b>${esc(m.unidades)}</b></p>` : ''}
-      ${num ? '' : `<p class="hint">${icon('info')} En los métodos de ${esc(tipoLabel(m.tipo_resultado).toLowerCase())} solo se configura si aplican a la receta.</p>`}`,
-    onOpen: ({ form }) => {
-      const crit = form.querySelector('[data-crit]');
-      const montar = () => {
-        const aplica = form.aplica.value === 'true';
-        crit.innerHTML = aplica && num ? criterioCampos('ef', m.tipo_resultado, base.parametro_referencia || 'ninguno', s ? base : {}) : '';
-        criterioVisibilidad(form, aplica && num ? m.tipo_resultado : 'verificacion');
-        form.param?.addEventListener('change', () => criterioVisibilidad(form, m.tipo_resultado));
-      };
-      montar();
-      form.aplica.addEventListener('change', montar);
-    },
-    onSubmit: async ({ form }) => {
-      if (!checkForm(form)) return false;
-      const aplica = form.aplica.value === 'true';
-      let fila;
-      if (!aplica || !num) fila = { receta_id: recetaId, metodo_id: m.id, tipo_limite: 'na', valor_referencia: null, valor_referencia_max: null, valor_referencia_texto: null, aplica };
-      else {
-        const c = criterioValores(form, m.tipo_resultado);
-        fila = { receta_id: recetaId, metodo_id: m.id, tipo_limite: PARAM_A_LIMITE[c.p], valor_referencia: c.v, valor_referencia_max: c.mx, valor_referencia_texto: c.txt, aplica: true };
-      }
-      if (aplica && !num && !s) { toast('El método ya se exige con su criterio general.', 'info'); return true; }
-      if (aplica && !num && s) {
-        const { error } = await sb.from('brom_especificaciones_receta').delete().eq('id', s.id);
-        if (error) throw error;
-        toast(`${m.metodo} vuelve a exigirse en ${r.nombre_receta}.`, 'success'); return true;
-      }
-      const { error } = s ? await sb.from('brom_especificaciones_receta').update(fila).eq('id', s.id) : await sb.from('brom_especificaciones_receta').insert(fila);
-      if (error) throw error;
-      toast(aplica ? `Especificación de ${m.metodo}: ${refLabel(criterio(m, fila))}.` : `${m.metodo} no se evaluará en ${r.nombre_receta}.`, 'success');
     },
   });
 }

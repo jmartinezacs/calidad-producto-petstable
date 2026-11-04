@@ -41,7 +41,7 @@ const TEMAS = [
     ['¿Qué áreas de análisis existen?', '- **Bromatológico:** proteínas, grasas y cenizas.\n- **Fisicoquímico:** pH y humedad.\n- **Microbiológico:** coliformes totales, Salmonella, hongos y levaduras, mesófilos aerobios.\n- **Sensorial:** olor, color, sabor y textura.\nLos administradores pueden agregar métodos o áreas nuevas.'],
     ['¿Cómo capturo los análisis de mi área?', 'Abre el lote con **Capturar análisis** (o **Editar y capturar**). En tu área:\n- Marca la casilla del método y escribe el resultado numérico, o\n- En los métodos de verificación pulsa **Cumple** o **No cumple**.\nCon **Marcar todo como cumple** registras de una vez todos los métodos de verificación del área. Pulsa **Guardar análisis**.'],
     ['¿Cómo se calcula Cumple o No cumple?', 'Cada resultado se compara con el criterio aplicable:\n- **Mínimo:** el resultado debe ser mayor o igual al límite.\n- **Máximo:** el resultado debe ser menor o igual al límite.\n- **Valor exacto:** el resultado debe ser igual.\n- **Rango:** el resultado debe estar dentro del intervalo.\n- **Verificación:** cumple si se marca «Cumple».\nMientras capturas ves una vista previa; el dictamen definitivo lo calcula la base de datos al guardar.'],
-    ['¿Qué es la especificación «específica de la receta»?', 'Algunas recetas tienen un criterio distinto al general del método (por ejemplo, un límite de grasa diferente para una receta de gato). Cuando existe, aparece en naranja con la leyenda **específico de la receta** y es el que se aplica.'],
+    ['¿Cómo se define el criterio de cada análisis?', 'Cada **método** tiene su criterio (por ejemplo, humedad máxima de 10 %) y las recetas a las que aplica. Si una receta necesita otro criterio, se **duplica el método** con el nuevo criterio y se asigna solo a esa receta.'],
     ['¿Puedo corregir un resultado?', 'Sí, mientras el lote no esté liberado. Si ya se liberó, un administrador debe **revertir la liberación** primero; la reversión queda registrada con su motivo.'],
     ['¿Puedo quitar un análisis ya capturado?', 'Solo un administrador puede quitar análisis ya capturados, para no perder información registrada.'],
   ] },
@@ -61,10 +61,10 @@ const TEMAS = [
     ['¿Cómo amplío o guardo una gráfica?', 'Toca o haz clic en la gráfica para verla en grande. Desde ahí puedes **guardarla como imagen**. Para cerrar, pulsa la X o la tecla Esc.'],
     ['¿Qué colores tienen las recetas?', '**Meat Festival** en naranja, **Chicken Chase** en turquesa y **Tasty Piggy** en verde. Las recetas nuevas toman el color que elija el administrador.'],
   ] },
-  { id: 'catalogos', ico: 'book-open-check', titulo: 'Recetas, métodos y especificaciones', preguntas: [
+  { id: 'catalogos', ico: 'book-open-check', titulo: 'Recetas y métodos', preguntas: [
     ['¿Cómo agrego una receta?', 'En **Recetas y métodos → Recetas** pulsa **Nueva receta**. El código se propone en formato **REC-04**; indica el nombre, la especie y el color característico.'],
-    ['¿Cómo uso la misma receta para otra especie?', 'Pulsa el botón **Duplicar para otra especie** en la receta (por ejemplo, Meat Festival para gato). Se crea una receta nueva con su propio código, que copia las especificaciones particulares y los métodos asignados, para que después los ajustes a la nueva especie.'],
-    ['¿Cómo cambio la especificación de un método para una receta?', 'En **Especificaciones por receta** elige la receta y edita el método. Puedes definir un criterio particular o marcar que el método **No aplica** a esa receta (entonces no se exige para liberar). Con el botón de regresar vuelves al criterio general.'],
+    ['¿Cómo uso la misma receta para otra especie?', 'Pulsa el botón **Duplicar para otra especie** en la receta (por ejemplo, Meat Festival para gato). Se crea una receta nueva con su propio código, al que también se asignan los métodos de la receta original.'],
+    ['¿Cómo uso un criterio distinto para una receta?', 'Duplica el método (botón **Duplicar** en **Métodos**), cambia el criterio y elige **Solo a las recetas que elija** con esa receta. Deja marcada **Quitar las recetas elegidas del método original** para que la receta solo se evalúe con el nuevo criterio.'],
     ['¿Si cambio un criterio se recalculan los dictámenes anteriores?', 'No. El nuevo criterio aplica a los resultados que se registren o editen después. Los dictámenes ya calculados se conservan.'],
     ['¿Cómo agrego un método?', 'En **Métodos** pulsa **Nuevo método** y elige su área, tipo de resultado (cuantitativo, verificación o cualitativo), criterio, unidad, referencia normativa y **a qué recetas aplica** (a todas o solo a las que elijas).'],
     ['¿Cómo hago que un método aplique solo a algunas recetas?', 'Edita el método y en **¿A qué recetas aplica?** elige **Solo a las recetas que elija** y marca las recetas. En las demás recetas el método no se exige para liberar.'],
@@ -74,6 +74,8 @@ const TEMAS = [
     ['¿Cómo doy acceso a una persona?', 'Un administrador entra a **Usuarios**, pulsa **Nuevo usuario**, busca a la persona por nombre o correo, la selecciona, indica su **puesto** y su **área** (elige uno de la lista o escribe uno nuevo), asigna su **rol** y pulsa **Dar acceso**. La persona debe tener una cuenta de Pet\'s Table; su fotografía se toma de las demás aplicaciones.'],
     ['¿Cómo cambio mi fotografía?', 'En **Mi perfil → Cambiar fotografía**. Un administrador también puede cambiarla desde **Usuarios → Editar**.'],
     ['¿Qué es la bitácora?', 'Es el registro automático de todos los cambios: lotes registrados, análisis capturados o corregidos, liberaciones y reversiones, firmas, recetas, métodos, especificaciones, usuarios y puestos. Muestra quién hizo cada acción, con su foto, y la fecha y hora. Pulsa un registro para ver el detalle de antes y después. Solo la consultan los administradores y no se puede modificar.'],
+    ['¿Qué notificaciones recibo?', 'Según tu puesto, recibes un aviso cuando:\n- Se registra un lote y **te toca capturar** un área.\n- Otra persona **completa la captura** de un área que tú también capturas, o de un lote que registraste.\n- Un lote queda **listo para liberar** (si tu puesto libera lotes) o **no conforme**.\n- Se **libera** un lote que registraste o capturaste.\nLos avisos aparecen en la **campana** del encabezado, como notificación en tu celular o computadora y por **correo**.'],
+    ['¿Cómo activo las notificaciones y los correos?', 'En **Mi perfil → Notificaciones y correos**:\n- Pulsa **Activar notificaciones** en cada dispositivo donde quieras recibirlas (en iPhone, primero instala la aplicación).\n- Activa o desactiva **Recibir los avisos por correo**.\n- Usa **Enviar notificación de prueba**, **Vista previa del correo** y **Enviarme un correo de prueba** para comprobar que te llegan.'],
     ['¿Cómo cambio mi contraseña?', 'En **Mi perfil → Cambiar contraseña**. El cambio aplica a todas las aplicaciones de Pet\'s Table que usan tu cuenta.'],
     ['¿Cómo desactivo a una persona?', 'En **Usuarios** pulsa el botón **Desactivar** de la persona (o cambia su estado en **Editar**). Su cuenta sigue funcionando en otras aplicaciones, pero ya no entra a este sistema. Siempre debe quedar al menos un administrador activo.'],
   ] },
@@ -209,7 +211,7 @@ export default {
           <span class="faq-guia-ico">${icon('book-open-text')}</span>
           <b>Guía de usuario en PDF</b>
           <span>Cómo operar todo el sistema, desde la instalación y el inicio de sesión hasta la liberación y el certificado. Lista para imprimir o compartir.</span>
-          <button class="btn primary" id="faq-pdf">${icon('download')} Descargar guía</button>
+          <button class="btn c-red" id="faq-pdf">${icon('download')} Descargar guía</button>
         </div>
       </section>
       <nav class="faq-chips" aria-label="Temas">

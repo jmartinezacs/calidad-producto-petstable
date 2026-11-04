@@ -7,7 +7,7 @@
 import {
   esc, icon, refreshIcons, toast, emptyState, errorState, fmtDate, fmtNum, todayISO, fechaLote,
   dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio, getCatalogos, getResultados, makeChart, destroyCharts,
-  toCSV, descargar, cssVar, fmtValor, prefs, mesLargo, recetaTxt, getDirectorio, personaHTML, especieIco,
+  toCSV, descargar, cssVar, fmtValor, prefs, mesLargo, recetaTxt, getDirectorio, personaHTML, especieIco, especieImg,
 } from '../core.js';
 
 const POR_PAGINA = 20;
@@ -20,7 +20,7 @@ export default {
       <section class="page-intro">
         <div><span class="eyebrow">Calidad de producto</span><h1>Resultados</h1>
           <p>Tendencia histórica por receta, área y método, con límites de especificación y media del periodo filtrado.</p></div>
-        <div class="page-actions"><button class="btn secondary" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
+        <div class="page-actions"><button class="btn s-green" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
       </section>
       <div class="card filtros-card">
         <div class="filtros">
@@ -227,7 +227,7 @@ function graficas(datos) {
   box.innerHTML = grupos.map((g, gi) => {
     const metodos = [...g.metodos.values()].sort((a, b) => posMetodo(a[0].metodo_id) - posMetodo(b[0].metodo_id));
     return `<div class="receta-sep" style="--rc:${esc(g.receta.color || '#F58020')}"><b>${esc(g.receta.nombre_receta)}</b><span class="rs-cod">${esc(g.receta.codigo)}</span>
-        ${g.receta.especie ? `<span class="rs-especie">${icon(especieIco(g.receta.especie))}${esc(g.receta.especie)}</span>` : ''}
+        ${g.receta.especie ? `<span class="rs-especie">${especieImg(g.receta.especie, "sm")}${esc(g.receta.especie)}</span>` : ''}
         <span class="rs-count">${fmtNum(g.n)} ${g.n === 1 ? 'resultado' : 'resultados'} · ${metodos.length} ${metodos.length === 1 ? 'método' : 'métodos'}</span></div>
       <div class="trend-grid">${metodos.map((items, mi) => {
         const id = `tr-${gi}-${mi}`;
@@ -269,7 +269,8 @@ function dibujarCumplimiento(id, items) {
   const usar = valores.map((v, i) => i).filter((i) => valores[i] > 0);
   makeChart(document.getElementById(id), {
     type: 'doughnut',
-    data: { labels: usar.map((i) => etiquetas[i]), datasets: [{ data: usar.map((i) => valores[i]), backgroundColor: usar.map((i) => colores[i]), borderWidth: 0, _porcentaje: true }] },
+    data: { labels: usar.map((i) => etiquetas[i]), datasets: [{ data: usar.map((i) => valores[i]), backgroundColor: usar.map((i) => colores[i]), _porcentaje: true,
+      _centro: { valor: ok + no ? `${Math.round((ok / (ok + no)) * 1000) / 10} %` : '—', etiqueta: 'Cumplen', color: no ? '#E0464E' : '#16A34A' } }] },
     options: {
       plugins: {
         legend: { position: 'bottom' },
@@ -289,8 +290,8 @@ function dibujar(id, items0) {
   const fuera = items.map((it, i) => (it.cumple === false ? i : -1)).filter((i) => i >= 0);
   const rojo = '#E0464E', turq = '#0891B2';
   const datasets = [{
-    label: m.metodo, data: valores, borderColor: color, backgroundColor: color, fill: false,
-    borderWidth: 2.4, tension: 0, spanGaps: true,
+    label: m.metodo, data: valores, borderColor: color, backgroundColor: color, _area: true,
+    borderWidth: 2.6, cubicInterpolationMode: 'monotone', spanGaps: true, borderCapStyle: 'round',
     pointRadius: items.map((_, i) => (fuera.includes(i) ? 5 : 3)), pointHoverRadius: 7,
     pointBackgroundColor: items.map((_, i) => (fuera.includes(i) ? rojo : color)), pointBorderColor: '#fff', pointBorderWidth: 1.2,
     _etiquetas: true, _fuera: fuera, _cualitativo: false,

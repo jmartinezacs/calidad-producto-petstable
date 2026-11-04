@@ -2,6 +2,18 @@
 
 Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
+## Versión 9.0
+
+- **Notificaciones y correos:** campana en el encabezado, notificaciones push en celular y computadora, y correos (misma cuenta de Gmail que Servicio médico). Avisan cuando te toca capturar un área de un lote nuevo, cuando alguien más completa un área que también capturas, cuando un lote queda listo para liberar o no conforme y cuando se libera. En Mi perfil: activar en el dispositivo, recibir o no correos, y botones de notificación de prueba, vista previa del correo y correo de prueba.
+- **Gráficas** con un diseño más cuidado: degradados, tarjetas con ícono de color, recuadro de información y etiquetas renovados; el porcentaje de cumplimiento ahora es una **dona** con la cifra al centro.
+- **Perro y gato** con imágenes 3D realistas en lugar del ícono naranja.
+- **Botones de colores** según su acción (certificado, liberar, capturar, firmas, revertir, exportar…).
+- **Bitácora** con tabla, encabezados y texto centrados. **Mi perfil** con seis recuadros (se agregan área y correo).
+- **Recetas y métodos:** se quitó «Especificaciones por receta» (un criterio distinto se logra duplicando el método); en Áreas de análisis cada puesto tiene su propio color.
+- Se borraron los lotes de prueba; el siguiente certificado es CC-2026-0001.
+
+Base de datos: migración `supabase/migrations/20261104_brom_v9_notificaciones.sql` y Edge Function `supabase/functions/notificar_brom`.
+
 ## Versión 8.0
 
 - **Puestos y permisos:** lo que cada persona captura, si libera lotes y si firma el certificado depende de su puesto. Roles: solo Usuario y Administrador.

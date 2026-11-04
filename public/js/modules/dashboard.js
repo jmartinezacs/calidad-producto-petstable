@@ -104,8 +104,8 @@ const statusCard = (cls, title, desc, n, go = '') =>
 const cardHead = (title, sub = '', btn = '') =>
   `<div class="card-head center"><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}</div>${btn}</div>`;
 
-function chartCard(id, title, sub, cls = '', total = '', alto = 0) {
-  return `<div class="card"><div class="card-head center"><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}${total ? `<span class="total-badge">${total}</span>` : ''}</div></div>
+function chartCard(id, title, sub, cls = '', total = '', alto = 0, ico = 'bar-chart-3', color = '#F58020') {
+  return `<div class="card chart-card" style="--cc:${color}"><div class="card-head center"><span class="cc-ico" aria-hidden="true">${icon(ico)}</span><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}${total ? `<span class="total-badge">${total}</span>` : ''}</div></div>
     <div tabindex="0" title="Ampliar gráfica" class="chart-box ${cls}"${alto ? ` style="height:${alto}px"` : ''}><canvas id="${id}" role="img" aria-label="${esc(title)}"></canvas></div></div>`;
 }
 
@@ -140,21 +140,21 @@ function contenido(cat, lotes, rs) {
       ${statusCard(n('no_conforme') ? 'bad' : '', 'No conformes', 'Con al menos un análisis fuera de especificación', n('no_conforme'), '#/lotes?estado=no_conforme')}
     </div>
     <div class="grid grid-main mt">
-      ${chartCard('ch-mes', 'Lotes por mes', 'Según su estado de liberación')}
-      ${chartCard('ch-pct', 'Porcentaje de cumplimiento', `${fmtNum(ok + no)} análisis evaluados en el periodo`)}
+      ${chartCard('ch-mes', 'Lotes por mes', 'Según su estado de liberación', '', '', 0, 'calendar-range', '#2563EB')}
+      ${chartCard('ch-pct', 'Porcentaje de cumplimiento', `${fmtNum(ok + no)} análisis evaluados en el periodo`, '', '', 0, 'circle-check-big', '#16A34A')}
     </div>
     <div class="grid grid-2 mt">
-      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm')}
-      ${chartCard('ch-area', 'Cumplimiento por área de análisis', 'Porcentaje de análisis que cumplen', 'sm')}
+      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'chef-hat', '#F58020')}
+      ${chartCard('ch-area', 'Cumplimiento por área de análisis', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'microscope', '#7C3AED')}
     </div>
     <div class="grid grid-2 mt">
-      ${chartCard('ch-metodo', 'Fuera de especificación por método', 'Número de análisis que no cumplen', 'sm', `Total: <b>${fmtNum(no)}</b>`, Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24))}
-      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} lotes en el periodo`, 'sm')}
+      ${chartCard('ch-metodo', 'Fuera de especificación por método', 'Número de análisis que no cumplen', 'sm', `Total: <b>${fmtNum(no)}</b>`, Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24), 'triangle-alert', '#DC2626')}
+      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} lotes en el periodo`, 'sm', '', 0, 'pie-chart', '#0891B2')}
     </div>
     <div class="grid grid-2 mt">
-      <div class="card">${cardHead('Listos para liberar', 'Todos sus análisis cumplen', `<button class="btn secondary" data-dash="#/lotes?estado=listo">${icon('badge-check')} Ver lotes</button>`)}
+      <div class="card">${cardHead('Listos para liberar', 'Todos sus análisis cumplen', `<button class="btn s-green" data-dash="#/lotes?estado=listo">${icon('badge-check')} Ver lotes</button>`)}
         ${lista(lotes.filter((l) => l.estado === 'listo').slice(0, 6), emptyState({ ico: 'inbox', title: 'Sin lotes por liberar', text: 'Aquí aparecen los lotes con todos sus análisis en cumplimiento.' }))}</div>
-      <div class="card">${cardHead('No conformidades', 'Lotes con algún análisis fuera de especificación', `<button class="btn secondary" data-dash="#/lotes?estado=no_conforme">${icon('triangle-alert')} Ver todos</button>`)}
+      <div class="card">${cardHead('No conformidades', 'Lotes con algún análisis fuera de especificación', `<button class="btn s-red" data-dash="#/lotes?estado=no_conforme">${icon('triangle-alert')} Ver todos</button>`)}
         ${lista(lotes.filter((l) => l.estado === 'no_conforme').slice(0, 6), emptyState({ ico: 'shield-check', title: 'Sin no conformidades', text: 'Ningún lote del periodo tiene análisis fuera de especificación.' }))}</div>
     </div>`;
 }
@@ -204,12 +204,13 @@ function drawCharts(cat, lotes, rs) {
     },
     options: { scales: { x: { stacked: true, ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true } }, y: { stacked: true } } },
   });
-  // Porcentaje de cumplimiento (pastel)
+  // Porcentaje de cumplimiento (dona con el porcentaje que cumple al centro)
   const ok = rs.filter((r) => r.cumple === true).length, no = rs.filter((r) => r.cumple === false).length, pend = rs.length - ok - no;
   const seg = [['Cumple', ok, '#16A34A'], ['No cumple', no, '#E0464E'], ['Pendiente', pend, '#F59E0B']].filter((s) => s[1] > 0);
   makeChart(document.getElementById('ch-pct'), {
-    type: 'pie',
-    data: { labels: seg.map((s) => s[0]), datasets: [{ data: seg.map((s) => s[1]), backgroundColor: seg.map((s) => s[2]), borderWidth: 2, _porcentaje: true }] },
+    type: 'doughnut',
+    data: { labels: seg.map((s) => s[0]), datasets: [{ data: seg.map((s) => s[1]), backgroundColor: seg.map((s) => s[2]), _porcentaje: true,
+      _centro: { valor: pct(ok, ok + no), etiqueta: 'Cumplen', color: '#16A34A' } }] },
     options: { plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${fmtNum(c.raw)} análisis (${pct(c.raw, rs.length)})` } } } },
   });
   // Cumplimiento por receta (color característico de cada receta)
@@ -237,7 +238,8 @@ function drawCharts(cat, lotes, rs) {
   // Lotes por estado
   makeChart(document.getElementById('ch-estado'), {
     type: 'doughnut',
-    data: { labels: estados.map(([, v]) => v.label), datasets: [{ data: estados.map(([k]) => lotes.filter((l) => l.estado === k).length), backgroundColor: estados.map(([, v]) => v.color), borderWidth: 0 }] },
+    data: { labels: estados.map(([, v]) => v.label), datasets: [{ data: estados.map(([k]) => lotes.filter((l) => l.estado === k).length), backgroundColor: estados.map(([, v]) => v.color),
+      _centro: { valor: fmtNum(lotes.length), etiqueta: lotes.length === 1 ? 'Lote' : 'Lotes' } }] },
     options: { plugins: { legend: { position: 'bottom' } } },
   });
 }

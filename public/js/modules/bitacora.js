@@ -99,10 +99,10 @@ function pintar() {
   }
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const ini = (pagina - 1) * POR_PAGINA;
-  body.innerHTML = `<div class="table-wrap responsive"><table class="table bitacora-tabla"><thead><tr><th>Fecha y hora</th><th class="col-user">Usuario</th><th>Módulo</th><th>Acción</th><th>Descripción</th><th></th></tr></thead><tbody>
+  body.innerHTML = `<div class="table-wrap responsive"><table class="table bitacora-tabla"><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Descripción</th><th></th></tr></thead><tbody>
     ${filas.map((b) => `<tr data-ver="${b.id}" class="clickable">
       <td data-label="Fecha y hora"><div class="td-in mono">${fmtDateTime(b.created_at)}</div></td>
-      <td data-label="Usuario" class="col-user"><div class="td-in">${actorHTML(b)}</div></td>
+      <td data-label="Usuario"><div class="td-in">${actorHTML(b)}</div></td>
       <td data-label="Módulo"><div class="td-in">${esc(TABLAS[b.tabla] || b.tabla)}</div></td>
       <td data-label="Acción"><div class="td-in"><span class="pill ${ACC[b.accion]?.[1] || 'gray'}">${icon(ACC[b.accion]?.[2] || 'dot')} ${esc(ACC[b.accion]?.[0] || b.accion)}</span></div></td>
       <td data-label="Descripción" class="col-desc"><div class="td-in"><span class="bit-desc">${describir(b)}</span></div></td>
