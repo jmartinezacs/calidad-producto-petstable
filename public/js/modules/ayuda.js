@@ -203,7 +203,7 @@ export default {
         <div class="faq-hero-txt">
           <span class="eyebrow">Centro de ayuda</span>
           <h1>Preguntas frecuentes</h1>
-          <p>Todo lo que necesitas para registrar lotes, capturar análisis, liberar producto, emitir certificados e instalar la aplicación.</p>
+          <p>Respuestas rápidas y guía de uso.</p>
           <div class="faq-search">${icon('search')}<input type="search" id="faq-q" placeholder="Escribe tu duda, por ejemplo: «no cumple» o «instalar»" aria-label="Buscar en preguntas frecuentes" autocomplete="off"></div>
           <div class="faq-meta"><span>${icon('message-circle-question')} ${totalPreguntas} respuestas</span><span>${icon('layers')} ${TEMAS.length + 1} temas</span><span>${icon('info')} Versión ${esc(APP_VERSION)}</span></div>
         </div>

@@ -19,7 +19,7 @@ export default {
     el.innerHTML = `
       <section class="page-intro">
         <div><span class="eyebrow">Calidad de producto</span><h1>Resultados</h1>
-          <p>Tendencia histórica por receta, área y método, con límites de especificación y media del periodo filtrado.</p></div>
+          <p>Tendencia por receta, área y método.</p></div>
         <div class="page-actions"><button class="btn c-sheets" data-r="csv">${icon('file-spreadsheet')} Exportar</button></div>
       </section>
       <div class="card filtros-card">

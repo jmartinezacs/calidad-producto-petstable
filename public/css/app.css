@@ -2106,3 +2106,17 @@ ul.lib-areas li { display: flex; align-items: center; gap: 4px; font-size: 13px;
 .pill-solida.azul { background: linear-gradient(135deg, #0E8F96, #1BC7C7); }
 .puesto-chip { padding: 6px 13px; }
 .form-sec .form-grid .form-grid { margin-left: 0; margin-right: 0; }
+
+/* ===================== v9.4 ===================== */
+/* Usuarios: cada fila en un solo renglón (en pantallas anchas) */
+@media (min-width: 901px) {
+  .usuarios-tabla { font-size: 12.5px; }
+  .usuarios-tabla th, .usuarios-tabla td { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+  .usuarios-tabla .user-txt b { font-size: 13.5px; }
+  .usuarios-tabla .user-txt small, .usuarios-tabla .puesto-txt small { font-size: 11.5px; }
+  .usuarios-tabla .puesto-txt b { font-size: 13px; }
+  .usuarios-tabla .pill { font-size: 11px; padding: 4px 10px; }
+  .usuarios-tabla .mail-switch { font-size: 11.5px; }
+  .usuarios-tabla .row-actions { flex-wrap: nowrap; }
+}
+.p-tile b.p-perm { font-size: 14px; line-height: 1.4; }

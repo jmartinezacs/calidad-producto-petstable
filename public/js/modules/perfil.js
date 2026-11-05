@@ -13,32 +13,32 @@ const instalada = () => window.matchMedia('(display-mode: standalone), (display-
 
 // Permisos: el rol define qué se administra; el puesto, qué se captura, si libera y si firma
 function permisosTxt(p) {
-  if (p.rol === 'admin') return 'Administración completa: recetas, métodos, usuarios, puestos y bitácora; captura de todas las áreas, liberación y borrado de lotes';
-  const areas = (p.areas_captura || []).map((a) => ({ bromatologico: 'bromatológico', fisicoquimico: 'fisicoquímico', microbiologico: 'microbiológico', sensorial: 'sensorial' }[a] || a));
-  return ['Registrar lotes', areas.length ? `capturar análisis ${areas.join(', ')}` : 'consultar análisis', p.puede_liberar ? 'liberar lotes y emitir certificados' : '',
-    p.firma_certificado === 'jefe_calidad' ? 'firmar certificados como Jefe de calidad' : p.firma_certificado === 'inspector' ? 'firmar certificados como Inspector de calidad' : ''].filter(Boolean).join('; ');
+  if (p.rol === 'admin') return 'Acceso total';
+  const areas = (p.areas_captura || []).map((a) => ({ bromatologico: 'Bromatológico', fisicoquimico: 'Fisicoquímico', microbiologico: 'Microbiológico', sensorial: 'Sensorial' }[a] || a));
+  return [areas.length ? `Captura: ${areas.join(', ')}` : 'Solo consulta', p.puede_liberar ? 'Libera lotes' : '',
+    p.firma_certificado ? `Firma como ${p.firma_certificado === 'jefe_calidad' ? 'Jefe de calidad' : 'Inspector de calidad'}` : ''].filter(Boolean).join(' · ');
 }
 
 
 // ---------- Notificaciones push de este dispositivo ----------
-const QUE_AVISA = 'Te avisamos cuando se registra un lote y te toca capturar un área, cuando alguien más completa un área que tú también capturas, cuando un lote queda listo para liberar o no conforme, y cuando se libera un lote que registraste o capturaste.';
+const QUE_AVISA = 'Te avisamos cuando te toca capturar, cuando un lote está listo para liberar, no cumple o se libera.';
 async function pintarPush(box) {
   if (!box) return;
   const est = await push.estado().catch(() => 'no-soportado');
   const prueba = `<button class="btn c-purple" data-n="test">${icon('bell-ring')} Enviar notificación de prueba</button>`;
   const txt = {
-    activo: [pill('Activadas en este dispositivo', 'ok'), 'Quedan activas aunque cierres sesión; los avisos llegan a la última cuenta que inició sesión aquí.', `<div class="page-actions notif-acts">
+    activo: [pill('Activadas en este dispositivo', 'ok'), 'Siguen activas aunque cierres sesión.', `<div class="page-actions notif-acts">
         ${prueba}<button class="btn s-red" data-n="off">${icon('bell-off')} Desactivar en este dispositivo</button></div>
       <details class="notif-ajustes"><summary>${icon('smartphone')} ¿No suena o no aparece en la pantalla bloqueada?</summary>
         <p><b>Android (Chrome):</b> mantén presionado el aviso de prueba → Configuración, o ve a Ajustes → Aplicaciones → Chrome → Notificaciones → busca este sitio y activa <b>Mostrar en pantalla emergente</b>, <b>Sonido</b> y <b>Pantalla de bloqueo</b>.</p>
         <p><b>iPhone:</b> Ajustes → Notificaciones → Liberación → activa <b>Permitir notificaciones</b>, <b>Pantalla bloqueada</b> y <b>Sonidos</b>.</p>
         <p><b>Windows:</b> Configuración → Sistema → Notificaciones → activa las de Chrome o Edge y revisa que «No molestar» esté apagado.</p>
       </details>`],
-    inactivo: [pill('Desactivadas en este dispositivo', 'gray'), 'Actívalas para recibir los avisos aunque no tengas el sistema abierto. Mientras tanto, los avisos aparecen en la campana del encabezado.', `<div class="page-actions notif-acts">
+    inactivo: [pill('Desactivadas en este dispositivo', 'gray'), 'Actívalas para recibir avisos aunque el sistema esté cerrado.', `<div class="page-actions notif-acts">
         <button class="btn c-green" data-n="on">${icon('bell')} Activar notificaciones</button>${prueba}</div>`],
-    bloqueado: [pill('Bloqueadas', 'bad'), 'Las notificaciones están bloqueadas para este sitio. Permítelas desde la configuración del navegador (ícono del candado junto a la dirección) y vuelve a intentarlo.', `<div class="page-actions notif-acts">${prueba}</div>`],
+    bloqueado: [pill('Bloqueadas', 'bad'), 'Permítelas desde el candado junto a la dirección del sitio.', `<div class="page-actions notif-acts">${prueba}</div>`],
     instalar: [pill('Requiere instalar', 'warn'), 'En iPhone y iPad las notificaciones solo funcionan con la app instalada: toca Compartir → «Agregar a pantalla de inicio», ábrela desde ese ícono y regresa aquí para activarlas.', `<div class="page-actions notif-acts">${prueba}</div>`],
-    'no-soportado': [pill('No disponibles', 'gray'), 'Este navegador no admite notificaciones web. Usa Chrome, Edge o Safari actualizados. Los avisos siguen apareciendo en la campana.', `<div class="page-actions notif-acts">${prueba}</div>`],
+    'no-soportado': [pill('No disponibles', 'gray'), 'Este navegador no las admite; usa Chrome, Edge o Safari.', `<div class="page-actions notif-acts">${prueba}</div>`],
   }[est];
   box.innerHTML = `<p style="margin:0 0 8px">${txt[0]}</p><p class="hint" style="margin:0 0 12px">${esc(txt[1])}</p>${txt[2]}`;
   refreshIcons();
@@ -78,7 +78,7 @@ async function pintarCorreo(box) {
   const { data } = await sb.from('brom_usuarios').select('recibe_correos, correos_admin').eq('id', p.id).maybeSingle();
   const recibe = data?.recibe_correos !== false;
   const bloqueado = data?.correos_admin === false;
-  box.innerHTML = `${bloqueado ? `<div class="notice warn" style="margin-bottom:10px">${icon('mail-x')}<span>Un administrador desactivó los correos de avisos para tu cuenta. Los avisos te siguen llegando a la campana y como notificación.</span></div>` : ''}<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
+  box.innerHTML = `${bloqueado ? `<div class="notice warn" style="margin-bottom:10px">${icon('mail-x')}<span>Un administrador desactivó tus correos de avisos.</span></div>` : ''}<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
       <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data && !bloqueado ? '' : 'disabled'}></label>
     <div class="page-actions notif-acts" style="margin-top:12px">
       <button class="btn s-blue" data-mail="vista">${icon('eye')} Vista previa del correo</button>

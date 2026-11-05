@@ -22,7 +22,7 @@ export default {
     el.innerHTML = `
       <section class="page-intro">
         <div><span class="eyebrow">Administración</span><h1>Usuarios</h1>
-          <p>Personas autorizadas para usar Liberación de producto: puesto, área, rol, foto y cuenta de acceso.</p></div>
+          <p>Quién tiene acceso y con qué puesto.</p></div>
         <div class="page-actions" id="u-acts"></div>
       </section>
       <div class="tabs" role="tablist">
@@ -119,14 +119,14 @@ function pintar() {
       <td data-label="Rol"><div class="td-in">${u.rol === 'admin' ? '<span class="pill orange">Administrador</span>' : '<span class="pill info">Usuario</span>'}</div></td>
       <td data-label="Último acceso"><div class="td-in">${ultimoAcceso(u)}</div></td>
       <td data-label="Estado"><div class="td-in">${u.activo ? '<span class="pill ok">Activo</span>' : '<span class="pill gray">Inactivo</span>'}</div></td>
-      <td data-label="Correos"><div class="td-in"><button class="mail-switch ${u.correos_admin === false ? '' : 'on'}" data-correos="${esc(u.id)}" role="switch" aria-checked="${u.correos_admin !== false}" title="${u.correos_admin === false ? 'No recibe correos de avisos: toca para activarlos' : 'Recibe correos de avisos: toca para desactivarlos'}">
+      <td data-label="Correos"><div class="td-in"><button class="mail-switch ${u.correos_admin === false ? '' : 'on'}" data-correos="${esc(u.id)}" role="switch" aria-checked="${u.correos_admin !== false}" title="${u.correos_admin === false ? 'Toca para activar sus correos' : 'Toca para desactivar sus correos'}">
         <span class="ms-track"><span class="ms-knob">${icon(u.correos_admin === false ? 'mail-x' : 'mail')}</span></span><span class="ms-txt">${u.correos_admin === false ? 'Desactivados' : 'Activos'}</span></button></div></td>
-      <td class="actions" data-label="Acciones"><div class="td-in"><div class="acc-grupo">
-        <button class="acc-btn editar" data-edit="${esc(u.id)}" aria-label="Editar a ${esc(u.nombre_completo)}" title="Editar">${icon('pencil')}<span>Editar</span></button>
-        ${yo ? '' : `<button class="acc-btn ${u.activo ? 'baja' : 'alta'}" data-toggle="${esc(u.id)}" aria-label="${u.activo ? 'Desactivar' : 'Activar'} a ${esc(u.nombre_completo)}" title="${u.activo ? 'Desactivar acceso' : 'Activar acceso'}">${icon(u.activo ? 'user-round-x' : 'user-round-check')}<span>${u.activo ? 'Desactivar' : 'Activar'}</span></button>`}
+      <td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">
+        <button class="icon-btn" data-edit="${esc(u.id)}" aria-label="Editar" title="Editar">${icon('pencil')}</button>
+        ${yo ? '' : `<button class="icon-btn ${u.activo ? 'warn' : 'ok'}" data-toggle="${esc(u.id)}" aria-label="${u.activo ? 'Desactivar' : 'Activar'}" title="${u.activo ? 'Desactivar' : 'Activar'}">${icon(u.activo ? 'user-x' : 'user-check')}</button>`}
       </div></div></td></tr>`;
     }).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} <b>Administrador:</b> administra recetas, métodos, usuarios, puestos y la bitácora. <b>Usuario:</b> registra lotes y captura los análisis que permite su puesto.</p>`;
+    <p class="hint">${icon('info')} <b>Administrador:</b> configura todo el sistema. <b>Usuario:</b> captura lo que permite su puesto.</p>`;
   refreshIcons();
 }
 
@@ -153,15 +153,12 @@ async function onClick(e) {
   if (mc) {
     const u = usuarios.find((x) => x.id === mc.dataset.correos);
     if (!u) return;
+    // Cambio inmediato, sin confirmación; si falla, el interruptor regresa
     const activar = u.correos_admin === false;
-    const ok = await confirmDialog({
-      title: activar ? 'Activar correos de avisos' : 'Desactivar correos de avisos', confirmText: activar ? 'Activar' : 'Desactivar', danger: !activar,
-      message: activar ? `${u.nombre_completo} volverá a recibir por correo los avisos de lotes (si también los tiene activados en su perfil).` : `${u.nombre_completo} dejará de recibir correos de avisos, aunque los tenga activados en su perfil. Los avisos le seguirán llegando a la campana y como notificación.`,
-    });
-    if (!ok) return;
+    u.correos_admin = activar; pintar();
     const { error } = await sb.from('brom_usuarios').update({ correos_admin: activar }).eq('id', u.id);
-    if (error) throw error;
-    toast(activar ? 'Correos activados.' : 'Correos desactivados para esta persona.', 'success'); cargar(); return;
+    if (error) { u.correos_admin = !activar; pintar(); throw error; }
+    toast(activar ? `Correos activados para ${u.nombre_completo}.` : `Correos desactivados para ${u.nombre_completo}.`, 'success'); return;
   }
   const tg = e.target.closest('[data-toggle]');
   if (tg) {
@@ -238,7 +235,7 @@ function usuarioForm(u) {
         ${rolSelect(u.rol, yo)}
         <div class="field"><label for="uf-act">Estado</label><select id="uf-act" name="activo" ${yo ? 'disabled' : ''}><option value="true">Activo</option><option value="false" ${u.activo ? '' : 'selected'}>Inactivo</option></select></div>
       </div>
-      <label class="switch-row" style="margin-top:12px"><span><b>${icon('mail')} Enviar correos de avisos</b><small class="hint" style="display:block;margin:2px 0 0">Si lo desactivas, no recibe correos aunque los tenga activados en su perfil. La campana y las notificaciones siguen llegando.</small></span>
+      <label class="switch-row" style="margin-top:12px"><span><b>${icon('mail')} Enviar correos de avisos</b><small class="hint" style="display:block;margin:2px 0 0">Si lo apagas, no recibe correos aunque los tenga activos en su perfil.</small></span>
         <input type="checkbox" name="correos" ${u.correos_admin === false ? '' : 'checked'}></label>
       ${yo ? `<p class="hint">${icon('lock')} No puedes cambiar tu propio rol ni desactivarte.</p>` : ''}`,
     onOpen: ({ form, wrap }) => {
@@ -360,7 +357,7 @@ function pintarPuestos() {
         ${g.length ? '' : `<button class="icon-btn bad" data-del-puesto="${esc(p.id)}" aria-label="Eliminar" title="Eliminar">${icon('trash-2')}</button>`}
       </div></div></td></tr>`;
     }).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} Lo que cada persona captura depende de su puesto. Los administradores pueden capturar cualquier área. El certificado de calidad lo firman un <b>Jefe de calidad</b> y un <b>Inspector de calidad</b>.</p>`;
+    <p class="hint">${icon('info')} El puesto define qué captura cada persona. El certificado lo firman un <b>Jefe de calidad</b> y un <b>Inspector de calidad</b>.</p>`;
   refreshIcons();
 }
 

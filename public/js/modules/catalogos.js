@@ -21,7 +21,7 @@ export default {
     el.innerHTML = `
       <section class="page-intro">
         <div><span class="eyebrow">Configuración</span><h1>Recetas y métodos</h1>
-          <p>Catálogos que definen qué se analiza en cada lote, con qué especificación y quién lo captura.</p></div>
+          <p>Qué se analiza en cada lote y quién lo captura.</p></div>
         <div class="page-actions" id="cat-acts"></div>
       </section>
       <div class="tabs" role="tablist">
@@ -121,7 +121,7 @@ function areasHTML(cat) {
       <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => puestoChip(cat, p)).join('')}<span class="puesto-chip admin">Administrador</span></div></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(a.activa, true)}</div></td>
       ${acciones(editar('data-edit-area', a.id))}</tr>`).join('')}</tbody></table></div>
-    <p class="hint">${icon('info')} Un lote se libera cuando todos los métodos activos de las áreas activas que aplican a su receta cumplen. Quién captura cada área se define por puesto (Usuarios → Puestos y permisos); los administradores capturan cualquier área.</p>`;
+    <p class="hint">${icon('info')} Quién captura cada área se define en Usuarios → Puestos y permisos.</p>`;
 }
 
 async function onClick(e) {

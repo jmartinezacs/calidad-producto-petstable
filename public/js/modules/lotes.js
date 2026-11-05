@@ -24,7 +24,7 @@ export default {
     el.innerHTML = `
       <section class="page-intro">
         <div><span class="eyebrow">Calidad de producto</span><h1>Lotes y liberación</h1>
-          <p>Cada lote se libera cuando sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales cumplen la especificación.</p></div>
+          <p>Un lote se libera cuando todos sus análisis cumplen.</p></div>
         <div class="page-actions">
           <button class="btn c-sheets" data-l="csv">${icon('file-spreadsheet')} Exportar</button>
           <button class="btn primary" data-l="nuevo">${icon('plus')} Nuevo lote</button>

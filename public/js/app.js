@@ -17,9 +17,9 @@ import bitacora from './modules/bitacora.js';
 const TODOS = ['admin', 'usuario'];
 const ROUTES = {
   panel:      { mod: dashboard,  icon: 'layout-dashboard', label: 'Panel',               roles: TODOS, mobile: true },
-  lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes y liberación',  roles: TODOS, mobile: true },
+  lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes y liberación', corto: 'Lotes',  roles: TODOS, mobile: true },
   resultados: { mod: resultados, icon: 'line-chart',       label: 'Resultados',          roles: TODOS, mobile: true },
-  catalogos:  { mod: catalogos,  icon: 'book-open-check',  label: 'Recetas y métodos',   roles: TODOS, mobile: true },
+  catalogos:  { mod: catalogos,  icon: 'book-open-check',  label: 'Recetas y métodos', corto: 'Recetas',   roles: TODOS, mobile: true },
   usuarios:   { mod: usuarios,   icon: 'user-cog',         label: 'Usuarios',            roles: ['admin'] },
   bitacora:   { mod: bitacora,   icon: 'history',          label: 'Bitácora',            roles: ['admin'] },
   perfil:     { mod: perfil,     icon: 'circle-user',      label: 'Mi perfil',           roles: TODOS, mobile: true },
@@ -190,7 +190,7 @@ function buildNav() {
   const items = Object.entries(ROUTES).filter(([k]) => allowed(k));
   $('#nav').innerHTML = items.map(([k, r]) => `<a href="#/${k}" data-route="${k}">${icon(r.icon)}<span>${esc(label(r))}</span></a>`).join('');
   $('#mobile-nav').innerHTML = items.filter(([, r]) => r.mobile).slice(0, 5)
-    .map(([k, r]) => `<a href="#/${k}" data-route="${k}">${icon(r.icon)}<span>${esc(label(r))}</span></a>`).join('');
+    .map(([k, r]) => `<a href="#/${k}" data-route="${k}">${icon(r.icon)}<span>${esc(r.corto || label(r))}</span></a>`).join('');
   refreshIcons();
 }
 

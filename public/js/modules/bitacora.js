@@ -38,7 +38,7 @@ export default {
     el.innerHTML = `
       <section class="page-intro">
         <div><span class="eyebrow">Auditoría</span><h1>Bitácora</h1>
-          <p>Registro automático de altas, cambios y bajas: lotes, análisis, liberaciones, recetas, métodos, usuarios y puestos.</p></div>
+          <p>Altas, cambios y bajas registrados automáticamente.</p></div>
       </section>
       <div class="card">
         <div class="toolbar">
