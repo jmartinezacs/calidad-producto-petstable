@@ -109,20 +109,21 @@ function pintar() {
   lista.sort((a, b) => String(f(a)).localeCompare(String(f(b)), 'es', { numeric: true }) * (orden.asc ? 1 : -1));
   if (!lista.length) { body.innerHTML = emptyState({ ico: 'users', title: 'Sin usuarios', text: 'No hay perfiles que coincidan con la búsqueda.' }); refreshIcons(); return; }
   body.innerHTML = `<div class="table-wrap responsive"><table class="table usuarios-tabla"><thead><tr>
-      ${th('Usuario', 'nombre')}${th('Puesto', 'puesto')}${th('Rol', 'rol')}${th('Último acceso', 'acceso')}${th('Estado', 'estado')}<th>Acciones</th></tr></thead><tbody>
+      ${th('Usuario', 'nombre')}${th('Puesto', 'puesto')}${th('Rol', 'rol')}${th('Último acceso', 'acceso')}${th('Estado', 'estado')}<th>Correos</th><th>Acciones</th></tr></thead><tbody>
     ${lista.map((u) => {
       const yo = u.id === state.session?.user?.id;
       return `<tr class="${u.activo ? '' : 'inactivo'}">
       <td class="col-user" data-label="Usuario"><div class="td-in"><div class="user-cell">${avatarHTML(u.nombre_completo, fotoDe(u))}
-        <span class="user-txt"><b>${esc(u.nombre_completo)}${yo ? ' <small class="tu">(tú)</small>' : ''}</b><small>${esc(u.correo)}${u.correos_admin === false ? ` <span class="sin-correo" title="No recibe correos de avisos">${icon('mail-x')} sin correos</span>` : ''}</small></span></div></div></td>
+        <span class="user-txt"><b>${esc(u.nombre_completo)}${yo ? ' <small class="tu">(tú)</small>' : ''}</b><small>${esc(u.correo)}</small></span></div></div></td>
       <td data-label="Puesto"><div class="td-in"><span class="puesto-txt"><b>${esc(u.puesto || '—')}</b><small>${esc(u.area || 'Sin área')}</small></span></div></td>
       <td data-label="Rol"><div class="td-in">${u.rol === 'admin' ? '<span class="pill orange">Administrador</span>' : '<span class="pill info">Usuario</span>'}</div></td>
       <td data-label="Último acceso"><div class="td-in">${ultimoAcceso(u)}</div></td>
       <td data-label="Estado"><div class="td-in">${u.activo ? '<span class="pill ok">Activo</span>' : '<span class="pill gray">Inactivo</span>'}</div></td>
-      <td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">
-        <button class="icon-btn" data-edit="${esc(u.id)}" aria-label="Editar" title="Editar">${icon('pencil')}</button>
-        <button class="icon-btn ${u.correos_admin === false ? 'warn' : 'ok'}" data-correos="${esc(u.id)}" aria-label="${u.correos_admin === false ? 'Activar sus correos de avisos' : 'Desactivar sus correos de avisos'}" title="${u.correos_admin === false ? 'No recibe correos: toca para activarlos' : 'Recibe correos: toca para desactivarlos'}">${icon(u.correos_admin === false ? 'mail-x' : 'mail-check')}</button>
-        ${yo ? '' : `<button class="icon-btn ${u.activo ? 'warn' : 'ok'}" data-toggle="${esc(u.id)}" aria-label="${u.activo ? 'Desactivar' : 'Activar'}" title="${u.activo ? 'Desactivar' : 'Activar'}">${icon(u.activo ? 'user-x' : 'user-check')}</button>`}
+      <td data-label="Correos"><div class="td-in"><button class="mail-switch ${u.correos_admin === false ? '' : 'on'}" data-correos="${esc(u.id)}" role="switch" aria-checked="${u.correos_admin !== false}" title="${u.correos_admin === false ? 'No recibe correos de avisos: toca para activarlos' : 'Recibe correos de avisos: toca para desactivarlos'}">
+        <span class="ms-track"><span class="ms-knob">${icon(u.correos_admin === false ? 'mail-x' : 'mail')}</span></span><span class="ms-txt">${u.correos_admin === false ? 'Desactivados' : 'Activos'}</span></button></div></td>
+      <td class="actions" data-label="Acciones"><div class="td-in"><div class="acc-grupo">
+        <button class="acc-btn editar" data-edit="${esc(u.id)}" aria-label="Editar a ${esc(u.nombre_completo)}" title="Editar">${icon('pencil')}<span>Editar</span></button>
+        ${yo ? '' : `<button class="acc-btn ${u.activo ? 'baja' : 'alta'}" data-toggle="${esc(u.id)}" aria-label="${u.activo ? 'Desactivar' : 'Activar'} a ${esc(u.nombre_completo)}" title="${u.activo ? 'Desactivar acceso' : 'Activar acceso'}">${icon(u.activo ? 'user-round-x' : 'user-round-check')}<span>${u.activo ? 'Desactivar' : 'Activar'}</span></button>`}
       </div></div></td></tr>`;
     }).join('')}</tbody></table></div>
     <p class="hint">${icon('info')} <b>Administrador:</b> administra recetas, métodos, usuarios, puestos y la bitácora. <b>Usuario:</b> registra lotes y captura los análisis que permite su puesto.</p>`;
@@ -351,8 +352,8 @@ function pintarPuestos() {
       <td data-label="Puesto"><div class="td-in cell-main">${esc(p.nombre)}</div></td>
       <td data-label="Personas"><div class="td-in">${g.length ? `<span class="avatares" title="${esc(g.map((u) => u.nombre_completo).join(', '))}">${g.slice(0, 5).map((u) => avatarHTML(u.nombre_completo, fotoDe(u), 'sm')).join('')}${g.length > 5 ? `<span class="mas">+${g.length - 5}</span>` : ''}</span>` : '<span class="cell-sub">Sin personas</span>'}</div></td>
       <td data-label="Áreas que captura"><div class="td-in"><div class="chips-areas">${(p.areas_captura || []).length ? p.areas_captura.map((id) => { const a = cat.area(id); return `<span class="area-chip" style="--ac:${esc(a.color)}"><span class="area-dot"></span>${esc(a.nombre)}</span>`; }).join('') : '<span class="cell-sub">No captura</span>'}</div></div></td>
-      <td data-label="Libera lotes"><div class="td-in">${p.puede_liberar ? `<span class="pill ok">${icon('badge-check')} Sí</span>` : '<span class="cell-sub">No</span>'}</div></td>
-      <td data-label="Firma"><div class="td-in">${p.firma_certificado ? `<span class="pill ${p.firma_certificado === 'jefe_calidad' ? 'orange' : 'info'}">${icon('pen-line')} ${esc(FIRMAS[p.firma_certificado])}</span>` : '<span class="cell-sub">No firma</span>'}</div></td>
+      <td data-label="Libera lotes"><div class="td-in">${p.puede_liberar ? '<span class="pill-solida verde">Sí</span>' : '<span class="cell-sub">No</span>'}</div></td>
+      <td data-label="Firma"><div class="td-in">${p.firma_certificado ? `<span class="pill-solida ${p.firma_certificado === 'jefe_calidad' ? 'naranja' : 'azul'}">${esc(FIRMAS[p.firma_certificado])}</span>` : '<span class="cell-sub">No firma</span>'}</div></td>
       <td data-label="Estado"><div class="td-in">${p.activo ? '<span class="pill ok">Activo</span>' : '<span class="pill gray">Inactivo</span>'}</div></td>
       <td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">
         <button class="icon-btn" data-edit-puesto="${esc(p.id)}" aria-label="Editar" title="Editar">${icon('pencil')}</button>

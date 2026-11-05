@@ -68,7 +68,7 @@ const editar = (attr, id, t = 'Editar') => `<button class="icon-btn" ${attr}="${
 const COLORES_PUESTO = ['#2563EB', '#16A34A', '#7C3AED', '#DB2777', '#0891B2', '#CA8A04', '#DC2626', '#0D9488', '#4F46E5', '#E8890C'];
 const puestoChip = (cat, p) => {
   const i = [...cat.puestos].sort((x, y) => String(x.nombre).localeCompare(String(y.nombre), 'es')).findIndex((x) => x.nombre === p.nombre);
-  return `<span class="puesto-chip" style="--pc:${COLORES_PUESTO[Math.max(0, i) % COLORES_PUESTO.length]}">${icon('id-card')}${esc(p.nombre)}</span>`;
+  return `<span class="puesto-chip" style="--pc:${COLORES_PUESTO[Math.max(0, i) % COLORES_PUESTO.length]}">${esc(p.nombre)}</span>`;
 };
 const areaChip = (a) => `<span class="area-chip" style="--ac:${esc(a.color)}"><span class="area-dot"></span>${esc(a.nombre)}</span>`;
 
@@ -118,7 +118,7 @@ function areasHTML(cat) {
       <td data-label="Área"><div class="td-in">${areaChip(a)}</div></td>
       <td data-label="Descripción"><div class="td-in cell-sub">${esc(a.descripcion || '—')}</div></td>
       <td data-label="Métodos"><div class="td-in mono">${fmtNum(cat.metodos.filter((m) => m.area === a.id && m.activo).length)}</div></td>
-      <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => puestoChip(cat, p)).join('')}<span class="puesto-chip admin">${icon('crown')}Administrador</span></div></div></td>
+      <td data-label="Captura"><div class="td-in"><div class="chips-areas">${cat.puestosArea(a.id).map((p) => puestoChip(cat, p)).join('')}<span class="puesto-chip admin">Administrador</span></div></div></td>
       <td data-label="Estado"><div class="td-in">${estadoPill(a.activa, true)}</div></td>
       ${acciones(editar('data-edit-area', a.id))}</tr>`).join('')}</tbody></table></div>
     <p class="hint">${icon('info')} Un lote se libera cuando todos los métodos activos de las áreas activas que aplican a su receta cumplen. Quién captura cada área se define por puesto (Usuarios → Puestos y permisos); los administradores capturan cualquier área.</p>`;

@@ -90,7 +90,8 @@ Copy-Item (Join-Path $Src 'manifest.webmanifest') (Join-Path $Out 'manifest.webm
 # Logotipo de los correos (lo adjunta la Edge Function notificar_brom) e ícono de las notificaciones push
 Copy-Item (Join-Path $Src 'logo-correo.png') (Join-Path $Out 'logo-correo.png') -Force
 Copy-Item (Join-Path $Src 'notif-icon.png') (Join-Path $Out 'notif-icon.png') -Force
+Copy-Item (Join-Path $Src 'notif-badge.png') (Join-Path $Out 'notif-badge.png') -Force
 # Versión publicada: la app la consulta para ofrecer "Actualizar" cuando cambia
 if ($configJs -notmatch 'APP_VERSION:\s*["'']([^"'']+)["'']') { throw 'No se encontró APP_VERSION en config.js' }
 [IO.File]::WriteAllText((Join-Path $Out 'version.json'), "{`"version`":`"$($Matches[1])`"}`n", $utf8)
-Get-Item (@('index.html', 'apple-touch-icon.png', 'sw.js', 'manifest.webmanifest', 'logo-correo.png', 'notif-icon.png', 'version.json') | ForEach-Object { Join-Path $Out $_ }) | ForEach-Object { '{0,-24} {1,10:N0} bytes' -f $_.Name, $_.Length }
+Get-Item (@('index.html', 'apple-touch-icon.png', 'sw.js', 'manifest.webmanifest', 'logo-correo.png', 'notif-icon.png', 'notif-badge.png', 'version.json') | ForEach-Object { Join-Path $Out $_ }) | ForEach-Object { '{0,-24} {1,10:N0} bytes' -f $_.Name, $_.Length }

@@ -2,6 +2,14 @@
 
 Sistema de Calidad de producto de Pet's Table S.A. de C.V. (antes «Análisis Bromatológicos»): un lote se libera cuando cumple sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales, y se emite su certificado de calidad.
 
+## Versión 9.3
+
+- **Schnauzer** de frente (gris sal y pimienta, cejas y barba) para perro; gato naranja de frente.
+- **Ícono de la barra de notificaciones de Android:** huella blanca con palomita (`notif-badge.png`).
+- **Correos** rediseñados: bloque de estado, datos del lote en cuadrícula (lote, receta sin especie, fecha, estado, folio, quién registró), avance por área con barras de color, botón destacado y el motivo por el que se recibe.
+- **Usuarios:** columna «Correos» con interruptor y acciones agrupadas (Editar, Desactivar). Etiquetas de puestos, «Libera lotes» y firmas sin íconos.
+- Secciones de los formularios con color propio y encabezado destacado.
+
 ## Versión 9.2
 
 - **Correos por persona:** en Usuarios, el administrador activa o desactiva los correos de avisos de cada persona (botón del sobre o Editar), sin importar lo que ella elija en su perfil. La campana y las notificaciones siguen llegando.

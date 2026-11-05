@@ -40,6 +40,8 @@ async function mostrar(d) {
   const opciones = {
     body: d.body || '',
     icon: await iconoConFoto(d.foto),
+    // Android pinta la insignia de la barra de estado como silueta: huella blanca con palomita sobre transparente
+    badge: '/notif-badge.png',
     tag: d.tag || `brom-${Date.now()}`,
     renotify: true,
     requireInteraction: true,
