@@ -4,8 +4,17 @@
 // =====================================================================
 import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, checkForm, prefs, fmtDateTime, APP_VERSION, avatarHTML, roleLabel,
-  prepararFoto, subirFoto, borrarFotoPropia, push, pill, openModal, ganchos,
+  prepararFoto, subirFoto, borrarFotoPropia, push, openModal, ganchos, emoji, getDirectorio,
 } from '../core.js';
+
+// Mosaico de información con ilustración
+const fila = (ilus, label, valor, cls = '') => `<div class="pf-t ${cls}"><span class="pf-ico">${emoji(ilus)}</span><div><small>${esc(label)}</small><b>${esc(valor)}</b></div></div>`;
+// Insignia de cuenta verificada (la misma de Ruta de calidad)
+const VERIFICADO = `<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="pf-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3EA2FF"/><stop offset="1" stop-color="#1565E0"/></linearGradient></defs><g fill="url(#pf-v)">${Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<circle cx="${(16 + 11.2 * Math.cos(a)).toFixed(2)}" cy="${(16 + 11.2 * Math.sin(a)).toFixed(2)}" r="4.4"/>`; }).join('')}<circle cx="16" cy="16" r="12.4"/></g><path d="M10.4 16.4l3.7 3.7 7.6-7.8" fill="none" stroke="#FFF" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const AUTOR = { nombre: 'Javier Martínez González', correo: 'javier.martinez@petstable.mx' };
+// Tarjeta de notificaciones: estado (on, off, pend, info), ilustración, texto y botones a la derecha
+const avisosHTML = (cls, ilus, titulo, texto, acciones = '') => `<div class="avisos ${cls}"><span class="avisos-ico">${emoji(ilus)}</span>
+  <div class="avisos-txt"><b>${esc(titulo)}</b><p>${esc(texto)}</p></div>${acciones ? `<div class="avisos-acc">${acciones}</div>` : ''}</div>`;
 
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
@@ -27,20 +36,18 @@ async function pintarPush(box) {
   const est = await push.estado().catch(() => 'no-soportado');
   const prueba = `<button class="btn c-purple" data-n="test">${icon('bell-ring')} Enviar notificación de prueba</button>`;
   const txt = {
-    activo: [pill('Activadas en este dispositivo', 'ok'), 'Siguen activas aunque cierres sesión.', `<div class="page-actions notif-acts">
-        ${prueba}<button class="btn s-red" data-n="off">${icon('bell-off')} Desactivar en este dispositivo</button></div>
+    activo: ['on', 'Activadas en este dispositivo', 'Siguen activas aunque cierres sesión.', `${prueba}<button class="btn s-red" data-n="off">${icon('bell-off')} Desactivar en este dispositivo</button>`, `
       <details class="notif-ajustes"><summary>${icon('smartphone')} ¿No suena o no aparece en la pantalla bloqueada?</summary>
         <p><b>Android (Chrome):</b> mantén presionado el aviso de prueba → Configuración, o ve a Ajustes → Aplicaciones → Chrome → Notificaciones → busca este sitio y activa <b>Mostrar en pantalla emergente</b>, <b>Sonido</b> y <b>Pantalla de bloqueo</b>.</p>
         <p><b>iPhone:</b> Ajustes → Notificaciones → Liberación → activa <b>Permitir notificaciones</b>, <b>Pantalla bloqueada</b> y <b>Sonidos</b>.</p>
         <p><b>Windows:</b> Configuración → Sistema → Notificaciones → activa las de Chrome o Edge y revisa que «No molestar» esté apagado.</p>
       </details>`],
-    inactivo: [pill('Desactivadas en este dispositivo', 'gray'), 'Actívalas para recibir avisos aunque el sistema esté cerrado.', `<div class="page-actions notif-acts">
-        <button class="btn c-green" data-n="on">${icon('bell')} Activar notificaciones</button>${prueba}</div>`],
-    bloqueado: [pill('Bloqueadas', 'bad'), 'Permítelas desde el candado junto a la dirección del sitio.', `<div class="page-actions notif-acts">${prueba}</div>`],
-    instalar: [pill('Requiere instalar', 'warn'), 'En iPhone y iPad las notificaciones solo funcionan con la app instalada: toca Compartir → «Agregar a pantalla de inicio», ábrela desde ese ícono y regresa aquí para activarlas.', `<div class="page-actions notif-acts">${prueba}</div>`],
-    'no-soportado': [pill('No disponibles', 'gray'), 'Este navegador no las admite; usa Chrome, Edge o Safari.', `<div class="page-actions notif-acts">${prueba}</div>`],
+    inactivo: ['pend', 'Desactivadas en este dispositivo', 'Actívalas para recibir avisos aunque el sistema esté cerrado.', `<button class="btn c-green" data-n="on">${icon('bell')} Activar notificaciones</button>${prueba}`],
+    bloqueado: ['off', 'Bloqueadas', 'Permítelas desde el candado junto a la dirección del sitio.', prueba],
+    instalar: ['info', 'Requiere instalar la aplicación', 'En iPhone y iPad las notificaciones solo funcionan con la app instalada: toca Compartir → «Agregar a pantalla de inicio», ábrela desde ese ícono y regresa aquí para activarlas.', prueba],
+    'no-soportado': ['off', 'No disponibles', 'Este navegador no las admite; usa Chrome, Edge o Safari.', prueba],
   }[est];
-  box.innerHTML = `<p style="margin:0 0 8px">${txt[0]}</p><p class="hint" style="margin:0 0 12px">${esc(txt[1])}</p>${txt[2]}`;
+  box.innerHTML = avisosHTML(txt[0], 'celular', txt[1], txt[2], txt[3]) + (txt[4] || '');
   refreshIcons();
   box.querySelector('[data-n="test"]')?.addEventListener('click', async (e) => {
     const b = e.currentTarget; b.disabled = true;
@@ -78,17 +85,19 @@ async function pintarCorreo(box) {
   const { data } = await sb.from('brom_usuarios').select('recibe_correos, correos_admin').eq('id', p.id).maybeSingle();
   const recibe = data?.recibe_correos !== false;
   const bloqueado = data?.correos_admin === false;
-  box.innerHTML = `${bloqueado ? `<div class="notice warn" style="margin-bottom:10px">${icon('mail-x')}<span>Un administrador desactivó tus correos de avisos.</span></div>` : ''}<label class="switch-row"><span><b>Recibir los avisos por correo</b><small class="hint" style="display:block;margin:2px 0 0">Se envían a ${esc(p.email)}</small></span>
-      <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data && !bloqueado ? '' : 'disabled'}></label>
-    <div class="page-actions notif-acts" style="margin-top:12px">
-      <button class="btn s-blue" data-mail="vista">${icon('eye')} Vista previa del correo</button>
-      <button class="btn c-teal" data-mail="enviar">${icon('send')} Enviarme un correo de prueba</button></div>`;
+  box.innerHTML = avisosHTML(bloqueado ? 'off' : recibe ? 'on' : 'pend', 'correo', bloqueado ? 'Correos desactivados por un administrador' : recibe ? 'Avisos también por correo' : 'Correos desactivados',
+    bloqueado ? 'Los avisos te siguen llegando a la campana y como notificación.' : `Se envían a ${p.email}.`,
+    `<button class="btn s-blue" data-mail="vista">${icon('eye')} Vista previa del correo</button>
+      <button class="btn c-teal" data-mail="enviar">${icon('send')} Enviarme un correo de prueba</button>`)
+    + `<label class="switch-row avisos-switch"><span><b>Recibir los avisos por correo</b></span>
+      <input type="checkbox" class="switch" id="pf-correos" ${recibe ? 'checked' : ''} ${data && !bloqueado ? '' : 'disabled'}></label>`;
   refreshIcons();
   box.querySelector('#pf-correos').addEventListener('change', async (e) => {
     const on = e.target.checked;
     const { error } = await sb.rpc('brom_mis_avisos', { p_correos: on });
     if (error) { e.target.checked = !on; toast(errMsg(error), 'error'); return; }
     toast(on ? 'Recibirás los avisos también por correo.' : 'Ya no recibirás los avisos por correo; seguirán en la campana.', 'success');
+    pintarCorreo(box);
   });
   box.querySelectorAll('[data-mail]').forEach((b) => b.addEventListener('click', () => correoPrueba(b)));
 }
@@ -130,32 +139,34 @@ export default {
     const theme = prefs.get('brom.theme') || 'system';
     el.innerHTML = `
       <section class="page-intro"><div><span class="eyebrow">Cuenta</span><h1>Mi perfil</h1><p>Tus datos de acceso y preferencias.</p></div></section>
-      <section class="profile-hero">
-        <div class="access-photo">${avatarHTML(p.nombre, p.foto_url, 'xl')}<span class="access-check">${icon('badge-check')}</span></div>
-        <div>
-          <span class="access-badge">${icon(p.rol === 'admin' ? 'crown' : 'user')} ${esc(roleLabel(p.rol))}</span>
+      <div class="pf">
+        <section class="pf-id">
+          <div class="pf-foto">${avatarHTML(p.nombre, p.foto_url, 'xl')}<span class="pf-verif" role="img" aria-label="Cuenta identificada de Pet's Table" title="Cuenta identificada de Pet's Table">${VERIFICADO}</span></div>
+          <span class="pf-rol ${p.rol === 'admin' ? 'admin' : ''}">${icon(p.rol === 'admin' ? 'crown' : 'user-round')} ${esc(roleLabel(p.rol))}</span>
           <h2>${esc(p.nombre)}</h2>
-          <p class="puesto">${esc(p.puesto || 'Puesto no registrado')}</p>
-          <span class="mail">${icon('mail')} ${esc(p.email)}</span>
-          <div style="margin-top:12px"><label class="btn secondary" for="pf-foto">${icon('camera')} Cambiar fotografía</label>
-            <input id="pf-foto" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only"></div>
+          <p class="pf-puesto">${esc(p.puesto || 'Puesto no registrado')}</p>
+          <span class="pf-mail">${icon('mail')} ${esc(p.email)}</span>
+          <label class="btn pf-cambiar" for="pf-foto">${icon('camera')} Cambiar fotografía</label>
+          <input id="pf-foto" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
+        </section>
+        <div class="pf-info">
+          <section class="pf-bloque"><h3 class="pf-sec">${icon('briefcase')} Información laboral</h3>
+            <div class="pf-tiles t3">${fila('gafete', 'Puesto', p.puesto || 'Sin puesto registrado')}${fila('personas', 'Área', p.area || 'Sin área registrada')}${fila('correo', 'Correo', p.email || '—', 'pf-mail-t')}</div></section>
+          <section class="pf-bloque"><h3 class="pf-sec">${icon('shield-check')} Acceso</h3>
+            <div class="pf-tiles t2">${fila('llave', 'Permisos', permisosTxt(p))}${fila('reloj', 'Último acceso', fmtDateTime(user?.last_sign_in_at))}</div></section>
+          <section class="pf-sistema"><span class="brand-logo pf-logo" aria-hidden="true"></span>
+            <div><small>Liberación de producto</small><b>Calidad de producto <i aria-hidden="true">|</i> <span>Pet's Table</span></b></div>
+            <span class="pf-ver"><small>Versión</small><b>${esc(APP_VERSION)}</b></span></section>
+        </div>
+      </div>
+      <section class="pf-bloque mt notif-card">
+        <h3 class="pf-sec">${icon('bell-ring')} Notificaciones y correos</h3>
+        <p class="pf-nota">${esc(QUE_AVISA)}</p>
+        <div class="grid grid-2 pf-avisos">
+          <div id="pf-push"><div class="skeleton" style="height:76px"></div></div>
+          <div id="pf-correo"><div class="skeleton" style="height:76px"></div></div>
         </div>
       </section>
-      <div class="profile-tiles mt">
-        <div class="p-tile"><span class="ti">${icon('briefcase')}</span><small>Puesto</small><b>${esc(p.puesto || 'Sin puesto registrado')}</b></div>
-        <div class="p-tile"><span class="ti">${icon('building-2')}</span><small>Área</small><b>${esc(p.area || 'Sin área registrada')}</b></div>
-        <div class="p-tile"><span class="ti">${icon('mail')}</span><small>Correo</small><b class="p-mail">${esc(p.email || '—')}</b></div>
-        <div class="p-tile"><span class="ti">${icon('shield-check')}</span><small>Permisos</small><b class="p-perm">${esc(permisosTxt(p))}</b></div>
-        <div class="p-tile"><span class="ti">${icon('clock')}</span><small>Último acceso</small><b>${fmtDateTime(user?.last_sign_in_at)}</b></div>
-        <div class="p-tile"><span class="ti">${icon('info')}</span><small>Versión del sistema</small><b>${esc(APP_VERSION)}</b></div>
-      </div>
-      <div class="card mt notif-card">
-        <div class="card-head"><div><h3>${icon('bell-ring')} Notificaciones y correos</h3><p>${esc(QUE_AVISA)}</p></div></div>
-        <div class="grid grid-2">
-          <div class="notif-col"><div class="section-title">${icon('smartphone')} En este dispositivo</div><div id="pf-push"><div class="skeleton" style="height:60px"></div></div></div>
-          <div class="notif-col"><div class="section-title">${icon('mail')} Por correo</div><div id="pf-correo"><div class="skeleton" style="height:60px"></div></div></div>
-        </div>
-      </div>
       <div class="grid grid-2 mt">
         <div class="card">
           <div class="card-head"><div><h3>Cambiar contraseña</h3><p>Aplica a todas las aplicaciones de Pet's Table que usan esta cuenta.</p></div></div>
@@ -185,10 +196,28 @@ export default {
           <p class="hint" style="margin:10px 0 6px"><b>Android (Chrome):</b></p>
           <ol class="steps"><li>Abre el menú <b>⋮</b>.</li><li>Elige <b>Instalar aplicación</b> o <b>Agregar a pantalla principal</b>.</li></ol>`}
         </div>
-      </div>`;
+      </div>
+      <section class="cr mt" aria-labelledby="cr-t">
+        <div class="cr-foto" id="cr-foto">${avatarHTML(AUTOR.nombre, null, 'xl')}</div>
+        <div class="cr-cuerpo">
+          <span class="cr-eyebrow">${icon('sparkles')} Desarrollado por</span>
+          <h3 id="cr-t">${esc(AUTOR.nombre)}</h3>
+          <p class="cr-rol">Creador y desarrollador de la plataforma</p>
+          <p class="cr-txt">Diseñó, desarrolló e implementó Liberación de producto: el registro de lotes y análisis, la liberación con certificado, los avisos y la experiencia en escritorio y celular.</p>
+          <ul class="cr-etapas" aria-label="Participación"><li>Conceptualización</li><li>Diseño</li><li>Desarrollo</li><li>Implementación</li></ul>
+        </div>
+        <figure class="cr-firma"><span class="cr-firma-img" role="img" aria-label="Firma de ${esc(AUTOR.nombre)}"></span>
+          <figcaption><b>${esc(AUTOR.nombre)}</b><small>Autor de la plataforma</small></figcaption></figure>
+      </section>`;
     refreshIcons();
     pintarPush(el.querySelector('#pf-push'));
     pintarCorreo(el.querySelector('#pf-correo'));
+    // Fotografía del autor: la de su cuenta (directorio de usuarios)
+    getDirectorio().then((d) => {
+      const a = d.lista.find((u) => String(u.correo || '').toLowerCase() === AUTOR.correo) || d.porNombre('Javier Martínez');
+      const caja = el.querySelector('#cr-foto');
+      if (a?.foto && caja) caja.innerHTML = avatarHTML(AUTOR.nombre, a.foto, 'xl');
+    });
 
     el.querySelectorAll('[data-theme-opt]').forEach((b) => b.addEventListener('click', () => {
       window.__bromSetTheme?.(b.dataset.themeOpt);
@@ -219,7 +248,7 @@ export default {
         }
         borrarFotoPropia(anterior);
         p.foto_url = url;
-        document.querySelectorAll('#top-avatar img, .profile-hero .avatar img').forEach((img) => { img.src = url; });
+        document.querySelectorAll('#top-avatar img, .pf-foto .avatar img').forEach((img) => { img.src = url; });
         toast('Fotografía actualizada.', 'success');
         window.dispatchEvent(new HashChangeEvent('hashchange'));
       } catch (err) { toast(errMsg(err), 'error'); }

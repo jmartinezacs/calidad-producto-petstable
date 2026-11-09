@@ -3,7 +3,7 @@
 // =====================================================================
 import {
   sb, state, prefs, esc, icon, refreshIcons, toast, errMsg, openModal, checkForm,
-  destroyCharts, APP_VERSION, TZ, navigate, avatarHTML, restyleCharts, roleLabel, fotoDe, ganchos, push, TIPOS_AVISO,
+  destroyCharts, animarCifras, emoji, APP_VERSION, TZ, navigate, avatarHTML, restyleCharts, roleLabel, fotoDe, ganchos, push, TIPOS_AVISO,
 } from './core.js';
 import dashboard from './modules/dashboard.js';
 import lotes from './modules/lotes.js';
@@ -16,14 +16,14 @@ import bitacora from './modules/bitacora.js';
 
 const TODOS = ['admin', 'usuario'];
 const ROUTES = {
-  panel:      { mod: dashboard,  icon: 'layout-dashboard', label: 'Panel',               roles: TODOS, mobile: true },
-  lotes:      { mod: lotes,      icon: 'flask-conical',    label: 'Lotes y liberación', corto: 'Lotes',  roles: TODOS, mobile: true },
-  resultados: { mod: resultados, icon: 'line-chart',       label: 'Resultados',          roles: TODOS, mobile: true },
-  catalogos:  { mod: catalogos,  icon: 'book-open-check',  label: 'Recetas y métodos', corto: 'Recetas',   roles: TODOS, mobile: true },
-  usuarios:   { mod: usuarios,   icon: 'user-cog',         label: 'Usuarios',            roles: ['admin'] },
-  bitacora:   { mod: bitacora,   icon: 'history',          label: 'Bitácora',            roles: ['admin'] },
-  perfil:     { mod: perfil,     icon: 'circle-user',      label: 'Mi perfil',           roles: TODOS, mobile: true },
-  ayuda:      { mod: ayuda,      icon: 'circle-help',      label: 'Preguntas frecuentes', roles: TODOS },
+  panel:      { mod: dashboard,  icon: 'layout-dashboard', ilus: 'n_panel', label: 'Panel',               roles: TODOS, mobile: true },
+  lotes:      { mod: lotes,      icon: 'flask-conical', ilus: 'n_lotes',    label: 'Lotes y liberación', corto: 'Lotes',  roles: TODOS, mobile: true },
+  resultados: { mod: resultados, icon: 'line-chart', ilus: 'n_resultados',       label: 'Resultados',          roles: TODOS, mobile: true },
+  catalogos:  { mod: catalogos,  icon: 'book-open-check', ilus: 'n_recetas',  label: 'Recetas y métodos', corto: 'Recetas',   roles: TODOS, mobile: true },
+  usuarios:   { mod: usuarios,   icon: 'user-cog', ilus: 'n_usuarios',         label: 'Usuarios',            roles: ['admin'] },
+  bitacora:   { mod: bitacora,   icon: 'history', ilus: 'n_bitacora',          label: 'Bitácora',            roles: ['admin'] },
+  perfil:     { mod: perfil,     icon: 'circle-user', ilus: 'n_perfil',      label: 'Mi perfil',           roles: TODOS, mobile: true },
+  ayuda:      { mod: ayuda,      icon: 'circle-help', ilus: 'n_ayuda',      label: 'Preguntas frecuentes', roles: TODOS },
 };
 
 const $ = (s) => document.querySelector(s);
@@ -188,9 +188,9 @@ function label(r) { return r.label; }
 
 function buildNav() {
   const items = Object.entries(ROUTES).filter(([k]) => allowed(k));
-  $('#nav').innerHTML = items.map(([k, r]) => `<a href="#/${k}" data-route="${k}">${icon(r.icon)}<span>${esc(label(r))}</span></a>`).join('');
+  $('#nav').innerHTML = items.map(([k, r]) => `<a href="#/${k}" data-route="${k}">${r.ilus ? emoji(r.ilus, 'nav-ilus') : icon(r.icon)}<span>${esc(label(r))}</span></a>`).join('');
   $('#mobile-nav').innerHTML = items.filter(([, r]) => r.mobile).slice(0, 5)
-    .map(([k, r]) => `<a href="#/${k}" data-route="${k}">${icon(r.icon)}<span>${esc(r.corto || label(r))}</span></a>`).join('');
+    .map(([k, r]) => `<a href="#/${k}" data-route="${k}">${r.ilus ? emoji(r.ilus, 'nav-ilus') : icon(r.icon)}<span>${esc(r.corto || label(r))}</span></a>`).join('');
   refreshIcons();
 }
 
@@ -228,10 +228,14 @@ async function route() {
     // (antes se abrían dos ventanas iguales y al guardar quedaba una abierta)
     const viejo = $('#view');
     const view = viejo.cloneNode(false);
+    view.classList.remove('entra');
     viejo.replaceWith(view);
+    view.classList.add('entra'); // aparición suave de la vista (una vez por montaje)
     window.scrollTo(0, 0);
-    await r.mod.render(view, params);
+    document.body.classList.add('cargando');
+    try { await r.mod.render(view, params); } finally { document.body.classList.remove('cargando'); }
     refreshIcons();
+    animarCifras(view);
   } catch (err) {
     console.error(err);
     $('#view').innerHTML = `<div class="card">${esc(errMsg(err))}</div>`;

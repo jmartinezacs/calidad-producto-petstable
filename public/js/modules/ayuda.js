@@ -5,13 +5,13 @@
 // Las ilustraciones son SVG propios; el PDF las convierte a PNG.
 // Si cambia un flujo de la aplicación, actualiza aquí la respuesta.
 // =====================================================================
-import { esc, icon, refreshIcons, toast, errMsg, APP_VERSION } from '../core.js';
+import { esc, icon, refreshIcons, toast, errMsg, APP_VERSION, emoji } from '../core.js';
 import { LOGO, cargarJsPDF, pdfTxt, RGB } from './pdf.js';
 
 // ---------------- Contenido ----------------
 // Formato de las respuestas: párrafos separados por \n, viñetas con «- » y **negritas**.
 const TEMAS = [
-  { id: 'inicio', ico: 'rocket', titulo: 'Primeros pasos', preguntas: [
+  { id: 'inicio', ico: 'rocket', ilus: 'cohete', titulo: 'Primeros pasos', preguntas: [
     ['¿Qué es Liberación de producto?', 'Es el sistema de **Calidad de producto** de Pet\'s Table para decidir si un lote de producto terminado puede liberarse. Reúne en un solo lugar:\n- El registro de cada lote con su receta.\n- Los análisis **bromatológicos**, **fisicoquímicos**, **microbiológicos** y **sensoriales**.\n- El dictamen automático contra la especificación.\n- La **liberación** del lote y su **certificado de calidad** en PDF.\n- Las tendencias históricas por receta y método.'],
     ['¿Cómo entro al sistema?', 'Abre la dirección del sistema en tu navegador (o el ícono de la aplicación instalada) y escribe:\n- Tu **correo corporativo** @petstable.mx.\n- Tu **contraseña**, que es la misma de las demás aplicaciones de Pet\'s Table.\nPulsa **Entrar**. Si tu cuenta no tiene acceso, solicítalo a un administrador del sistema.'],
     ['¿Qué hace la opción «Mantener sesión»?', 'Si la dejas marcada, el sistema recuerda tu sesión en ese dispositivo y no tendrás que escribir tu contraseña cada vez. Desmárcala en equipos compartidos: la sesión se cerrará al cerrar el navegador.'],
@@ -21,13 +21,13 @@ const TEMAS = [
     ['¿Cómo cambio entre modo claro y modo oscuro?', 'Con el selector de **sol y luna** del encabezado, o en **Mi perfil → Apariencia** (claro, oscuro o el del sistema). Solo cambia la presentación; los datos son los mismos.'],
     ['¿Cómo cierro sesión?', 'Pulsa **Salir** en el encabezado o **Cerrar sesión** al final del menú. Solo se cierra este sistema; tus otras aplicaciones de Pet\'s Table siguen abiertas.'],
   ] },
-  { id: 'roles', ico: 'shield-check', titulo: 'Roles y permisos', preguntas: [
+  { id: 'roles', ico: 'shield-check', ilus: 'llave', titulo: 'Roles y permisos', preguntas: [
     ['¿Qué roles existen?', 'Solo hay dos roles, que definen qué puedes **administrar**:\n- **Usuario:** registra lotes y captura los análisis que permite su puesto.\n- **Administrador:** además administra recetas, métodos, especificaciones, áreas, usuarios y puestos; consulta la bitácora, revierte liberaciones y borra lotes. Puede capturar cualquier área.\nLo que cada persona **captura**, si **libera** lotes y si **firma** el certificado depende de su **puesto**.'],
     ['¿Qué permite cada puesto?', 'En **Usuarios → Puestos y permisos** cada puesto indica:\n- Las **áreas de análisis que captura** (por ejemplo, el Inspector de calidad captura bromatológicos y el Jefe de calidad todas las áreas).\n- Si **libera lotes** y emite certificados.\n- Si **firma el certificado** como Jefe de calidad o como Inspector de calidad.\nSi agregas a una persona con un puesto nuevo, el puesto se crea sin permisos; configúralo ahí.'],
     ['¿Por qué no puedo capturar un área?', 'Cada área la capturan ciertos puestos. Si un área no te corresponde, en el formulario aparece en modo de consulta con la etiqueta **Lo captura:** y los puestos responsables. Un administrador puede cambiarlo en **Usuarios → Puestos y permisos** o en **Recetas y métodos → Áreas de análisis**.'],
     ['¿Quién puede liberar un lote?', 'Las personas cuyo puesto tiene el permiso **Libera lotes** (por ejemplo, el Jefe de calidad) y los **administradores**. El sistema solo permite liberar cuando todos los análisis requeridos están capturados y cumplen.'],
   ] },
-  { id: 'lotes', ico: 'flask-conical', titulo: 'Registro de lotes', preguntas: [
+  { id: 'lotes', ico: 'flask-conical', ilus: 'n_lotes', titulo: 'Registro de lotes', preguntas: [
     ['¿Cómo registro un lote nuevo?', 'En **Lotes y liberación** pulsa **Nuevo lote** (o usa el botón flotante del matraz):\n- Elige la **fecha del lote** en el calendario.\n- Selecciona la **receta** (cada receta es para perro o para gato).\n- Marca los análisis que ya se realizaron y captura su resultado.\n- Pulsa **Registrar lote**.\nNo es necesario capturar todas las áreas a la vez: el lote queda **En proceso** hasta completar sus análisis.'],
     ['¿Cómo se genera el número de lote?', 'Con la fecha del lote en formato día, mes y año a dos dígitos. Por ejemplo, 27/09/2026 genera **270926**. Al editar un lote se conserva su número mientras no cambies la fecha.'],
     ['¿Qué pasa si registro un lote que ya existe?', 'El sistema te avisa si ya hay un lote con el mismo número y la misma receta, y te pregunta si deseas continuar.'],
@@ -37,7 +37,7 @@ const TEMAS = [
     ['¿Puedo borrar un lote?', 'Solo un administrador. Se eliminan el lote, todos sus resultados y el registro de su liberación; la acción no se puede deshacer.'],
     ['¿Puedo exportar los lotes?', 'Sí. **Exportar** genera un archivo CSV compatible con Excel con los lotes y resultados que coinciden con los filtros.'],
   ] },
-  { id: 'analisis', ico: 'list-checks', titulo: 'Captura de análisis', preguntas: [
+  { id: 'analisis', ico: 'list-checks', ilus: 'fisicoquimicos', titulo: 'Captura de análisis', preguntas: [
     ['¿Qué áreas de análisis existen?', '- **Bromatológico:** proteínas, grasas y cenizas.\n- **Fisicoquímico:** pH y humedad.\n- **Microbiológico:** coliformes totales, Salmonella, hongos y levaduras, mesófilos aerobios.\n- **Sensorial:** olor, color, sabor y textura.\nLos administradores pueden agregar métodos o áreas nuevas.'],
     ['¿Cómo capturo los análisis de mi área?', 'Abre el lote con **Capturar análisis** (o **Editar y capturar**). En tu área:\n- Marca la casilla del método y escribe el resultado numérico, o\n- En los métodos de verificación pulsa **Cumple** o **No cumple**.\nCon **Marcar todo como cumple** registras de una vez todos los métodos de verificación del área. Pulsa **Guardar análisis**.'],
     ['¿Cómo se calcula Cumple o No cumple?', 'Cada resultado se compara con el criterio aplicable:\n- **Mínimo:** el resultado debe ser mayor o igual al límite.\n- **Máximo:** el resultado debe ser menor o igual al límite.\n- **Valor exacto:** el resultado debe ser igual.\n- **Rango:** el resultado debe estar dentro del intervalo.\n- **Verificación:** cumple si se marca «Cumple».\nMientras capturas ves una vista previa; el dictamen definitivo lo calcula la base de datos al guardar.'],
@@ -45,7 +45,7 @@ const TEMAS = [
     ['¿Puedo corregir un resultado?', 'Sí, mientras el lote no esté liberado. Si ya se liberó, un administrador debe **revertir la liberación** primero; la reversión queda registrada con su motivo.'],
     ['¿Puedo quitar un análisis ya capturado?', 'Solo un administrador puede quitar análisis ya capturados, para no perder información registrada.'],
   ] },
-  { id: 'liberacion', ico: 'badge-check', titulo: 'Liberación y certificado', preguntas: [
+  { id: 'liberacion', ico: 'badge-check', ilus: 'certificado', titulo: 'Liberación y certificado', preguntas: [
     ['¿Cuándo se puede liberar un lote?', 'Cuando su estado es **Listo para liberar**: todos los métodos activos de las áreas activas que aplican a su receta están capturados y cumplen. Si algo falta o no cumple, el sistema lo indica y no permite liberar.'],
     ['¿Cómo libero un lote?', 'En la tarjeta del lote pulsa **Liberar lote**, revisa el resumen por área, elige quién **firma** el certificado (un Jefe de calidad y un Inspector de calidad), agrega observaciones si lo necesitas y pulsa **Liberar y emitir certificado**. El sistema asigna un **folio** (por ejemplo, CC-2026-0001) y descarga el certificado.'],
     ['¿Qué contiene el certificado de calidad?', 'Folio, producto, código de receta, especie, número y fecha del lote, fecha de liberación, los resultados de cada área con su especificación y dictamen, el dictamen final **Producto liberado**, las observaciones, las **firmas del Jefe de calidad y del Inspector de calidad** y quién liberó el lote.'],
@@ -53,7 +53,7 @@ const TEMAS = [
     ['¿Cómo vuelvo a descargar un certificado?', 'En la tarjeta del lote liberado pulsa **Certificado de calidad**. Puedes descargarlo las veces que lo necesites; el folio no cambia.'],
     ['¿Qué pasa si hay que corregir un lote liberado?', 'Un administrador pulsa **Revertir liberación** y escribe el motivo. El certificado anterior deja de ser válido, el lote vuelve a abrirse y, al liberarse de nuevo, recibe un folio nuevo. Todo queda en la bitácora de liberación.'],
   ] },
-  { id: 'resultados', ico: 'line-chart', titulo: 'Resultados y gráficas', preguntas: [
+  { id: 'resultados', ico: 'line-chart', ilus: 'n_resultados', titulo: 'Resultados y gráficas', preguntas: [
     ['¿Cómo funcionan los filtros?', 'Periodo, receta, área y método se aplican al instante. Las gráficas, los indicadores, las medias y la tabla usan exactamente el mismo conjunto filtrado, y la tabla regresa a la primera página.'],
     ['¿Cómo se calcula la media?', 'Es la suma de los resultados dividida entre el número de resultados, solo con los registros que cumplen los filtros activos. Aparece como indicador y como línea punteada.'],
     ['¿Qué muestran las gráficas?', '- Métodos numéricos: la tendencia por fecha del lote con el color de la receta, la línea del límite (o los dos límites del rango) y la media. Los puntos rojos están fuera de especificación.\n- Métodos de verificación o cualitativos: el porcentaje de lotes que cumplen.'],
@@ -61,7 +61,7 @@ const TEMAS = [
     ['¿Cómo amplío o guardo una gráfica?', 'Toca o haz clic en la gráfica para verla en grande. Desde ahí puedes **guardarla como imagen**. Para cerrar, pulsa la X o la tecla Esc.'],
     ['¿Qué colores tienen las recetas?', '**Meat Festival** en naranja, **Chicken Chase** en turquesa y **Tasty Piggy** en verde. Las recetas nuevas toman el color que elija el administrador.'],
   ] },
-  { id: 'catalogos', ico: 'book-open-check', titulo: 'Recetas y métodos', preguntas: [
+  { id: 'catalogos', ico: 'book-open-check', ilus: 'n_recetas', titulo: 'Recetas y métodos', preguntas: [
     ['¿Cómo agrego una receta?', 'En **Recetas y métodos → Recetas** pulsa **Nueva receta**. El código se propone en formato **REC-04**; indica el nombre, la especie y el color característico.'],
     ['¿Cómo uso la misma receta para otra especie?', 'Pulsa el botón **Duplicar para otra especie** en la receta (por ejemplo, Meat Festival para gato). Se crea una receta nueva con su propio código, al que también se asignan los métodos de la receta original.'],
     ['¿Cómo uso un criterio distinto para una receta?', 'Duplica el método (botón **Duplicar** en **Métodos**), cambia el criterio y elige **Solo a las recetas que elija** con esa receta. Deja marcada **Quitar las recetas elegidas del método original** para que la receta solo se evalúe con el nuevo criterio.'],
@@ -70,7 +70,7 @@ const TEMAS = [
     ['¿Cómo hago que un método aplique solo a algunas recetas?', 'Edita el método y en **¿A qué recetas aplica?** elige **Solo a las recetas que elija** y marca las recetas. En las demás recetas el método no se exige para liberar.'],
     ['¿Cómo duplico un método?', 'Pulsa el botón **Duplicar** del método (por ejemplo, Humedad). Se abre con todos sus datos: cambia solo lo necesario, como el criterio o las recetas. Si dejas marcada la opción **Quitar las recetas elegidas del método original**, esas recetas dejan de exigir el método original para que no se evalúe dos veces.'],
   ] },
-  { id: 'cuenta', ico: 'user', titulo: 'Usuarios y cuenta', preguntas: [
+  { id: 'cuenta', ico: 'user', ilus: 'n_perfil', titulo: 'Usuarios y cuenta', preguntas: [
     ['¿Cómo doy acceso a una persona?', 'Un administrador entra a **Usuarios**, pulsa **Nuevo usuario**, busca a la persona por nombre o correo, la selecciona, indica su **puesto** y su **área** (elige uno de la lista o escribe uno nuevo), asigna su **rol** y pulsa **Dar acceso**. La persona debe tener una cuenta de Pet\'s Table; su fotografía se toma de las demás aplicaciones.'],
     ['¿Cómo cambio mi fotografía?', 'En **Mi perfil → Cambiar fotografía**. Un administrador también puede cambiarla desde **Usuarios → Editar**.'],
     ['¿Qué es la bitácora?', 'Es el registro automático de todos los cambios: lotes registrados, análisis capturados o corregidos, liberaciones y reversiones, firmas, recetas, métodos, especificaciones, usuarios y puestos. Muestra quién hizo cada acción, con su foto, y la fecha y hora. Pulsa un registro para ver el detalle de antes y después. Solo la consultan los administradores y no se puede modificar.'],
@@ -79,7 +79,7 @@ const TEMAS = [
     ['¿Cómo cambio mi contraseña?', 'En **Mi perfil → Cambiar contraseña**. El cambio aplica a todas las aplicaciones de Pet\'s Table que usan tu cuenta.'],
     ['¿Cómo desactivo a una persona?', 'En **Usuarios** pulsa el botón **Desactivar** de la persona (o cambia su estado en **Editar**). Su cuenta sigue funcionando en otras aplicaciones, pero ya no entra a este sistema. Siempre debe quedar al menos un administrador activo.'],
   ] },
-  { id: 'problemas', ico: 'life-buoy', titulo: 'Solución de problemas', preguntas: [
+  { id: 'problemas', ico: 'life-buoy', ilus: 'n_alerta', titulo: 'Solución de problemas', preguntas: [
     ['Aparece «Tu cuenta no tiene acceso»', 'Tu cuenta existe, pero no está dada de alta en este sistema o está inactiva. Pide a un administrador que te agregue en **Usuarios**.'],
     ['Aparece «Su sesión expiró»', 'Vuelve a iniciar sesión. Ocurre cuando el sistema estuvo abierto mucho tiempo sin uso.'],
     ['Aparece «Hay una nueva versión disponible»', 'Pulsa **Actualizar** para cargar la versión más reciente del sistema. No se pierde información guardada.'],
@@ -130,7 +130,7 @@ const paginaPC = (y0 = 86) => `<rect x="22" y="${y0}" width="38" height="${188 -
   <rect x="66" y="${y0 + 32}" width="148" height="${188 - y0 - 36}" rx="3" fill="${C.white}"/>`;
 
 const INSTALAR = [
-  { id: 'android', ico: 'smartphone', titulo: 'Celular Android', sub: 'Google Chrome', pasos: [
+  { id: 'android', ico: 'smartphone', ilus: 'celular', titulo: 'Celular Android', sub: 'Google Chrome', pasos: [
     ['Abre el menú', 'Entra a la aplicación desde **Chrome** y toca el botón de menú **⋮** en la esquina superior derecha.',
       () => telefono(`<rect x="51" y="30" width="138" height="16" fill="${C.white}"/><rect x="58" y="33" width="104" height="10" rx="5" fill="${C.bg}"/>${T(64, 40.5, URL_APP, 5.4, C.muted)}${T(176, 41.5, '⋮', 11, C.txt, 700, 'middle')}${anillo(176, 38, 9)}${paginaApp(52)}`)],
     ['Elige «Instalar aplicación»', 'En el menú toca **Instalar aplicación** (en algunos teléfonos dice **Agregar a pantalla principal**).',
@@ -146,7 +146,7 @@ const INSTALAR = [
     ['¡Listo!', 'Abre **Liberación** desde el ícono de tu pantalla de inicio, como cualquier otra aplicación.',
       () => telefono(pantallaInicio())],
   ] },
-  { id: 'ios', ico: 'tablet-smartphone', titulo: 'iPhone o iPad', sub: 'Safari', pasos: [
+  { id: 'ios', ico: 'tablet-smartphone', ilus: 'tableta', titulo: 'iPhone o iPad', sub: 'Safari', pasos: [
     ['Toca «Compartir»', 'Abre la aplicación en **Safari** y toca el botón **Compartir** (el cuadro con la flecha hacia arriba) en la barra inferior.',
       () => telefono(`${paginaApp(36, 238)}<rect x="51" y="244" width="138" height="40" rx="0" fill="${C.white}"/><rect x="62" y="248" width="116" height="10" rx="5" fill="${C.bg}"/>${T(120, 255.5, URL_APP, 5.2, C.muted, 400, 'middle')}
         ${[72, 96, 144, 168].map((x) => `<rect x="${x - 4}" y="265" width="8" height="8" rx="2" fill="none" stroke="${C.turq}" stroke-width="1.3"/>`).join('')}
@@ -161,7 +161,7 @@ const INSTALAR = [
     ['¡Listo!', 'Abre **Liberación** desde el nuevo ícono. Se abre en pantalla completa, como una aplicación.',
       () => telefono(pantallaInicio())],
   ] },
-  { id: 'pc', ico: 'monitor', titulo: 'Computadora', sub: 'Chrome o Microsoft Edge', pasos: [
+  { id: 'pc', ico: 'monitor', ilus: 'monitor', titulo: 'Computadora', sub: 'Chrome o Microsoft Edge', pasos: [
     ['Busca el ícono de instalar', 'Abre la aplicación en **Chrome** o **Edge** y haz clic en el ícono de **Instalar** de la barra de direcciones (una pantalla con una flecha).',
       () => monitor(`${barraNavegador(true)}${paginaPC()}`)],
     ['Confirma la instalación', 'Haz clic en **Instalar**. En Edge también puedes usar el menú **⋯ → Aplicaciones → Instalar este sitio como aplicación**.',
@@ -208,32 +208,32 @@ export default {
           <div class="faq-meta"><span>${icon('message-circle-question')} ${totalPreguntas} respuestas</span><span>${icon('layers')} ${TEMAS.length + 1} temas</span><span>${icon('info')} Versión ${esc(APP_VERSION)}</span></div>
         </div>
         <div class="faq-guia">
-          <span class="faq-guia-ico">${icon('book-open-text')}</span>
+          <span class="faq-guia-ico">${emoji('libro')}</span>
           <b>Guía de usuario en PDF</b>
           <span>Cómo operar todo el sistema, desde la instalación y el inicio de sesión hasta la liberación y el certificado. Lista para imprimir o compartir.</span>
           <button class="btn c-red" id="faq-pdf">${icon('download')} Descargar guía</button>
         </div>
       </section>
       <nav class="faq-chips" aria-label="Temas">
-        ${TEMAS.map((t) => `<a href="#faq-${t.id}" class="faq-chip" data-sec="${t.id}">${icon(t.ico)} ${esc(t.titulo)}</a>`).join('')}
-        <a href="#faq-instalar" class="faq-chip" data-sec="instalar">${icon('download')} Instalar la aplicación</a>
+        ${TEMAS.map((t) => `<a href="#faq-${t.id}" class="faq-chip" data-sec="${t.id}">${emoji(t.ilus, 'sm')} ${esc(t.titulo)}</a>`).join('')}
+        <a href="#faq-instalar" class="faq-chip" data-sec="instalar">${emoji('celular', 'sm')} Instalar la aplicación</a>
       </nav>
       <div class="faq-body">
         ${TEMAS.map((t) => `<section class="faq-sec" id="faq-${t.id}">
-          <h2><span class="faq-sec-ico">${icon(t.ico)}</span>${esc(t.titulo)}<small>${t.preguntas.length} preguntas</small></h2>
+          <h2><span class="faq-sec-ico">${emoji(t.ilus)}</span>${esc(t.titulo)}<small>${t.preguntas.length} preguntas</small></h2>
           <div class="faq-list">${t.preguntas.map(([q, a]) => `<details class="faq-item" data-texto="${esc(norm(`${q} ${plano(a)}`))}">
             <summary><span>${esc(q)}</span>${icon('chevron-down')}</summary><div class="faq-a">${htmlRespuesta(a)}</div></details>`).join('')}</div>
         </section>`).join('')}
         <p class="faq-vacio hidden" id="faq-vacio">${icon('search-x')} No encontramos preguntas con esa búsqueda. Prueba con otras palabras o consulta a un administrador.</p>
         <section class="faq-sec faq-instalar" id="faq-instalar" data-texto="${esc(norm('instalar aplicacion celular android iphone ipad computadora chrome safari edge pantalla de inicio'))}">
-          <h2><span class="faq-sec-ico">${icon('download')}</span>Instalar la aplicación<small>Paso a paso</small></h2>
+          <h2><span class="faq-sec-ico">${emoji('celular')}</span>Instalar la aplicación<small>Paso a paso</small></h2>
           <p class="faq-intro">Instalada, Liberación se abre desde su propio ícono, y en pantalla completa. No ocupa espacio como una app de tienda y se actualiza sola.</p>
-          <div class="faq-tabs" role="tablist">${INSTALAR.map((p, i) => `<button role="tab" class="faq-tab ${i === 0 ? 'on' : ''}" data-plat="${p.id}" aria-selected="${i === 0}">${icon(p.ico)}<span><b>${esc(p.titulo)}</b><small>${esc(p.sub)}</small></span></button>`).join('')}</div>
+          <div class="faq-tabs" role="tablist">${INSTALAR.map((p, i) => `<button role="tab" class="faq-tab ${i === 0 ? 'on' : ''}" data-plat="${p.id}" aria-selected="${i === 0}">${emoji(p.ilus)}<span><b>${esc(p.titulo)}</b><small>${esc(p.sub)}</small></span></button>`).join('')}</div>
           ${INSTALAR.map((p, i) => `<div class="faq-pasos ${i === 0 ? '' : 'hidden'}" data-pasos="${p.id}">${p.pasos.map(([tit, txt, dib], k) => `
             <article class="faq-paso"><div class="faq-ilus">${dib()}</div>
               <div class="faq-paso-txt"><span class="faq-num">${k + 1}</span><b>${esc(tit)}</b>${htmlRespuesta(txt)}</div></article>`).join('')}</div>`).join('')}
         </section>
-        <section class="faq-ayuda">${icon('life-buoy')}<div><b>¿No encontraste tu respuesta?</b><span>Comunícate con un administrador del sistema en Calidad de producto. Si tu duda es sobre un análisis o un lote, consulta al Jefe de calidad.</span></div></section>
+        <section class="faq-ayuda"><span class="faq-ayuda-ilus">${emoji('n_ayuda')}</span><div><b>¿No encontraste tu respuesta?</b><span>Comunícate con un administrador del sistema en Calidad de producto. Si tu duda es sobre un análisis o un lote, consulta al Jefe de calidad.</span></div></section>
       </div>`;
     refreshIcons();
     const q = el.querySelector('#faq-q');

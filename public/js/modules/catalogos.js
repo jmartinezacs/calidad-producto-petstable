@@ -7,7 +7,7 @@
 import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, openModal, confirmDialog, checkForm, emptyState, errorState, fmtNum,
   getCatalogos, invalidarCatalogos, refLabel, tipoLabel, criterio, PARAMETROS, PARAM_A_LIMITE, UNIDADES, prefs, fetchAll,
-  ESPECIES, especieHTML, recetaTxt, opcionCheck, PROTEINAS, proteinaHTML,
+  ESPECIES, especieHTML, recetaTxt, opcionCheck, PROTEINAS, proteinaHTML, emoji, navigate,
 } from '../core.js';
 
 let root = null, token = 0, tab = 'recetas';
@@ -24,6 +24,7 @@ export default {
           <p>Qué se analiza en cada lote y quién lo captura.</p></div>
         <div class="page-actions" id="cat-acts"></div>
       </section>
+      <div class="cat-res" id="cat-res" aria-label="Resumen de catálogos"></div>
       <div class="tabs" role="tablist">
         <button data-tab="recetas" role="tab">${icon('book-open')} Recetas</button>
         <button data-tab="metodos" role="tab">${icon('flask-round')} Métodos</button>
@@ -50,6 +51,7 @@ async function pintar() {
   try {
     const cat = await getCatalogos({ force: true });
     if (t !== token || !root) return;
+    pintarResumen(cat);
     if (tab === 'recetas') body.innerHTML = await recetasHTML(cat);
     else if (tab === 'metodos') body.innerHTML = metodosHTML(cat);
     else body.innerHTML = areasHTML(cat);
@@ -61,6 +63,19 @@ async function pintar() {
   refreshIcons();
 }
 
+// Recuadros de resumen con ilustración grande (al tocarlos abren su pestaña)
+function pintarResumen(cat) {
+  const box = root?.querySelector('#cat-res');
+  if (!box) return;
+  const items = [
+    ['recetas', 'n_recetas', 'Recetas activas', cat.recetas.filter((r) => r.activo !== false).length, `${fmtNum(cat.recetas.length)} registradas`, '#F58020'],
+    ['metodos', 'fisicoquimicos', 'Métodos activos', cat.metodos.filter((m) => m.activo !== false).length, `${fmtNum(cat.metodos.length)} registrados`, '#2563EB'],
+    ['areas', 'microbiologia', 'Áreas de análisis', cat.areas.filter((a) => a.activa !== false).length, 'Activas para liberar', '#7C3AED'],
+    ['puestos', 'puesto', 'Puestos que capturan', cat.puestos.filter((p) => p.activo && (p.areas_captura || []).length).length, `${fmtNum(cat.puestos.length)} puestos en total`, '#0E9F9F'],
+  ];
+  box.innerHTML = items.map(([k, il, label, n, sub, color]) => `<button type="button" class="cat-kpi ${k === tab ? 'on' : ''}" style="--ac:${color}" ${k === 'puestos' ? (state.isAdmin ? 'data-ir="#/usuarios"' : 'disabled') : `data-tab="${k}"`}>
+    <span class="cat-kpi-ico">${emoji(il)}</span><span class="cat-kpi-txt"><small>${esc(label)}</small><b data-cifra>${fmtNum(n)}</b><span>${esc(sub)}</span></span></button>`).join('');
+}
 const estadoPill = (v, f = false) => (v ? `<span class="pill ok">${f ? 'Activa' : 'Activo'}</span>` : `<span class="pill gray">${f ? 'Inactiva' : 'Inactivo'}</span>`);
 const acciones = (botones) => (state.isAdmin ? `<td class="actions" data-label="Acciones"><div class="td-in"><div class="row-actions">${botones}</div></div></td>` : '');
 const editar = (attr, id, t = 'Editar') => `<button class="icon-btn" ${attr}="${esc(id)}" aria-label="${t}" title="${t}">${icon('pencil')}</button>`;
@@ -127,6 +142,7 @@ function areasHTML(cat) {
 async function onClick(e) {
   const tb = e.target.closest('[data-tab]');
   if (tb) { tab = tb.dataset.tab; pintar(); return; }
+  if (e.target.closest('[data-ir]')) { prefs.set('brom.usr.tab', 'puestos'); navigate('#/usuarios'); return; }
   const a = e.target.closest('[data-c], [data-edit-receta], [data-dup-receta], [data-edit-metodo], [data-dup-metodo], [data-edit-area]');
   if (!a) return;
   const cat = await getCatalogos();

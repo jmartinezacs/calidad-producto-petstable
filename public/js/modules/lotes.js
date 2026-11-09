@@ -10,6 +10,7 @@ import {
   fmtDate, fmtDateTime, fmtNum, todayISO, fechaLote, loteDesdeFecha, mesLargo, dictamenPill, refLabel, resultadoTxt, tipoLabel, criterio,
   getCatalogos, invalidarCatalogos, fetchAll, toCSV, descargar, debounce, sanitizeSearch, ganchos, estadoLote, estadoPill, ESTADOS_LOTE,
   puedeCapturar, puedeLiberar, recetaTxt, roleLabel, getDirectorio, avatarHTML, puedeElegirFirmas, FIRMAS, especieIco, especieHTML, avisar, PROTEINAS, proteinaHTML,
+  emoji, ilusArea, ILUS_ESTADO,
 } from '../core.js';
 import { generarCertificado } from './certificado.js';
 
@@ -100,9 +101,9 @@ function pintar() {
   // Resumen en recuadros: lotes mostrados y uno por estado (al tocarlo filtra)
   const estSel = root.querySelector('#l-estado').value;
   root.querySelector('#l-resumen').innerHTML = lotes.length ? `<button class="rs-tile ${estSel ? '' : 'on'}" data-filtro="" style="--ec:#F58020">
-      <span class="rs-ico">${icon('layers')}</span><span class="rs-txt"><b>${fmtNum(lista.length)}<small> de ${fmtNum(lotes.length)}</small></b><span>Lotes mostrados</span></span></button>`
+      <span class="rs-ico ilus">${emoji('n_lotes')}</span><span class="rs-txt"><b>${fmtNum(lista.length)}<small> de ${fmtNum(lotes.length)}</small></b><span>Lotes mostrados</span></span></button>`
     + Object.entries(ESTADOS_LOTE).map(([k, v]) => `<button class="rs-tile ${estSel === k ? 'on' : ''}" data-filtro="${k}" style="--ec:${esc(v.color)}">
-      <span class="rs-ico">${icon(v.ico)}</span><span class="rs-txt"><b>${fmtNum(n(k))}</b><span>${esc(v.label)}</span></span></button>`).join('') : '';
+      <span class="rs-ico ilus">${emoji(ILUS_ESTADO[k] || 'paquete')}</span><span class="rs-txt"><b>${fmtNum(n(k))}</b><span>${esc(v.label)}</span></span></button>`).join('') : '';
   if (!lotes.length) {
     body.innerHTML = emptyState({ ico: 'flask-conical', title: 'Aún no hay lotes registrados', text: 'Registra el primer lote con sus análisis.', action: `<button class="btn primary" data-l="nuevo">${icon('plus')} Nuevo lote</button>` });
     refreshIcons(); return;
@@ -163,8 +164,8 @@ function tarjeta(l) {
       <span>${icon('list-checks')} ${l.completos} de ${l.requeridos} análisis evaluados</span></div>
     ${personas(l)}
     <div class="area-progreso">${l.porArea.map((p) => `<span class="ap ${p.noCumple ? 'bad' : p.pendientes ? 'warn' : 'ok'}" style="--ac:${esc(p.area.color)}" title="${esc(p.area.nombre)}: ${p.cumple} de ${p.total} cumplen${p.noCumple ? `, ${p.noCumple} no cumplen` : ''}">
-      ${icon(p.noCumple ? 'x' : p.pendientes ? 'hourglass' : 'check')}<b>${esc(p.area.nombre)}</b><small>${p.cumple} de ${p.total}</small></span>`).join('')}</div>
-    ${l.liberado_en ? `<div class="liberado-info">${icon('badge-check')}<span>Liberado por <b>${esc(l.liberado_por_nombre || '—')}</b> el ${fmtDateTime(l.liberado_en)} · Folio <b>${esc(l.folio_certificado)}</b>${l.firma_jefe_id ? `<br>Firman: ${esc(l.firma_jefe_nombre)} y ${esc(l.firma_inspector_nombre)}` : '<br>Firmas del certificado pendientes de elegir'}</span></div>` : ''}
+      <span class="ap-ilus">${emoji(ilusArea(p.area.id))}<span class="ap-est">${icon(p.noCumple ? 'x' : p.pendientes ? 'hourglass' : 'check')}</span></span><b>${esc(p.area.nombre)}</b><small>${p.cumple} de ${p.total}</small></span>`).join('')}</div>
+    ${l.liberado_en ? `<div class="liberado-info"><span class="li-ilus">${emoji('certificado')}</span><span>Liberado por <b>${esc(l.liberado_por_nombre || '—')}</b> el ${fmtDateTime(l.liberado_en)} · Folio <b>${esc(l.folio_certificado)}</b>${l.firma_jefe_id ? `<br>Firman: ${esc(l.firma_jefe_nombre)} y ${esc(l.firma_inspector_nombre)}` : '<br>Firmas del certificado pendientes de elegir'}</span></div>` : ''}
     ${filasArea ? `<details class="lote-det"><summary>${icon('chevron-down')} Ver los ${l.res.length} análisis capturados</summary><div class="table-wrap"><table class="table compact"><thead><tr><th>Método</th><th>Resultado</th><th>Especificación</th><th>Dictamen</th></tr></thead><tbody>${filasArea}</tbody></table></div></details>`
       : '<p class="cell-sub" style="margin:0">Sin análisis capturados.</p>'}
     <footer class="lote-acts">
@@ -499,7 +500,7 @@ export async function openLoteForm(lote = null) {
           if (!metodos.length) return '';
           const puede = puedeCapturar(a);
           return `<section class="area-sec ${puede ? '' : 'solo-lectura'}" style="--ac:${esc(a.color)}" data-area="${esc(a.id)}">
-            <header class="area-head"><span class="area-ico">${icon(puede ? 'flask-conical' : 'lock')}</span><b>${esc(a.nombre)}</b><span class="area-n" data-area-n>0 de ${metodos.length}</span>
+            <header class="area-head"><span class="area-ico ilus">${emoji(ilusArea(a.id))}${puede ? '' : `<span class="area-lock">${icon('lock')}</span>`}</span><b>${esc(a.nombre)}</b><span class="area-n" data-area-n>0 de ${metodos.length}</span>
               ${puede ? (metodos.some((m) => m.tipo_resultado === 'verificacion') ? `<button type="button" class="link-btn" data-todo-cumple>${icon('check-check')} Marcar todo como cumple</button>` : '')
                 : `<span class="pill gray">${icon('lock')} Lo captura: ${esc(c.puestosArea(a.id).map((p) => p.nombre).join(' o ') || 'un administrador')}</span>`}</header>
             <div class="metodo-grid">${metodos.map((m0) => {

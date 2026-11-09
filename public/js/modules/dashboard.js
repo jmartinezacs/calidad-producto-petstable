@@ -6,7 +6,7 @@
 import {
   sb, state, esc, icon, refreshIcons, todayISO, fmtDate, fmtDateTime, fmtNum, makeChart, destroyCharts, emptyState, errorState,
   navigate, prefs, avatarHTML, fechaLote, roleLabel, getCatalogos, getResultados, fetchAll, ganchos, mesLargo,
-  estadoLote, estadoPill, ESTADOS_LOTE, colorN, recetaTxt, puedeLiberar, mesCorto,
+  estadoLote, estadoPill, ESTADOS_LOTE, recetaTxt, kpiHTML, emoji, puedeLiberar, mesCorto,
 } from '../core.js';
 
 let root, token = 0;
@@ -65,7 +65,7 @@ async function load() {
   const t = ++token;
   const body = root?.querySelector('#dash-body');
   if (!body) return;
-  if (!body.children.length) body.innerHTML = `<div class="grid grid-4">${'<div class="kpi"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="height:30px;width:40%"></div></div>'.repeat(4)}</div>`;
+  if (!body.children.length) body.innerHTML = `<div class="grid grid-4 kx-grid">${'<div class="kx"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="height:30px;width:40%;margin-top:18px"></div></div>'.repeat(4)}</div>`;
   try {
     const [cat, res, mues] = await Promise.all([
       getCatalogos({ force: true }),
@@ -91,21 +91,16 @@ async function load() {
   }
 }
 
-const kpi = (cls, ico, label, value, desc, go = '') =>
-  `<div class="kpi ${cls} ${go ? 'clickable' : ''}" ${go ? `data-dash="${go}" role="link" tabindex="0"` : ''}>
-    <div class="kpi-head"><span class="kpi-ico">${icon(ico)}</span><small>${esc(label)}</small></div>
-    <strong>${value}</strong>
-    <span class="desc">${esc(desc)}</span></div>`;
 
-const statusCard = (cls, title, desc, n, go = '') =>
+const statusCard = (cls, title, desc, n, go = '', ilus = '') =>
   `<div class="status-card ${go ? 'clickable' : ''}" ${go ? `data-dash="${go}" role="link" tabindex="0"` : ''}>
-    <div class="status-head"><span class="dot blinking ${cls}"></span><b>${esc(title)}</b></div><p>${esc(desc)}</p><span class="num">${fmtNum(n)}</span></div>`;
+    ${ilus ? `<span class="sc-ilus">${emoji(ilus)}</span>` : ''}<div class="status-head"><span class="dot blinking ${cls}"></span><b>${esc(title)}</b></div><p>${esc(desc)}</p><span class="num">${fmtNum(n)}</span></div>`;
 
 const cardHead = (title, sub = '', btn = '') =>
   `<div class="card-head center"><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}</div>${btn}</div>`;
 
-function chartCard(id, title, sub, cls = '', total = '', alto = 0, ico = 'bar-chart-3', color = '#F58020') {
-  return `<div class="card chart-card" style="--cc:${color}"><div class="card-head center"><span class="cc-ico" aria-hidden="true">${icon(ico)}</span><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}${total ? `<span class="total-badge">${total}</span>` : ''}</div></div>
+function chartCard(id, title, sub, cls = '', total = '', alto = 0, ilus = 'n_resultados', color = '#F58020') {
+  return `<div class="card chart-card" style="--cc:${color}"><div class="card-head center"><span class="cc-ico ilus" aria-hidden="true">${emoji(ilus)}</span><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}${total ? `<span class="total-badge">${total}</span>` : ''}</div></div>
     <div tabindex="0" title="Ampliar gráfica" class="chart-box ${cls}"${alto ? ` style="height:${alto}px"` : ''}><canvas id="${id}" role="img" aria-label="${esc(title)}"></canvas></div></div>`;
 }
 
@@ -128,28 +123,28 @@ function contenido(cat, lotes, rs) {
       ${estadoPill(l.estado)}</button>`;
   }).join('')}</div>` : vacio);
   return `
-    <div class="grid grid-4">
-      ${kpi('k-orange', 'flask-conical', 'Lotes analizados', fmtNum(lotes.length), 'Registrados en el periodo', '#/lotes')}
-      ${kpi('k-blue', 'badge-check', 'Lotes liberados', fmtNum(n('liberado')), `${pct(n('liberado'), lotes.length)} de los lotes del periodo`, '#/lotes?estado=liberado')}
-      ${kpi('k-green', 'percent', 'Cumplimiento', pct(ok, ok + no), `${fmtNum(ok)} de ${fmtNum(ok + no)} análisis evaluados cumplen`, '#/resultados')}
-      ${kpi(no ? 'k-red danger' : 'k-red', 'triangle-alert', 'Fuera de especificación', fmtNum(no), 'Análisis que no cumplen', '#/lotes?estado=no_conforme')}
+    <div class="grid grid-4 kx-grid">
+      ${kpiHTML({ tono: 'orange', ilus: 'n_lotes', label: 'Lotes analizados', valor: fmtNum(lotes.length), desc: 'Registrados en el periodo', go: '#/lotes' })}
+      ${kpiHTML({ tono: 'blue', ilus: 'liberado', label: 'Lotes liberados', valor: fmtNum(n('liberado')), desc: `${pct(n('liberado'), lotes.length)} de los lotes del periodo`, go: '#/lotes?estado=liberado', barra: lotes.length ? (n('liberado') / lotes.length) * 100 : 0 })}
+      ${kpiHTML({ tono: 'green', ilus: 'activo', label: 'Cumplimiento', valor: pct(ok, ok + no), desc: `${fmtNum(ok)} de ${fmtNum(ok + no)} análisis evaluados cumplen`, go: '#/resultados', barra: ok + no ? (ok / (ok + no)) * 100 : null, texto: !(ok + no) })}
+      ${kpiHTML({ tono: 'red', ilus: 'no_conforme', label: 'Fuera de especificación', valor: fmtNum(no), desc: 'Análisis que no cumplen', go: '#/lotes?estado=no_conforme' })}
     </div>
     <div class="grid grid-3 mt">
-      ${statusCard(n('listo') ? 'ok' : '', 'Listos para liberar', puedeLiberar() ? 'Todos sus análisis cumplen: puedes liberarlos' : 'Esperan la liberación de la Jefatura de calidad', n('listo'), '#/lotes?estado=listo')}
-      ${statusCard(n('en_proceso') ? 'warn' : '', 'En proceso', 'Con análisis por capturar o evaluar', n('en_proceso'), '#/lotes?estado=en_proceso')}
-      ${statusCard(n('no_conforme') ? 'bad' : '', 'No conformes', 'Con al menos un análisis fuera de especificación', n('no_conforme'), '#/lotes?estado=no_conforme')}
+      ${statusCard(n('listo') ? 'ok' : '', 'Listos para liberar', puedeLiberar() ? 'Todos sus análisis cumplen: puedes liberarlos' : 'Esperan la liberación de la Jefatura de calidad', n('listo'), '#/lotes?estado=listo', 'listo_liberar')}
+      ${statusCard(n('en_proceso') ? 'warn' : '', 'En proceso', 'Con análisis por capturar o evaluar', n('en_proceso'), '#/lotes?estado=en_proceso', 'en_captura')}
+      ${statusCard(n('no_conforme') ? 'bad' : '', 'No conformes', 'Con al menos un análisis fuera de especificación', n('no_conforme'), '#/lotes?estado=no_conforme', 'no_conforme')}
     </div>
     <div class="grid grid-main mt">
-      ${chartCard('ch-mes', 'Lotes por mes', 'Según su estado de liberación', '', '', 0, 'calendar-range', '#2563EB')}
-      ${chartCard('ch-pct', 'Porcentaje de cumplimiento', `${fmtNum(ok + no)} análisis evaluados en el periodo`, '', '', 0, 'circle-check-big', '#16A34A')}
+      ${chartCard('ch-mes', 'Lotes por mes', 'Según su estado de liberación', '', '', 0, 'calendario', '#2563EB')}
+      ${chartCard('ch-pct', 'Porcentaje de cumplimiento', `${fmtNum(ok + no)} análisis evaluados en el periodo`, '', '', 0, 'activo', '#16A34A')}
     </div>
     <div class="grid grid-2 mt">
-      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'chef-hat', '#F58020')}
-      ${chartCard('ch-area', 'Cumplimiento por área de análisis', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'microscope', '#7C3AED')}
+      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'n_recetas', '#F58020')}
+      ${chartCard('ch-area', 'Cumplimiento por área de análisis', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'microbiologia', '#7C3AED')}
     </div>
     <div class="grid grid-2 mt">
-      ${chartCard('ch-metodo', 'Fuera de especificación por método', 'Número de análisis que no cumplen', 'sm', `Total: <b>${fmtNum(no)}</b>`, Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24), 'triangle-alert', '#DC2626')}
-      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} ${lotes.length === 1 ? 'lote' : 'lotes'} en el periodo`, 'sm', '', Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24) + 34, 'pie-chart', '#0891B2')}
+      ${chartCard('ch-metodo', 'Fuera de especificación por método', 'Número de análisis que no cumplen', 'sm', `Total: <b>${fmtNum(no)}</b>`, Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24), 'no_conforme', '#DC2626')}
+      ${chartCard('ch-estado', 'Lotes por estado', `${fmtNum(lotes.length)} ${lotes.length === 1 ? 'lote' : 'lotes'} en el periodo`, 'sm', '', Math.max(220, 40 + new Set(rs.map((r) => r.metodo_id)).size * 24) + 34, 'n_lotes', '#0891B2')}
     </div>
     <div class="grid grid-2 mt">
       <div class="card">${cardHead('Listos para liberar', 'Todos sus análisis cumplen', `<button class="btn s-green" data-dash="#/lotes?estado=listo">${icon('badge-check')} Ver lotes</button>`)}
@@ -160,13 +155,13 @@ function contenido(cat, lotes, rs) {
 }
 
 function quickHTML() {
-  const items = [['nuevo-lote', 'flask-conical', 'Nuevo lote', 'Registrar lote y análisis'],
-    ['#/lotes?estado=listo', 'badge-check', 'Liberar lotes', 'Lotes con todos sus análisis en cumplimiento'],
-    ['#/resultados', 'line-chart', 'Tendencias', 'Gráficas por receta y método'],
-    ['#/ayuda', 'circle-help', 'Ayuda y guía', 'Preguntas frecuentes y guía en PDF']];
+  const items = [['nuevo-lote', 'n_lotes', 'Nuevo lote', 'Registrar lote y análisis'],
+    ['#/lotes?estado=listo', 'liberado', 'Liberar lotes', 'Lotes con todos sus análisis en cumplimiento'],
+    ['#/resultados', 'n_resultados', 'Tendencias', 'Gráficas por receta y método'],
+    ['#/ayuda', 'n_ayuda', 'Ayuda y guía', 'Preguntas frecuentes y guía en PDF']];
   return `<section class="card mt quick-section">${cardHead('Accesos rápidos', 'Las acciones más utilizadas')}
     <div class="quick-grid">
-      ${items.map(([a, ic, t, s]) => `<button class="quick-action" data-dash="${a}"><span class="qi">${icon(ic)}</span><b>${esc(t)}</b><span>${esc(s)}</span></button>`).join('')}
+      ${items.map(([a, ic, t, s]) => `<button class="quick-action" data-dash="${a}"><span class="qi ilus">${emoji(ic)}</span><b>${esc(t)}</b><span>${esc(s)}</span></button>`).join('')}
     </div></section>`;
 }
 
@@ -228,11 +223,11 @@ function drawCharts(cat, lotes, rs) {
     data: { labels: areas.map((a) => a.nombre), datasets: [{ label: 'Cumplimiento', data: areas.map((a) => porcentaje(rs.filter((x) => metArea.get(x.metodo_id) === a.id))), backgroundColor: areas.map((a) => a.color), borderRadius: 6, maxBarThickness: 52, _sufijo: ' %' }] },
     options: { plugins: { legend: { display: false } }, scales: ejePct },
   });
-  // Fuera de especificación por método (un color distinto por barra)
+  // Fuera de especificación por método (cada barra con el color de su área de análisis)
   const metodos = cat.metodos.filter((m) => rs.some((x) => x.metodo_id === m.id));
   makeChart(document.getElementById('ch-metodo'), {
     type: 'bar',
-    data: { labels: metodos.map((m) => m.metodo), datasets: [{ label: 'No cumplen', data: metodos.map((m) => rs.filter((x) => x.metodo_id === m.id && x.cumple === false).length), backgroundColor: metodos.map((_, i) => colorN(i)), borderRadius: 6, maxBarThickness: 22 }] },
+    data: { labels: metodos.map((m) => m.metodo), datasets: [{ label: 'No cumplen', data: metodos.map((m) => rs.filter((x) => x.metodo_id === m.id && x.cumple === false).length), backgroundColor: metodos.map((m) => cat.area(m.area)?.color || '#94A3B8'), borderRadius: 6, maxBarThickness: 22 }] },
     options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { autoSkip: false, font: { size: 10.5 } } } } },
   });
   // Lotes por estado

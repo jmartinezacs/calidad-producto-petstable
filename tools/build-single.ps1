@@ -91,6 +91,12 @@ Copy-Item (Join-Path $Src 'manifest.webmanifest') (Join-Path $Out 'manifest.webm
 Copy-Item (Join-Path $Src 'logo-correo.png') (Join-Path $Out 'logo-correo.png') -Force
 Copy-Item (Join-Path $Src 'notif-icon.png') (Join-Path $Out 'notif-icon.png') -Force
 Copy-Item (Join-Path $Src 'notif-badge.png') (Join-Path $Out 'notif-badge.png') -Force
+# v9.5: ilustraciones propias (SVG cacheables), íconos de la app y del sistema, y firma de los créditos
+foreach ($dir in @('emoji', 'notif', 'creditos')) {
+  $destino = Join-Path $Out $dir
+  if (Test-Path $destino) { Remove-Item $destino -Recurse -Force }
+  Copy-Item (Join-Path $Src $dir) $destino -Recurse -Force
+}
 # Versión publicada: la app la consulta para ofrecer "Actualizar" cuando cambia
 if ($configJs -notmatch 'APP_VERSION:\s*["'']([^"'']+)["'']') { throw 'No se encontró APP_VERSION en config.js' }
 [IO.File]::WriteAllText((Join-Path $Out 'version.json'), "{`"version`":`"$($Matches[1])`"}`n", $utf8)

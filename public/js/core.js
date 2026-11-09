@@ -67,6 +67,49 @@ export function initials(name) {
 export const pill = (text, cls = 'gray') => `<span class="pill ${cls}">${esc(text)}</span>`;
 export const icon = (name, cls = '') => `<i data-lucide="${name}"${cls ? ` class="${cls}"` : ''}></i>`;
 export function refreshIcons() { try { window.lucide?.createIcons(); } catch { /* sin íconos */ } }
+// Ilustración a color propia (fuentes/ilustraciones.src → public/emoji), mismo estilo que Ruta de calidad.
+// Decorativa: alt vacío y oculta a lectores de pantalla.
+export const emoji = (slug, cls = '') => `<img class="emoji ${cls}" src="/emoji/${slug}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+// Ilustración de cada área de análisis (las áreas nuevas usan la de Fisicoquímico)
+const ILUS_AREA = { bromatologico: 'bromatologico', fisicoquimico: 'fisicoquimicos', microbiologico: 'microbiologia', sensorial: 'sensorial' };
+export const ilusArea = (id) => ILUS_AREA[id] || 'fisicoquimicos';
+// Ilustración de cada estado del lote
+export const ILUS_ESTADO = { en_proceso: 'en_captura', listo: 'listo_liberar', liberado: 'liberado', no_conforme: 'no_conforme', revertido: 'revertido' };
+
+// Indicador (.kx). tono: orange, green, red, blue, violet o teal. ilus: ilustración de public/emoji.
+// texto: el valor es una palabra. barra: porcentaje 0 a 100. go: ruta al pulsar (#/lotes…).
+export function kpiHTML({ tono = 'orange', ico = 'circle', ilus = '', label, valor, desc = '', go = '', texto = false, barra = null }) {
+  const link = go ? ` data-go="${esc(go)}" role="link" tabindex="0"` : '';
+  return `<div class="kx t-${tono}${texto ? ' texto' : ''}${go ? ' go' : ''}"${link}>
+    <span class="kx-ico${ilus ? ' ilus-box' : ''}" aria-hidden="true">${ilus ? emoji(ilus, 'ilus') : icon(ico)}</span>
+    <div class="kx-top"><small>${esc(label)}</small></div>
+    <strong${texto ? '' : ' data-cifra'} title="${esc(valor)}">${esc(valor)}</strong>${desc ? `<span class="kx-desc">${esc(desc)}</span>` : ''}
+    ${barra !== null ? `<span class="kx-barra" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, barra))}%"></i></span>` : ''}
+    ${go ? `<span class="kx-go">Ver detalle ${icon('arrow-right')}</span>` : ''}</div>`;
+}
+// Las cifras de los indicadores cuentan desde 0 (1,832 · 95.5 % · 12). Fijas si el usuario reduce el movimiento.
+export function animarCifras(raiz) {
+  if (!raiz || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  raiz.querySelectorAll('[data-cifra]').forEach((el) => {
+    const m = el.textContent.trim().match(/^([\d,]+)(\.\d+)?(\s?%)?$/);
+    if (!m) return;
+    const fin = Number(`${m[1].replace(/,/g, '')}${m[2] || ''}`), dec = m[2] ? m[2].length - 1 : 0, suf = m[3] || '';
+    if (!fin) return;
+    const fmt = new Intl.NumberFormat('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    const t0 = performance.now(), dur = 900;
+    const paso = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - (1 - k) ** 3;
+      el.textContent = `${fmt.format(fin * e)}${suf}`;
+      if (k < 1 && el.isConnected) requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+  });
+}
+// Indicadores con destino: clic, Enter o espacio
+document.addEventListener('click', (e) => { const k = e.target.closest?.('.kx[data-go]'); if (k) navigate(k.dataset.go); });
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('.kx[data-go]')) { e.preventDefault(); navigate(e.target.dataset.go); }
+});
 
 export function sanitizeSearch(q) { return String(q || '').replace(/[%,()*\\"'`;:]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60); }
 export function debounce(fn, ms = 300) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
@@ -438,11 +481,17 @@ export function bindCounters(root) {
 }
 
 // ---------- Estados vacíos ----------
+// Ícono lucide → ilustración a color de 60 px (los que no estén en el mapa conservan el ícono)
+const ILUS_VACIO = {
+  'book-open': 'n_recetas', 'book-x': 'libro', briefcase: 'puesto', 'flask-conical': 'n_lotes', 'flask-round': 'fisicoquimicos', history: 'n_bitacora',
+  inbox: 'paquete', layers: 'n_catalogos', 'line-chart': 'n_resultados', 'search-x': 'paquete', 'shield-check': 'activo', table: 'n_resultados', users: 'personas',
+};
 export function emptyState({ ico = 'inbox', title, text = '', action = '' }) {
-  return `<div class="empty"><div class="empty-ico">${icon(ico)}</div><b>${esc(title)}</b>${text ? `<p>${esc(text)}</p>` : ''}${action}</div>`;
+  const il = ILUS_VACIO[ico];
+  return `<div class="empty"><div class="empty-ico${il ? ' ilus' : ''}">${il ? emoji(il) : icon(ico)}</div><b>${esc(title)}</b>${text ? `<p>${esc(text)}</p>` : ''}${action}</div>`;
 }
 export function errorState(err, retryAction = 'retry') {
-  return `<div class="empty error"><div class="empty-ico">${icon('wifi-off')}</div><b>No se pudo cargar la información</b><p>${esc(errMsg(err))}</p>
+  return `<div class="empty error"><div class="empty-ico ilus">${emoji('n_alerta')}</div><b>No se pudo cargar la información</b><p>${esc(errMsg(err))}</p>
     <button class="btn secondary" data-action="${retryAction}">${icon('refresh-cw')} Reintentar</button></div>`;
 }
 
@@ -454,7 +503,12 @@ export function cssVar(name) { return getComputedStyle(document.documentElement)
 // Colores distintos para cada barra o segmento (no se repiten mientras alcancen)
 export const PALETTE = ['#F58020', '#1BC7C7', '#7C3AED', '#16A34A', '#DB2777', '#2563EB', '#CA8A04', '#0891B2', '#DC2626', '#65A30D',
   '#9333EA', '#0D9488', '#E8890C', '#4F46E5', '#BE185D', '#475569'];
-export const colorN = (i) => PALETTE[i % PALETTE.length];
+// Categorías sin color propio: paleta validada para daltonismo, en orden y nunca cíclica
+// (de la novena en adelante, gris neutro). Las recetas, áreas y estados conservan su color de negocio.
+const PALETA_CAT = { claro: ['#2A78D6', '#EB6834', '#1BAF7A', '#EDA100', '#E87BA4', '#008300', '#6250D6', '#E34948'], oscuro: ['#3987E5', '#D95926', '#199E70', '#C98500', '#D55181', '#008300', '#9085E9', '#E66767'] };
+const temaOscuro = () => document.documentElement.dataset.theme === 'dark' || (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+export const paletaCat = () => PALETA_CAT[temaOscuro() ? 'oscuro' : 'claro'];
+export const colorN = (i) => paletaCat()[i] || '#94A3B8';
 // Etiqueta de datos: el valor centrado dentro de cada barra o segmento de pastel
 // (se dibuja en el canvas, así que también aparece al copiar la gráfica)
 const etiquetasDatos = {
@@ -588,9 +642,9 @@ export function makeChart(canvas, config) {
     // Barras con degradado (el color base se guarda en _color: la gráfica ampliada copia los datos como JSON)
     if ((d.type || tipo) === 'bar') {
       if (d._color === undefined) d._color = d.backgroundColor;
-      const col = d._color;
-      d.backgroundColor = (c) => degradadoBarra(c, col, horiz);
-      d.hoverBackgroundColor = (c) => colorDe(col, c.dataIndex);
+      // Lee _color al dibujar: restyleCharts puede cambiarlo con el tema (_colores)
+      d.backgroundColor = (c) => degradadoBarra(c, c.dataset._color, horiz);
+      d.hoverBackgroundColor = (c) => colorDe(c.dataset._color, c.dataIndex);
       d.borderRadius = d.stack ? 4 : 8;
       d.borderSkipped = d.stack ? 'middle' : 'start';
       return;
@@ -605,22 +659,27 @@ export function makeChart(canvas, config) {
       d.pointBorderWidth = 2;
     }
   });
-  const ejes = { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0, padding: 8, font: { size: 11, weight: '600' } }, border: { display: false, dash: [4, 4] } };
+  // Contenedores angostos (celular): marcas más pequeñas y menos etiquetas
+  const angosto = (canvas.parentElement?.clientWidth || 999) < 420 && !canvas.dataset.zoom;
+  const ejes = { grid: { color: line, drawTicks: false }, ticks: { color: muted, precision: 0, padding: 8, font: { size: angosto ? 10.5 : 11, weight: '500' }, ...(angosto ? { maxTicksLimit: 5 } : {}) }, border: { display: false, dash: [4, 4] } };
+  // Leyenda solo con dos series o más (o segmentos de pastel), salvo que la gráfica indique otra cosa
+  const leyendaAuto = ['pie', 'doughnut'].includes(tipo) || config.data.datasets.length > 1;
   const ox = config.options?.scales?.x || {}, oy = config.options?.scales?.y || {};
   const c = new window.Chart(canvas, {
     ...config,
     plugins: [...(config.plugins || []), etiquetasDatos, centroDona],
     options: {
       responsive: true, maintainAspectRatio: false,
-      animation: { duration: 900, easing: 'easeOutQuart' },
+      animation: { duration: 750, easing: 'easeOutCubic' },
+      transitions: { active: { animation: { duration: 160 } } },
       ...(config.options?.interaction ? { interaction: config.options.interaction } : {}),
       layout: config.options?.layout || { padding: { top: 12, right: 10, bottom: 2, left: 4 } },
       plugins: {
-        legend: { labels: { color: text, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11.5, weight: '600' } }, ...(config.options?.plugins?.legend || {}) },
+        legend: { display: leyendaAuto, labels: { color: text, boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 11.5, weight: '600' } }, ...(config.options?.plugins?.legend || {}) },
         tooltip: {
-          backgroundColor: 'rgba(11, 34, 53, .95)', titleColor: '#FFFFFF', bodyColor: '#E2E8F0',
-          titleFont: { size: 12.5, weight: '800' }, bodyFont: { size: 12, weight: '500' },
-          padding: 12, cornerRadius: 12, caretSize: 6, boxPadding: 6, usePointStyle: true,
+          backgroundColor: 'rgba(10, 26, 39, .96)', titleColor: '#FFFFFF', bodyColor: '#D7E1EA',
+          titleFont: { size: 12.5, weight: '700' }, bodyFont: { size: 12, weight: '500' },
+          padding: { x: 12, y: 10 }, cornerRadius: 10, caretSize: 6, boxPadding: 6, usePointStyle: true, animation: { duration: 140 },
           borderColor: 'rgba(255, 255, 255, .14)', borderWidth: 1,
           ...(config.options?.plugins?.tooltip || {}),
         },
@@ -649,6 +708,8 @@ export function restyleCharts() {
     try {
       const o = c.options;
       if (o.plugins?.legend?.labels) o.plugins.legend.labels.color = text;
+      // _colores: función que devuelve los colores de categoría del tema actual
+      c.data.datasets.forEach((d) => { if (typeof d._colores === 'function') d._color = d._colores(); });
       c.data.datasets.forEach((d) => { if (!d._bordeTarjeta) return; if (['pie', 'doughnut'].includes(c.config.type)) d.borderColor = cssVar('--card'); else d.pointBorderColor = cssVar('--card'); });
       for (const s of Object.values(o.scales || {})) {
         if (s.ticks) s.ticks.color = muted;

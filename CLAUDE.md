@@ -25,6 +25,22 @@ Guía para Claude Code al trabajar en este repositorio.
 ## Frontend (`public/js`)
 
 - Gráficas (v9): `makeChart` aplica degradados a las barras (color base en `_color`), área sombreada en la línea principal (`_area`), dona con cifra al centro (`_centro: { valor, etiqueta, color }`) y etiquetas en píldora; `chartCard` del panel lleva ícono y color. Perro y gato: `especieImg()`; el perro es un schnauzer dibujado en SVG (fuente en `fuentes/schnauzer.svg`) y el gato una cara de Fluent Emoji (MIT) recoloreada a naranja, ambos incrustados en el CSS. La insignia monocromática de Android es `public/notif-badge.png`.
+- Sistema visual (v9.5, el de Ruta de calidad): bloque `/* v9.5 · Sistema visual de Ruta de calidad */` al final de `app.css`.
+  - Superficies `--hero-*` (claro y oscuro) en Mi perfil, sistema y versión y créditos.
+  - Indicador único `.kx` con `kpiHTML({ tono, ilus, ico, label, valor, desc, go, texto, barra })` y `animarCifras(view)`. Lo llama el router una vez por vista; los clics `data-go` los atiende core.js.
+  - Etiquetas de indicadores, mosaicos y encabezados en tipo oración con peso 700, nunca en mayúsculas sostenidas como en Ruta.
+  - Dock flotante en celular (≤ 720 px) con `corto` y `ilus` en `ROUTES`. `#view` recibe la clase `entra` y `body.cargando` mientras carga.
+- Ilustraciones propias: SVG en `public/emoji/<slug>.svg`, con `emoji(slug, cls)` (decorativas, `alt=""`).
+  - Se generan con `perl tools/gen-ilustraciones.pl fuentes/ilustraciones.src public/emoji` (Git Bash). Edita la fuente, nunca los SVG; el id `sh` es el filtro de sombra.
+  - Ayudantes: `ilusArea(id)`, `ILUS_ESTADO` y `ILUS_VACIO` (dentro de `emptyState`).
+  - Los botones de acción, los campos y las acciones de tabla conservan lucide.
+- Color de gráficas: `colorN(i)` usa `paletaCat()` (validada para daltonismo, 8 colores, nunca cíclica, luego gris).
+  - Recetas, áreas y estados conservan su color de negocio; el método toma el color de su área.
+  - `_colores` (función) se vuelve a aplicar en `restyleCharts()`.
+- Íconos: `public/notif/` (`icono-192/512`, `apple-180` opaco para iOS y `badge-96/192` monocromáticos de Ruta).
+  - `notif-badge.png` tiene la silueta de Ruta y conserva su ruta.
+  - La firma de los créditos está en `public/creditos/firma.png`.
+  - El build copia `emoji/`, `notif/` y `creditos/` a la raíz.
 - `core.js`: cliente `sb`, `state`, formato, modales, toasts, gráficas (`makeChart` con colores `PALETTE`/`colorN`, etiquetas `_porcentaje`/`_sufijo`, recuadro que se oculta al salir; pastel y dona con borde del color de la tarjeta; ampliación al tocar `.chart-box`), selectores personalizados (opciones con `data-ico`; `<input list>` muestra todo al enfocar), CSV y fotos. Negocio: `getCatalogos()` (áreas, recetas, métodos, especificaciones, puestos, `aplica(m, receta)`, `requeridos(receta)`, `puestosArea(area)`), `getDirectorio()` (RPC `brom_directorio`: nombre, puesto, foto de todos), `personaHTML`, `opcionCheck`, `criterio`, `refLabel`, `estadoLote`, `puedeCapturar(area)` y `puedeLiberar()` (por puesto), `puedeElegirFirmas()`, `mesLargo`, `mesCorto`.
 - Módulos: `dashboard`, `lotes` (captura por área, liberación, reversión), `certificado` (PDF de una hoja), `resultados`, `catalogos` (recetas, métodos con recetas a las que aplican y duplicado, áreas con un color por puesto; la pestaña «Especificaciones por receta» se quitó en v9: un criterio distinto se logra duplicando el método), `usuarios` (solo admin; diseño de Servicio médico; pestañas Usuarios y Puestos y permisos; «Nuevo usuario» busca cuentas existentes), `bitacora` (solo admin; tabla centrada), `perfil` (seis recuadros; notificaciones push y correo con botones de prueba), `ayuda` (centro de ayuda y guía PDF; actualízala si cambia un flujo).
 - En `resultados.js`, los datos por punto de una gráfica deben ser JSON (arreglos, no `Set`): la gráfica ampliada los copia con `JSON.parse(JSON.stringify(...))`.

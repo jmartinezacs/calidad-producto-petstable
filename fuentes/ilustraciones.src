@@ -1,0 +1,351 @@
+# Ilustraciones propias de Liberación de producto (estilo de Ruta de calidad).
+# Genera: perl tools/gen-ilustraciones.pl fuentes/ilustraciones.src public/emoji
+
+@@n_lotes
+<defs>%V(t,#5EEAD4,#0E8F96)%V(b,#FFB067,#E2620A)%V(e,#FFFFFF,#E2E8F0)%V(k,#F4CF97,#C98A3E)</defs>
+<g %S><path d='M4 34h56l-5 18a5 5 0 0 1-4.8 3.6H13.8A5 5 0 0 1 9 52Z' fill='url(#t)' stroke='#115E59' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M8 38h48' stroke='#FFF' stroke-opacity='.5' stroke-width='1.6' stroke-linecap='round'/>
+<g %S><rect x='12' y='18' width='16' height='17' rx='3' fill='url(#b)' stroke='#9A3412' stroke-width='1.1'/><rect x='30' y='12' width='20' height='23' rx='3' fill='url(#k)' stroke='#92400E' stroke-width='1.1'/></g>
+<rect x='14.5' y='20.5' width='8' height='2' rx='1' %H/><rect x='32.5' y='14.5' width='10' height='2' rx='1' %H/>
+<g %S><path d='M38 40h17l4 6-4 6H38a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3Z' fill='url(#e)' stroke='#64748B' stroke-width='1.2' stroke-linejoin='round'/></g>
+<circle cx='54' cy='46' r='1.8' fill='#F58020'/><path d='M39.5 44h10M39.5 48h7' stroke='#334155' stroke-width='1.8' stroke-linecap='round'/>
+
+@@n_resultados
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(b,#60A5FA,#1D4ED8)%V(g,#5EEAD4,#0D9488)%V(v,#86EFAC,#16A34A)</defs>
+<g %S><rect x='4' y='6' width='44' height='44' rx='6' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M10 14v30h33' fill='none' stroke='#94A3B8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M10 22h33' stroke='#DC2626' stroke-opacity='.55' stroke-width='1.4' stroke-dasharray='3 2.5'/>
+<path d='M13 36l7-8 7 4 8-12 6 5' fill='none' stroke='url(#b)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>
+<g fill='#FFF' stroke='#1D4ED8' stroke-width='1.6'><circle cx='13' cy='36' r='2.2'/><circle cx='20' cy='28' r='2.2'/><circle cx='27' cy='32' r='2.2'/><circle cx='35' cy='20' r='2.2'/></g>
+<g %S><path d='M46 30h8v8.5l7.4 13.2A4 4 0 0 1 57.9 58H42.1a4 4 0 0 1-3.5-6.3L46 38.5Z' fill='#F1F5F9' stroke='#475569' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M41.6 48h16.8l3 5.4A3 3 0 0 1 58.8 57H41.2a3 3 0 0 1-2.6-3.6Z' fill='url(#v)'/>
+<rect x='44.5' y='28' width='11' height='3.4' rx='1.7' fill='#64748B'/><circle cx='47' cy='52' r='1.3' fill='#FFF' opacity='.8'/><circle cx='52.5' cy='54' r='1' fill='#FFF' opacity='.7'/>
+
+@@n_recetas
+<defs>%V(o,#FFB067,#E2620A)%V(p,#FFFFFF,#EEF2F6)%V(v,#C4B5FD,#7C3AED)</defs>
+<g %S><path d='M6 10a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v42a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4Z' fill='url(#o)' stroke='#9A3412' stroke-width='1.3'/></g>
+<rect x='11' y='6' width='29' height='47' rx='2' fill='url(#p)'/><path d='M11 6v47' stroke='#9A3412' stroke-opacity='.5' stroke-width='1.2'/>
+<path d='M17 16h17M17 23h17M17 30h11M17 37h14' stroke='#94A3B8' stroke-width='2.2' stroke-linecap='round'/>
+<path d='M6 12h5M6 20h5M6 28h5M6 36h5M6 44h5' stroke='#FFF' stroke-opacity='.55' stroke-width='1.4'/>
+<g %S><path d='M45 26h8v8l7 12.6a4 4 0 0 1-3.5 6H41.5a4 4 0 0 1-3.5-6L45 34Z' fill='#F1F5F9' stroke='#475569' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M41 42.5h18l1.2 2.2a3 3 0 0 1-2.6 4.4H41.4a3 3 0 0 1-2.6-4.4Z' fill='url(#v)'/>
+<rect x='43.5' y='24' width='11' height='3.4' rx='1.7' fill='#64748B'/><circle cx='46.5' cy='45.5' r='1.2' fill='#FFF' opacity='.8'/>
+
+@@bromatologico
+<defs>%V(c,#E2E8F0,#94A3B8)%V(b,#FFB067,#E2620A)%V(v,#E0F2FE,#93C5FD)%V(d,#334155,#0F172A)</defs>
+<g %S><rect x='6' y='44' width='52' height='12' rx='3' fill='url(#c)' stroke='#475569' stroke-width='1.3'/></g>
+<rect x='22' y='47.5' width='20' height='5.5' rx='1.4' fill='url(#d)'/><path d='M25 50.3h3M30 50.3h3M35 50.3h4' stroke='#5EEAD4' stroke-width='1.6' stroke-linecap='round'/>
+<g %S><path d='M10 44V16a4 4 0 0 1 4-4h36a4 4 0 0 1 4 4v28' fill='url(#v)' fill-opacity='.55' stroke='#64748B' stroke-width='1.3'/></g>
+<path d='M14 15h12' stroke='#FFF' stroke-width='2' stroke-linecap='round' opacity='.8'/>
+<rect x='22' y='38' width='20' height='3' rx='1' fill='#475569'/><rect x='30' y='34' width='4' height='4' fill='#64748B'/>
+<g %S><path d='M24 26h16l-2 8H26Z' fill='url(#b)' stroke='#9A3412' stroke-width='1.1' stroke-linejoin='round'/></g>
+<ellipse cx='32' cy='26' rx='8' ry='2' fill='#FDBA74' stroke='#9A3412' stroke-width='1'/><circle cx='29' cy='25.6' r='1.2' fill='#92400E'/><circle cx='33' cy='25.2' r='1.2' fill='#92400E'/><circle cx='35.6' cy='26.2' r='1' fill='#92400E'/>
+
+@@sensorial
+<defs>%V(p,#FFFFFF,#E2E8F0)%V(k,#F4CF97,#B7791F)%V(l,#93C5FD,#1D4ED8)%R(g,#E0F2FE,#7DD3FC)</defs>
+<g %S><ellipse cx='26' cy='46' rx='22' ry='9' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<ellipse cx='26' cy='44.5' rx='15' ry='5.5' fill='#F1F5F9' stroke='#CBD5E1' stroke-width='1'/>
+<g %S><path d='M14 43c0-4 3-6 6-6 2 0 3 1 4 1s2-2 5-2 6 2 6 6c0 2-2 3-4 3H18c-2.5 0-4-.8-4-2Z' fill='url(#k)' stroke='#92400E' stroke-width='1.1'/></g>
+<circle cx='21' cy='40.5' r='1.2' fill='#78350F'/><circle cx='27' cy='39.5' r='1.2' fill='#78350F'/><circle cx='31' cy='41.5' r='1' fill='#78350F'/>
+<g %S><circle cx='43' cy='22' r='13' fill='url(#g)' fill-opacity='.85' stroke='url(#l)' stroke-width='4.5'/></g>
+<path d='M37 17a8 8 0 0 1 7-4' stroke='#FFF' stroke-width='2.4' stroke-linecap='round' fill='none' opacity='.85'/>
+<path d='M52.5 31.5 60 39' stroke='#1E3A8A' stroke-width='6' stroke-linecap='round'/><path d='M52.5 31.5 60 39' stroke='url(#l)' stroke-width='4' stroke-linecap='round'/>
+
+@@en_captura
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(a,#FDE68A,#F59E0B)%V(o,#FFB067,#E2620A)</defs>
+<g %S><rect x='10' y='8' width='36' height='48' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<rect x='20' y='4' width='16' height='8' rx='2.5' fill='url(#o)' stroke='#9A3412' stroke-width='1.1'/>
+<path d='M17 22h22M17 30h22M17 38h12' stroke='#94A3B8' stroke-width='2.4' stroke-linecap='round'/>
+<g %S><path d='M50 22l7 7-20 20-9 2 2-9Z' fill='url(#a)' stroke='#92400E' stroke-width='1.2' stroke-linejoin='round'/></g>
+<path d='M30 42l-2 9 9-2Z' fill='#FDEBCB' stroke='#92400E' stroke-width='1'/><path d='M28.6 47.6 28 51l3.4-.6Z' fill='#1E293B'/>
+<path d='M50 22l7 7 2.6-2.6a2.5 2.5 0 0 0 0-3.5l-3.5-3.5a2.5 2.5 0 0 0-3.5 0Z' fill='#F472B6' stroke='#9D174D' stroke-width='1.1'/>
+<path d='M47 28l-14 14' stroke='#FFF' stroke-opacity='.55' stroke-width='1.6' stroke-linecap='round'/>
+
+@@listo_liberar
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(b,#60A5FA,#1D4ED8)%V(o,#FFB067,#E2620A)</defs>
+<g %S><rect x='8' y='8' width='36' height='48' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<rect x='18' y='4' width='16' height='8' rx='2.5' fill='url(#o)' stroke='#9A3412' stroke-width='1.1'/>
+<g stroke='#16A34A' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M14 21l2.4 2.4 4.2-4.4'/><path d='M14 31l2.4 2.4 4.2-4.4'/><path d='M14 41l2.4 2.4 4.2-4.4'/></g>
+<path d='M24 22h14M24 32h14M24 42h10' stroke='#94A3B8' stroke-width='2.2' stroke-linecap='round'/>
+<g %S><circle cx='47' cy='45' r='13' fill='url(#b)' stroke='#1E3A8A' stroke-width='1.2'/></g>
+<path d='M41 45h11M48 40l5 5-5 5' fill='none' stroke='#FFF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>
+
+@@liberado
+<defs>%V(g,#4ADE80,#15803D)%V(d,#BBF7D0,#22C55E)</defs>
+<g %S><path d='M32 4l5.4 4.2 6.8-.9 2.6 6.3 6.3 2.6-.9 6.8L56.4 28.4 52.2 33.8l.9 6.8-6.3 2.6-2.6 6.3-6.8-.9L32 52.8l-5.4-4.2-6.8.9-2.6-6.3-6.3-2.6.9-6.8L7.6 28.4l4.2-5.4-.9-6.8 6.3-2.6 2.6-6.3 6.8.9Z' fill='url(#g)' stroke='#14532D' stroke-width='1.3' stroke-linejoin='round'/></g>
+<circle cx='32' cy='28.4' r='16' fill='none' stroke='#FFF' stroke-opacity='.55' stroke-width='1.6' stroke-dasharray='2.5 2.5'/>
+<path d='M23.5 29l6 6 11.5-12' fill='none' stroke='#052E16' stroke-opacity='.25' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' transform='translate(0 1.4)'/>
+<path d='M23.5 29l6 6 11.5-12' fill='none' stroke='#FFF' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M20 50l-5 10 6-1.6 3 5 4.4-9.6M44 50l5 10-6-1.6-3 5-4.4-9.6' fill='url(#d)' stroke='#15803D' stroke-width='1.1' stroke-linejoin='round'/>
+<path d='M18 14a18 18 0 0 1 10-6' stroke='#FFF' stroke-width='2.2' stroke-linecap='round' fill='none' opacity='.55'/>
+
+@@no_conforme
+<defs>%V(r,#F87171,#C81E1E)</defs>
+<g %S><path d='M22.6 4h18.8L60 22.6v18.8L41.4 60H22.6L4 41.4V22.6Z' fill='url(#r)' stroke='#7F1D1D' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M23.8 8h16.4L56 23.8' stroke='#FFF' stroke-opacity='.45' stroke-width='2' stroke-linecap='round' fill='none'/>
+<path d='M22 22l20 20M42 22 22 42' stroke='#450A0A' stroke-opacity='.28' stroke-width='7.5' stroke-linecap='round' transform='translate(0 1.4)'/>
+<path d='M22 22l20 20M42 22 22 42' stroke='#FFF' stroke-width='6.4' stroke-linecap='round'/>
+
+@@revertido
+<defs>%V(v,#C4B5FD,#6D28D9)%V(p,#FFFFFF,#E8EEF5)</defs>
+<g %S><rect x='14' y='6' width='34' height='44' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M21 17h20M21 25h20M21 33h12' stroke='#94A3B8' stroke-width='2.4' stroke-linecap='round'/>
+<g %S><circle cx='22' cy='44' r='15' fill='url(#v)' stroke='#4C1D95' stroke-width='1.2'/></g>
+<path d='M28.5 47.5A7.5 7.5 0 1 1 26.8 38' fill='none' stroke='#FFF' stroke-width='3.2' stroke-linecap='round'/>
+<path d='M28.6 33.4l-.8 6.6-6.4-1.6' fill='none' stroke='#FFF' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/>
+
+@@certificado
+<defs>%V(p,#FFFFFF,#EEF2F6)%V(o,#FFB067,#E2620A)%V(g,#FDE68A,#D97706)</defs>
+<g %S><rect x='6' y='6' width='44' height='52' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M6 11a5 5 0 0 1 5-5h34a5 5 0 0 1 5 5v5H6Z' fill='url(#o)'/>
+<path d='M12 11h16' stroke='#FFF' stroke-opacity='.75' stroke-width='2' stroke-linecap='round'/>
+<rect x='34' y='9' width='12' height='4' rx='2' fill='#FFF' opacity='.85'/>
+<path d='M13 24h30M13 31h30M13 38h18' stroke='#94A3B8' stroke-width='2.2' stroke-linecap='round'/>
+<path d='M13 49c3-3 5 2 8-1s3-2 6-1' fill='none' stroke='#1E3A8A' stroke-width='1.8' stroke-linecap='round'/>
+<path d='M42 49l-4 12 5-2 3 4 2-12M50 49l4 12-5-2-3 4-2-12' fill='#F58020' stroke='#9A3412' stroke-width='1' stroke-linejoin='round'/>
+<g %S><circle cx='46' cy='45' r='10' fill='url(#g)' stroke='#92400E' stroke-width='1.2'/></g>
+<circle cx='46' cy='45' r='6.5' fill='none' stroke='#FFF' stroke-opacity='.7' stroke-width='1.3'/><path d='M42.8 45.2l2.2 2.2 4.2-4.4' fill='none' stroke='#78350F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
+
+@@firma
+<defs>%V(p,#FFFFFF,#EEF2F6)%V(b,#60A5FA,#1D4ED8)%V(a,#FDE68A,#D97706)</defs>
+<g %S><rect x='4' y='14' width='48' height='38' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M10 44h36' stroke='#94A3B8' stroke-width='1.6' stroke-linecap='round'/>
+<path d='M11 38c3-8 6-10 8-6s-1 8 2 7 4-9 7-8-1 7 3 7 5-4 8-3' fill='none' stroke='#1E3A8A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M10 22h18' stroke='#CBD5E1' stroke-width='2.2' stroke-linecap='round'/>
+<g %S><path d='M54 4l6 6-22 22-8 2 2-8Z' fill='url(#b)' stroke='#1E3A8A' stroke-width='1.2' stroke-linejoin='round'/></g>
+<path d='M32 26l-2 8 8-2Z' fill='url(#a)' stroke='#92400E' stroke-width='1'/><path d='M51 9 35 25' stroke='#FFF' stroke-opacity='.55' stroke-width='1.6' stroke-linecap='round'/>
+
+@@puesto
+<defs>%V(o,#FFB067,#E2620A)%V(c,#92400E,#5B2A0B)%R(f,#FCD9B8,#D9996B)%V(u,#5EEAD4,#0E8F96)</defs>
+<g %S><rect x='6' y='22' width='52' height='34' rx='6' fill='url(#o)' stroke='#9A3412' stroke-width='1.3'/></g>
+<path d='M24 22v-5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5' fill='none' stroke='url(#c)' stroke-width='3.4'/>
+<path d='M6 36h52' stroke='#9A3412' stroke-opacity='.5' stroke-width='1.3'/><rect x='28' y='32' width='8' height='8' rx='2' fill='#FDE68A' stroke='#92400E' stroke-width='1.1'/>
+<path d='M11 27h16' stroke='#FFF' stroke-opacity='.55' stroke-width='2' stroke-linecap='round'/>
+
+# --- Generales, tomadas de Ruta de calidad ---
+@@n_panel
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(o,#FFB067,#E2620A)%V(b,#60A5FA,#1D4ED8)%V(g,#4ADE80,#15803D)</defs>
+<g %S><rect x='4' y='8' width='56' height='46' rx='7' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M4 15a7 7 0 0 1 7-7h42a7 7 0 0 1 7 7v3H4Z' fill='url(#o)'/><g fill='#FFF' opacity='.85'><circle cx='10' cy='13' r='1.6'/><circle cx='15' cy='13' r='1.6'/><circle cx='20' cy='13' r='1.6'/></g>
+<rect x='10' y='34' width='6' height='14' rx='1.5' fill='url(#b)'/><rect x='19' y='27' width='6' height='21' rx='1.5' fill='url(#b)'/><rect x='28' y='38' width='6' height='10' rx='1.5' fill='url(#b)'/>
+<circle cx='47' cy='35' r='8.5' fill='none' stroke='#E2E8F0' stroke-width='5'/><path d='M47 26.5a8.5 8.5 0 1 1-8.1 11' fill='none' stroke='url(#g)' stroke-width='5'/>
+<path d='M9 24h24' stroke='#CBD5E1' stroke-width='2.4' stroke-linecap='round'/>
+
+@@n_usuarios
+<defs>%R(f,#FCD9B8,#D9996B)%V(u,#60A5FA,#1D4ED8)%V(h,#57534E,#1C1917)%V(o,#FDBA74,#EA580C)</defs>
+<g %S><path d='M4 58c0-11 9-18 21-18s21 7 21 18Z' fill='url(#u)' stroke='#1E3A8A' stroke-width='1.1'/></g>
+<circle cx='25' cy='25' r='11' fill='url(#f)' stroke='#B45309' stroke-opacity='.35'/><path d='M14 24c0-8 5-12 11-12s11 4 11 12c-3-3-7-4.5-11-4.5S17 21 14 24Z' fill='url(#h)'/>
+<g %S><path d='M45.5 34h5l.8 3.4 2.6 1.1 3-1.9 3.5 3.5-1.9 3 1.1 2.6 3.4.8v5l-3.4.8-1.1 2.6 1.9 3-3.5 3.5-3-1.9-2.6 1.1-.8 3.4h-5l-.8-3.4-2.6-1.1-3 1.9-3.5-3.5 1.9-3-1.1-2.6-3.4-.8v-5l3.4-.8 1.1-2.6-1.9-3 3.5-3.5 3 1.9 2.6-1.1Z' fill='url(#o)' stroke='#9A3412' stroke-width='1.1' stroke-linejoin='round'/></g>
+<circle cx='48' cy='48' r='4.6' fill='#FFF7ED' stroke='#9A3412' stroke-width='1.1'/>
+
+@@n_bitacora
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(b,#60A5FA,#1D4ED8)%V(o,#FFB067,#E2620A)</defs>
+<g %S><rect x='8' y='4' width='38' height='50' rx='5' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M8 9a5 5 0 0 1 5-5h28a5 5 0 0 1 5 5v4H8Z' fill='url(#o)'/>
+<path d='M15 21h24M15 28h24M15 35h16M15 42h12' stroke='#94A3B8' stroke-width='2.4' stroke-linecap='round'/>
+<g %S><circle cx='45' cy='44' r='15' fill='url(#b)' stroke='#1E3A8A' stroke-width='1.2'/></g><circle cx='45' cy='44' r='11' fill='#FFF'/>
+<path d='M45 37v7l5 3' stroke='#1E293B' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='45' cy='44' r='1.6' fill='#1E293B'/>
+
+@@n_perfil
+<defs>%V(b,#60A5FA,#1D4ED8)%V(w,#FFFFFF,#DBEAFE)</defs>
+<g %S><circle cx='32' cy='32' r='27' fill='url(#b)'/></g><circle cx='32' cy='32' r='26.2' fill='none' stroke='#1E3A8A' stroke-opacity='.4' stroke-width='1.4'/>
+<circle cx='32' cy='25' r='9.5' fill='url(#w)'/><path d='M14.5 50.5c3-8 9.5-12.5 17.5-12.5s14.5 4.5 17.5 12.5A26 26 0 0 1 32 58a26 26 0 0 1-17.5-7.5Z' fill='url(#w)'/>
+<path d='M13 22a20 20 0 0 1 12-12' stroke='#FFF' stroke-opacity='.45' stroke-width='3' stroke-linecap='round' fill='none'/>
+
+@@n_ayuda
+<defs>%V(o,#FFB067,#E2620A)</defs>
+<g %S><path d='M32 6c15 0 27 10 27 23S47 52 32 52c-3 0-6-.4-8.6-1.2L11 58l2.8-11.6C8.4 42 5 36 5 29 5 16 17 6 32 6Z' fill='url(#o)' stroke='#9A3412' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M14 20c3-5 8-8 14-9' stroke='#FFF' stroke-opacity='.5' stroke-width='2.6' stroke-linecap='round' fill='none'/>
+<path d='M25 23.5c0-4 3.2-6.5 7-6.5s7 2.5 7 6c0 5-7 5.5-7 10.5' stroke='#FFF' stroke-width='4.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='32' cy='41' r='2.9' fill='#FFF'/>
+
+@@n_catalogos
+<defs>%V(o,#FFB067,#E2620A)%V(b,#60A5FA,#1D4ED8)%V(g,#4ADE80,#15803D)%V(p,#FFFFFF,#E2E8F0)</defs>
+<g %S><rect x='8' y='44' width='48' height='12' rx='2.5' fill='url(#g)' stroke='#14532D' stroke-width='1.1'/><rect x='12' y='31' width='44' height='12' rx='2.5' fill='url(#b)' stroke='#1E3A8A' stroke-width='1.1'/><rect x='6' y='18' width='44' height='12' rx='2.5' fill='url(#o)' stroke='#9A3412' stroke-width='1.1'/></g>
+<rect x='48' y='47' width='6' height='6' fill='url(#p)'/><rect x='50' y='34' width='4' height='6' fill='url(#p)'/><rect x='44' y='21' width='4' height='6' fill='url(#p)'/>
+<path d='M14 22v4M36 35v4M18 48v4' stroke='#FFF' stroke-opacity='.7' stroke-width='2' stroke-linecap='round'/><path d='M18 24h14M40 37h6M22 50h20' stroke='#FFF' stroke-opacity='.45' stroke-width='1.6' stroke-linecap='round'/>
+<g %S><circle cx='48' cy='13' r='8' fill='#22C55E' stroke='#14532D' stroke-width='1'/></g><path d='M44.5 13.2l2.4 2.4 4.6-4.8' stroke='#FFF' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/>
+
+@@n_avisos
+<defs>%V(g,#FDE68A,#F59E0B)%V(r,#F87171,#DC2626)%V(c,#94A3B8,#475569)</defs>
+<path d='M26 51a6 6 0 0 0 12 0Z' fill='url(#c)' stroke='#334155' stroke-width='1.1'/>
+<g %S><path d='M32 7c-10 0-17 7.5-17 17.5v9.5L9.5 43.5c-1 1.8.3 3.5 2.3 3.5h40.4c2 0 3.3-1.7 2.3-3.5L49 34V24.5C49 14.5 42 7 32 7Z' fill='url(#g)' stroke='#B45309' stroke-width='1.4' stroke-linejoin='round'/></g>
+<rect x='29' y='3' width='6' height='6' rx='3' fill='url(#g)' stroke='#B45309' stroke-width='1.2'/>
+<path d='M21 22c1-5 4-8 8-9.5' stroke='#FFF' stroke-opacity='.6' stroke-width='2.6' stroke-linecap='round' fill='none'/>
+<g %S><circle cx='48' cy='15' r='9.5' fill='url(#r)' stroke='#FFF' stroke-width='2'/></g>
+<path d='M48 9.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5Z' fill='#FFF'/>
+@@n_alerta
+<defs>%V(y,#FFE45C,#F59E0B)</defs>
+<path d='M28.4 9.6a4.2 4.2 0 0 1 7.2 0l22.6 39.7a4.2 4.2 0 0 1-3.6 6.3H9.4a4.2 4.2 0 0 1-3.6-6.3Z' fill='url(#y)' stroke='#B45309' stroke-width='1.8' stroke-linejoin='round' %S/>
+<path d='M30.2 13.2 11.6 46' stroke='#FFF' stroke-opacity='.55' stroke-width='2.2' stroke-linecap='round' fill='none'/>
+<rect x='28.8' y='21' width='6.4' height='20' rx='3.2' fill='#111827'/><circle cx='32' cy='47.6' r='3.7' fill='#111827'/>
+
+@@calendario
+<defs>%V(p,#FFFFFF,#E8EEF5)%V(r,#F87171,#C81E1E)%V(m,#E2E8F0,#64748B)</defs>
+<g %S><rect x='6' y='10' width='52' height='48' rx='7' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M6 17a7 7 0 0 1 7-7h38a7 7 0 0 1 7 7v7H6Z' fill='url(#r)'/>
+<rect x='17' y='5' width='5' height='11' rx='2.5' fill='url(#m)' stroke='#475569'/><rect x='42' y='5' width='5' height='11' rx='2.5' fill='url(#m)' stroke='#475569'/>
+<g fill='#CBD5E1'><rect x='12' y='30' width='8' height='6' rx='1.5'/><rect x='23' y='30' width='8' height='6' rx='1.5'/><rect x='34' y='30' width='8' height='6' rx='1.5'/><rect x='45' y='30' width='8' height='6' rx='1.5'/><rect x='12' y='40' width='8' height='6' rx='1.5'/><rect x='23' y='40' width='8' height='6' rx='1.5'/><rect x='45' y='40' width='8' height='6' rx='1.5'/><rect x='12' y='49' width='8' height='5' rx='1.5'/><rect x='23' y='49' width='8' height='5' rx='1.5'/></g>
+<rect x='34' y='40' width='8' height='6' rx='1.5' fill='#F58020'/>
+
+@@reloj
+<defs>%V(b,#60A5FA,#1D4ED8)%V(w,#FFFFFF,#E2E8F0)</defs>
+<g %S><circle cx='32' cy='33' r='26' fill='url(#b)'/></g><circle cx='32' cy='33' r='20.5' fill='url(#w)'/>
+<g stroke='#64748B' stroke-width='2' stroke-linecap='round'><path d='M32 15.5v3M32 47.5v3M14.5 33h3M46.5 33h3'/></g>
+<path d='M32 22v11l8 5' stroke='#1E293B' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='32' cy='33' r='2.2' fill='#F58020'/>
+<path d='M13 22a22 22 0 0 1 11-10' stroke='#FFF' stroke-opacity='.45' stroke-width='3' stroke-linecap='round' fill='none'/>
+
+@@personas
+<defs>%R(f,#FCD9B8,#D9996B)%V(a,#93C5FD,#2563EB)%V(b,#C4B5FD,#7C3AED)%V(c,#5EEAD4,#0D9488)%V(h,#57534E,#1C1917)</defs>
+<g %S><path d='M2 56c0-8 6-13 14-13s14 5 14 13Z' fill='url(#b)'/><path d='M34 56c0-8 6-13 14-13s14 5 14 13Z' fill='url(#c)'/></g>
+<circle cx='16' cy='33' r='8' fill='url(#f)'/><path d='M8 32c0-6 3.5-9 8-9s8 3 8 9c-2-2-5-3-8-3s-6 1-8 3Z' fill='url(#h)'/>
+<circle cx='48' cy='33' r='8' fill='url(#f)'/><path d='M40 31c1-5 4-8 8-8s7 3 8 8c-3-1-5-3-6-5-2 2-6 4-10 5Z' fill='#92400E'/>
+<g %S><path d='M14 60c0-10 8-16 18-16s18 6 18 16Z' fill='url(#a)' stroke='#1E40AF' stroke-width='1.1'/></g>
+<circle cx='32' cy='30' r='10' fill='url(#f)' stroke='#B45309' stroke-opacity='.35'/><path d='M22 29c0-7 4.5-11 10-11s10 4 10 11c-3-3-6-4-10-4s-7 1-10 4Z' fill='url(#h)'/>
+
+@@paquete
+<defs>%V(t,#F8DDAF,#D9A05B)%V(f,#E9B97A,#B7793A)%V(s,#D9A05B,#9A6326)</defs>
+<g %S><path d='M32 6 58 17v30L32 58 6 47V17Z' fill='url(#f)' stroke='#78350F' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M6 17 32 28 58 17 32 6Z' fill='url(#t)' stroke='#78350F' stroke-width='1.2' stroke-linejoin='round'/><path d='M32 28v30L58 47V17Z' fill='url(#s)' opacity='.9'/>
+<path d='M19 11.5 45 22.5v9l-6 2.5v-9L13 14Z' fill='#FDEBCB' stroke='#B45309' stroke-width='.9' stroke-linejoin='round'/>
+<path d='M10 30l8 3.4M10 35l12 5' stroke='#78350F' stroke-opacity='.45' stroke-width='1.4' stroke-linecap='round'/>
+
+@@libro
+<defs>%V(o,#FFB067,#E2620A)%V(p,#FFFFFF,#E8EEF5)</defs>
+<g %S><path d='M4 14c9-4 19-4 28 2 9-6 19-6 28-2v40c-9-4-19-4-28 2-9-6-19-6-28-2Z' fill='url(#o)' stroke='#9A3412' stroke-width='1.2' stroke-linejoin='round'/></g>
+<path d='M8 13c8-3 16-2 24 3v36c-8-5-16-6-24-3ZM56 13c-8-3-16-2-24 3v36c8-5 16-6 24-3Z' fill='url(#p)' stroke='#94A3B8' stroke-width='1'/>
+<path d='M13 22c5-1 10 0 14 2M13 29c5-1 10 0 14 2M13 36c5-1 10 0 14 2M37 24c4-2 9-3 14-2M37 31c4-2 9-3 14-2M37 38c4-2 9-3 14-2' stroke='#94A3B8' stroke-width='1.8' fill='none' stroke-linecap='round'/>
+
+@@llave
+<defs>%V(g,#FDE68A,#D97706)</defs>
+<g %S><path d='M28 30l26 26-3 3-4-4-3 3-4-4 3-3-3-3-3 3-4-4 3-3-6-6Z' fill='url(#g)' stroke='#92400E' stroke-width='1.3' stroke-linejoin='round'/><circle cx='20' cy='22' r='13' fill='url(#g)' stroke='#92400E' stroke-width='1.3'/></g>
+<circle cx='17' cy='19' r='4.5' fill='#FFF7D6' stroke='#92400E' stroke-width='1.2'/><path d='M10 16a11 11 0 0 1 6-6' stroke='#FFF' stroke-opacity='.7' stroke-width='2' stroke-linecap='round' fill='none'/>
+
+@@activo
+<defs>%V(g,#4ADE80,#15803D)%R(l,#FFFFFF,#FFFFFF)</defs>
+<g %S><circle cx='32' cy='32' r='26' fill='url(#g)'/></g><circle cx='32' cy='32' r='25.3' fill='none' stroke='#14532D' stroke-opacity='.35' stroke-width='1.4'/>
+<path d='M14 24a20 20 0 0 1 14-14' stroke='#FFF' stroke-opacity='.45' stroke-width='3' stroke-linecap='round' fill='none'/>
+<path d='M20 33.5l8.5 8.5L45 25' fill='none' stroke='#052E16' stroke-opacity='.28' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' transform='translate(0 1.6)'/>
+<path d='M20 33.5l8.5 8.5L45 25' fill='none' stroke='#FFF' stroke-width='6.2' stroke-linecap='round' stroke-linejoin='round'/>
+
+@@inactivo
+<defs>%V(g,#CBD5E1,#64748B)</defs>
+<g %S><circle cx='32' cy='32' r='26' fill='url(#g)'/></g><circle cx='32' cy='32' r='25.3' fill='none' stroke='#334155' stroke-opacity='.35' stroke-width='1.4'/>
+<path d='M14 24a20 20 0 0 1 14-14' stroke='#FFF' stroke-opacity='.45' stroke-width='3' stroke-linecap='round' fill='none'/>
+<rect x='23' y='20' width='6.5' height='24' rx='3.2' fill='#FFF'/><rect x='34.5' y='20' width='6.5' height='24' rx='3.2' fill='#FFF'/>
+
+@@camara
+<defs>%V(b,#475569,#0F172A)%R(l,#93C5FD,#1E3A8A)%V(t,#94A3B8,#334155)</defs>
+<rect x='20' y='10' width='18' height='8' rx='2.5' fill='url(#t)'/>
+<g %S><rect x='4' y='16' width='56' height='38' rx='7' fill='url(#b)'/></g>
+<rect x='4' y='26' width='56' height='4' fill='#F58020'/>
+<circle cx='32' cy='35' r='14' fill='#1E293B' stroke='#94A3B8' stroke-width='2'/><circle cx='32' cy='35' r='10' fill='url(#l)'/><circle cx='28' cy='31' r='3.2' fill='#FFF' opacity='.75'/><circle cx='36' cy='39' r='1.4' fill='#FFF' opacity='.4'/>
+<rect x='48' y='20' width='7' height='4' rx='1.5' fill='#FDE68A'/><path d='M9 20h10' stroke='#FFF' stroke-opacity='.3' stroke-width='1.6' stroke-linecap='round'/>
+
+@@celular
+<defs>%V(b,#475569,#0F172A)%V(s,#60A5FA,#7C3AED)</defs>
+<g %S><rect x='16' y='3' width='32' height='58' rx='7' fill='url(#b)'/></g>
+<rect x='19' y='9' width='26' height='46' rx='3' fill='url(#s)'/><rect x='27' y='5' width='10' height='2' rx='1' fill='#64748B'/>
+<rect x='22' y='13' width='8' height='8' rx='2.2' fill='#F58020'/><rect x='34' y='13' width='8' height='8' rx='2.2' fill='#22C55E'/><rect x='22' y='25' width='8' height='8' rx='2.2' fill='#FDE047'/><rect x='34' y='25' width='8' height='8' rx='2.2' fill='#F472B6'/>
+
+@@folio
+<defs>%V(y,#FDE047,#EAB308)</defs>
+<g %S><path d='M30 6h22a4 4 0 0 1 4 4v22L30 58 6 34Z' fill='url(#y)' stroke='#A16207' stroke-width='1.3' stroke-linejoin='round'/></g>
+<circle cx='45' cy='17' r='4' fill='#FFF' stroke='#A16207' stroke-width='1.2'/>
+<text x='30' y='44' text-anchor='middle' font-family='Segoe UI,Arial,sans-serif' font-weight='800' font-size='20' fill='#78350F' transform='rotate(-45 30 37)'>#</text>
+
+@@gafete
+<defs>%V(b,#60A5FA,#1D4ED8)%V(p,#FFFFFF,#E8EEF5)%R(f,#FCD9B8,#D9996B)%V(m,#E2E8F0,#94A3B8)</defs>
+<path d='M26 2h12l-2 12h-8Z' fill='#F58020'/><rect x='27' y='10' width='10' height='7' rx='2' fill='url(#m)' stroke='#475569'/>
+<g %S><rect x='6' y='15' width='52' height='42' rx='6' fill='url(#p)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M6 21a6 6 0 0 1 6-6h40a6 6 0 0 1 6 6v3H6Z' fill='url(#b)'/>
+<rect x='11' y='29' width='17' height='21' rx='3' fill='#DBEAFE'/><circle cx='19.5' cy='37' r='4.5' fill='url(#f)'/><path d='M12.5 50c1-5 4-7 7-7s6 2 7 7Z' fill='#2563EB'/>
+<path d='M33 33h19M33 40h15M33 47h10' stroke='#94A3B8' stroke-width='2.6' stroke-linecap='round'/>
+
+@@huella
+<defs>%R(a,#FFC78A,#E2620A)%R(b,#FFD3A1,#EA6A12)</defs>
+<g %S><path d='M32 31c-7.5 0-17 9.5-17 17.5 0 5.8 4.3 8.5 9 8.5 3.6 0 5.4-1.8 8-1.8s4.4 1.8 8 1.8c4.7 0 9-2.7 9-8.5C49 40.5 39.5 31 32 31Z' fill='url(#a)' stroke='#9A3412' stroke-width='1.3' stroke-linejoin='round'/></g>
+<g %S fill='url(#b)' stroke='#9A3412' stroke-width='1.2'><ellipse cx='12' cy='27' rx='6' ry='7.6' transform='rotate(-22 12 27)'/><ellipse cx='23.5' cy='14.5' rx='6.2' ry='8.2' transform='rotate(-8 23.5 14.5)'/><ellipse cx='40.5' cy='14.5' rx='6.2' ry='8.2' transform='rotate(8 40.5 14.5)'/><ellipse cx='52' cy='27' rx='6' ry='7.6' transform='rotate(22 52 27)'/></g>
+<g fill='#FFF' opacity='.55'><ellipse cx='10.5' cy='24' rx='1.8' ry='2.6' transform='rotate(-22 10.5 24)'/><ellipse cx='22' cy='11' rx='1.9' ry='2.8'/><ellipse cx='39' cy='11' rx='1.9' ry='2.8'/><ellipse cx='50.5' cy='24' rx='1.8' ry='2.6' transform='rotate(22 50.5 24)'/></g>
+<path d='M22 41c3-4.5 7-7 10-7' stroke='#FFF' stroke-opacity='.55' stroke-width='2.4' stroke-linecap='round' fill='none'/>
+
+@@microbiologia
+<defs>%V(b,#F8FAFC,#94A3B8)%V(d,#60A5FA,#1D4ED8)%V(k,#475569,#0F172A)%R(p,#FDE68A,#F59E0B)</defs>
+<g %S><path d='M12 54h40a3 3 0 0 0 3-3v-1a3 3 0 0 0-3-3H12a3 3 0 0 0-3 3v1a3 3 0 0 0 3 3Z' fill='url(#k)'/>
+<path d='M38 47c8-3 12-10 11-18-.6-5-3-9-7-11' stroke='url(#b)' stroke-width='7' fill='none' stroke-linecap='round'/>
+<rect x='22' y='6' width='11' height='26' rx='3' fill='url(#d)' stroke='#1E3A8A' stroke-width='1.2' transform='rotate(-28 27.5 19)'/></g>
+<rect x='20' y='3' width='8' height='5' rx='1.5' fill='#1E293B' transform='rotate(-28 24 5.5)'/>
+<rect x='28' y='29' width='6' height='7' rx='1.5' fill='#334155' transform='rotate(-28 31 32.5)'/>
+<rect x='17' y='37' width='24' height='4' rx='2' fill='url(#b)' stroke='#475569' stroke-width='1'/>
+<ellipse cx='26' cy='36' rx='6' ry='1.8' fill='url(#p)' stroke='#B45309' stroke-width='.7'/>
+<rect x='38' y='37' width='6' height='12' rx='1.5' fill='#64748B'/>
+<path d='M24 10l4 9' stroke='#FFF' stroke-opacity='.55' stroke-width='1.6' stroke-linecap='round'/>
+
+@@fisicoquimicos
+<defs>%V(r,#E9C08A,#A16207)%V(g,#86EFAC,#16A34A)%V(p,#D8B4FE,#7E22CE)%V(o,#FDBA74,#EA580C)%V(t,#FFFFFF,#E2E8F0)</defs>
+<g stroke='#64748B' stroke-width='1.2'><rect x='11' y='6' width='10' height='44' rx='5' fill='url(#t)'/><rect x='27' y='10' width='10' height='40' rx='5' fill='url(#t)'/><rect x='43' y='4' width='10' height='46' rx='5' fill='url(#t)'/></g>
+<path d='M11 28h10v17a5 5 0 0 1-10 0Z' fill='url(#g)'/><path d='M27 22h10v23a5 5 0 0 1-10 0Z' fill='url(#p)'/><path d='M43 32h10v13a5 5 0 0 1-10 0Z' fill='url(#o)'/>
+<path d='M14 10v32M30 14v28M46 8v34' stroke='#FFF' stroke-opacity='.8' stroke-width='1.6' stroke-linecap='round'/>
+<circle cx='17' cy='36' r='1.3' fill='#FFF' opacity='.7'/><circle cx='33' cy='30' r='1.3' fill='#FFF' opacity='.7'/><circle cx='49' cy='38' r='1.3' fill='#FFF' opacity='.7'/>
+<g %S><rect x='4' y='36' width='56' height='7' rx='2' fill='url(#r)' stroke='#78350F' stroke-width='1.1'/><rect x='7' y='43' width='5' height='15' rx='1.5' fill='url(#r)'/><rect x='52' y='43' width='5' height='15' rx='1.5' fill='url(#r)'/></g>
+<path d='M7 38.5h50' stroke='#FDE68A' stroke-opacity='.6' stroke-width='1.2'/>
+
+@@recepcion
+<defs>%V(c,#FFB067,#E2620A)%V(b,#FFFFFF,#D5DEE9)%V(w,#475569,#0F172A)%V(k,#F4CF97,#C98A3E)</defs>
+<g %S><rect x='3' y='14' width='37' height='31' rx='3.5' fill='url(#b)' stroke='#94A3B8' stroke-width='1.3'/>
+<path d='M40 23h10.6a3.4 3.4 0 0 1 2.9 1.7l5.6 9.6a3.4 3.4 0 0 1 .5 1.8V45H40Z' fill='url(#c)' stroke='#C2410C' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M43.5 26.5h6.6a1.6 1.6 0 0 1 1.4.8l3.6 6.4H43.5Z' fill='#CFE9FF' stroke='#1E3A8A' stroke-opacity='.35' stroke-width='1'/>
+<rect x='3' y='36' width='37' height='4.5' fill='#F58020'/>
+<rect x='9' y='19' width='13' height='12' rx='1.5' fill='url(#k)' stroke='#92400E' stroke-width='1'/><rect x='14' y='19' width='3' height='12' fill='#FDEBCB'/>
+<rect x='24' y='23' width='11' height='8' rx='1.5' fill='url(#k)' stroke='#92400E' stroke-width='1'/>
+<rect x='5.5' y='16.5' width='16' height='2' rx='1' %H/>
+<circle cx='14' cy='47' r='6.2' fill='url(#w)'/><circle cx='14' cy='47' r='2.5' fill='#CBD5E1'/>
+<circle cx='49' cy='47' r='6.2' fill='url(#w)'/><circle cx='49' cy='47' r='2.5' fill='#CBD5E1'/>
+<rect x='55' y='39' width='4.5' height='3' rx='1.2' fill='#FDE68A'/>
+
+@@almacenamiento
+<defs>%V(m,#A3B1C2,#475569)%V(k,#F4CF97,#C98A3E)%V(u,#60A5FA,#1D4ED8)%V(r,#F87171,#C81E1E)</defs>
+<g %S><rect x='7' y='6' width='4.5' height='53' rx='1.6' fill='url(#m)'/><rect x='52.5' y='6' width='4.5' height='53' rx='1.6' fill='url(#m)'/>
+<rect x='7' y='29' width='50' height='4' rx='1.2' fill='url(#m)'/><rect x='7' y='52' width='50' height='4' rx='1.2' fill='url(#m)'/></g>
+<rect x='14' y='13' width='17' height='16' rx='1.6' fill='url(#k)' stroke='#92400E' stroke-width='1'/><rect x='21' y='13' width='3' height='16' fill='#FDEBCB'/>
+<rect x='33' y='18' width='17' height='11' rx='1.6' fill='url(#u)' stroke='#1E3A8A' stroke-width='1'/><path d='M36 21.8h11M36 25.2h11' stroke='#FFF' stroke-opacity='.5' stroke-width='1.3'/>
+<rect x='14' y='38' width='21' height='14' rx='1.6' fill='url(#r)' stroke='#991B1B' stroke-width='1'/><path d='M17 42h15M17 46h15' stroke='#FFF' stroke-opacity='.45' stroke-width='1.3'/>
+<rect x='37' y='39' width='13' height='13' rx='1.6' fill='url(#k)' stroke='#92400E' stroke-width='1'/><rect x='42' y='39' width='3' height='13' fill='#FDEBCB'/>
+
+@@monitor
+<defs>%V(b,#475569,#0F172A)%V(s,#7DD3FC,#2563EB)%V(m,#E2E8F0,#94A3B8)</defs>
+<path d='M26 46h12l2 9H24Z' fill='url(#m)' stroke='#64748B'/><rect x='17' y='54' width='30' height='4' rx='2' fill='url(#m)' stroke='#64748B'/>
+<g %S><rect x='3' y='8' width='58' height='40' rx='5' fill='url(#b)'/></g>
+<rect x='7' y='12' width='50' height='30' rx='2' fill='url(#s)'/>
+<rect x='11' y='16' width='18' height='4' rx='2' fill='#FFF' opacity='.85'/><rect x='11' y='24' width='12' height='14' rx='2' fill='#F58020'/><rect x='26' y='28' width='12' height='10' rx='2' fill='#22C55E'/><rect x='41' y='20' width='12' height='18' rx='2' fill='#FDE047'/>
+
+@@tableta
+<defs>%V(b,#475569,#0F172A)%V(s,#7DD3FC,#2563EB)</defs>
+<g %S><rect x='6' y='6' width='52' height='52' rx='7' fill='url(#b)'/></g>
+<rect x='10' y='10' width='44' height='44' rx='3' fill='url(#s)'/>
+<rect x='14' y='14' width='10' height='10' rx='2.6' fill='#F58020'/><rect x='27' y='14' width='10' height='10' rx='2.6' fill='#22C55E'/><rect x='40' y='14' width='10' height='10' rx='2.6' fill='#FDE047'/><rect x='14' y='27' width='10' height='10' rx='2.6' fill='#F472B6'/><rect x='27' y='27' width='10' height='10' rx='2.6' fill='#A78BFA'/>
+
+@@cohete
+<defs>%V(w,#FFFFFF,#CBD5E1)%V(r,#F87171,#B91C1C)%R(b,#93C5FD,#1D4ED8)%V(f,#FDE047,#EA580C)</defs>
+<path d='M22 46c-6 2-9 8-10 14 6-1 12-4 14-10Z' fill='url(#f)'/>
+<path d='M20 36 9 40l6-11h9ZM28 44l-4 11 11-6v-9Z' fill='url(#r)' stroke='#7F1D1D' stroke-width='1.1' stroke-linejoin='round'/>
+<g %S><path d='M56 8c-12-1-24 5-32 17l-4 9 10 10 9-4c12-8 18-20 17-32Z' fill='url(#w)' stroke='#475569' stroke-width='1.3' stroke-linejoin='round'/></g>
+<path d='M56 8c-4 0-8 .6-11 1.8l8.2 8.2C55.4 15 56 12 56 8Z' fill='url(#r)'/>
+<circle cx='39' cy='25' r='5.5' fill='url(#b)' stroke='#334155' stroke-width='1.6'/><circle cx='37.6' cy='23.6' r='1.6' fill='#FFF' opacity='.7'/>
+
+@@receta
+<defs>%V(c,#FFB067,#E2620A)%V(p,#FFFFFF,#E8EEF5)%V(h,#FFFFFF,#DCE3EC)</defs>
+<g %S><rect x='14' y='6' width='42' height='52' rx='4' fill='url(#p)' stroke='#94A3B8' stroke-width='1.2'/><path d='M10 8a4 4 0 0 1 4-4h34v52H14a4 4 0 0 0-4 4Z' fill='url(#c)' stroke='#9A3412' stroke-width='1.3'/></g>
+<path d='M10 56a4 4 0 0 1 4-4h34v4H14a4 4 0 0 0-4 4Z' fill='#FDE68A'/><rect x='14' y='4' width='4' height='48' fill='#9A3412' opacity='.35'/>
+<path d='M26 26c-3.6-.4-6-2.8-6-6 0-3.4 3-6 6.5-5.4C28 12 30 11 32 11s4 1 5.5 3.6c3.5-.6 6.5 2 6.5 5.4 0 3.2-2.4 5.6-6 6v6H26Z' fill='url(#h)' stroke='#9A3412' stroke-width='1' stroke-linejoin='round'/>
+<path d='M24 40h16M24 45h12' stroke='#FFF' stroke-width='2' stroke-linecap='round' opacity='.85'/>
+<path d='M13 9v40' stroke='#FFF' stroke-opacity='.45' stroke-width='1.6' stroke-linecap='round'/>
+
+
+@@correo
+<defs>%V(s,#FFFFFF,#E2E8F0)%V(o,#FFB067,#E2620A)%V(t,#5EEAD4,#0E8F96)</defs>
+<g %S><rect x='4' y='14' width='50' height='36' rx='5' fill='url(#s)' stroke='#94A3B8' stroke-width='1.3'/></g>
+<path d='M6 17l23 18 23-18' fill='none' stroke='url(#o)' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/>
+<path d='M6 48l17-14M52 48 35 34' stroke='#CBD5E1' stroke-width='1.8' stroke-linecap='round'/>
+<rect x='8' y='17.5' width='14' height='2' rx='1' %H/>
+<g %S><circle cx='50' cy='16' r='10' fill='url(#t)' stroke='#115E59' stroke-width='1.2'/></g>
+<path d='M45.6 16.2l3 3 5.6-5.8' fill='none' stroke='#FFF' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/>
