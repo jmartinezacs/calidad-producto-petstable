@@ -2382,7 +2382,7 @@ ul.lib-areas li { display: flex; align-items: center; gap: 4px; font-size: 13px;
 .cr-etapas li { padding: 4px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; color: var(--hero-chip-txt); background: var(--hero-chip); box-shadow: inset 0 0 0 1px var(--hero-chip-line); }
 .cr-firma { position: relative; z-index: 1; margin: 0; align-self: stretch; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 190px; padding: 14px 18px 12px; border-radius: 16px; background: var(--hero-chip); box-shadow: inset 0 0 0 1px var(--hero-chip-line); }
 .cr-firma-img { display: block; width: 116px; aspect-ratio: 494 / 600; background: var(--hero-txt);
-  -webkit-mask: url('/creditos/firma.png') center / contain no-repeat; mask: url('/creditos/firma.png') center / contain no-repeat; }
+  -webkit-mask: url('creditos/firma.png') center / contain no-repeat; mask: url('creditos/firma.png') center / contain no-repeat; }
 .cr-firma figcaption { min-width: 160px; margin-top: 8px; padding-top: 8px; border-top: 1.5px solid var(--hero-txt); text-align: center; }
 .cr-firma figcaption b { display: block; font-size: 12.5px; font-weight: 700; color: var(--hero-txt); } .cr-firma figcaption small { display: block; font-size: 11px; color: var(--hero-sub); }
 @media (min-width: 721px) { .cr { padding-right: 112px; } }
@@ -2464,3 +2464,8 @@ body.cargando .top::after { content: ""; position: absolute; left: 0; bottom: -1
 .cat-kpi { flex-direction: column; justify-content: center; text-align: center; gap: 8px; padding: 18px 14px 16px; }
 .cat-kpi-txt { align-items: center; }
 .pf-mail-t b { font-size: 13px; }
+
+/* ---------- Portal Pet's Table (theme-init.js pone .en-portal) ---------- */
+.portal-btn { text-decoration: none; }
+html:not(.en-portal) .portal-btn { display: none !important; }
+.side-portal { margin-bottom: 8px; background: rgba(27, 199, 199, .1); color: #7FE3E3; }

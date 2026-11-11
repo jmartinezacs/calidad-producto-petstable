@@ -73,7 +73,7 @@ Swap '  <link rel="icon" href="/favicon.ico?v=1" sizes="any">' "  <meta http-equ
 Swap "  <link rel=`"icon`" type=`"image/png`" sizes=`"32x32`" href=`"/icons/favicon-32.png?v=1`">`n" ''
 Swap '<img class="app-icon" src="/img/app-icon-128.png"' "<img class=`"app-icon`" src=`"$icon128`""
 # El manifiesto se publica como archivo aparte (necesario para notificaciones en iPhone)
-Swap '<link rel="manifest" href="/manifest.webmanifest?v=1">' '<link rel="manifest" href="/manifest.webmanifest">'
+Swap '<link rel="manifest" href="manifest.webmanifest?v=1">' '<link rel="manifest" href="manifest.webmanifest">'
 Swap '  <link rel="stylesheet" href="/css/app.css?v=1.0.0">' "  <style>`n$css</style>"
 Swap '  <script src="/js/theme-init.js"></script>' "  <script>$themeJs</script>"
 Swap '  <script src="/js/config.js?v=1.0.0"></script>' "  <script>$configJs</script>"

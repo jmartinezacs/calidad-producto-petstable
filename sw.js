@@ -5,7 +5,9 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', () => { /* red directa */ });
 
-const ICONO = '/notif-icon.png';
+// Todo es relativo a su alcance: / cuando la app está sola y /liberacion/ dentro del Portal Pet's Table.
+const enAlcance = (ruta) => new URL(String(ruta || '').replace(/^\//, ''), self.registration.scope).href;
+const ICONO = enAlcance('notif-icon.png');
 
 // Ícono con la foto circular de quien generó el aviso y el ícono de la app en
 // pequeño; si algo falla se usa el ícono de la app.
@@ -41,7 +43,7 @@ async function mostrar(d) {
     body: d.body || '',
     icon: await iconoConFoto(d.foto),
     // Android pinta la insignia de la barra de estado como silueta: huella blanca con palomita sobre transparente
-    badge: '/notif-badge.png',
+    badge: enAlcance('notif-badge.png'),
     tag: d.tag || `brom-${Date.now()}`,
     renotify: true,
     requireInteraction: true,
@@ -49,7 +51,8 @@ async function mostrar(d) {
     vibrate: [300, 120, 300],
     timestamp: Date.now(),
     actions: [{ action: 'ver', title: 'Ver ahora' }],
-    data: { url: d.url || '/' },
+    // La función notificar_brom manda rutas como '/#/perfil': se abren dentro del alcance de esta app
+    data: { url: enAlcance(d.url || '') },
   };
   try {
     await self.registration.showNotification(d.title || 'Liberación de producto', opciones);
@@ -73,11 +76,11 @@ self.addEventListener('message', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
   e.waitUntil((async () => {
     const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const c of list) {
-      if (new URL(c.url).origin === self.location.origin) {
+      if (c.url.startsWith(self.registration.scope)) {
         if ('navigate' in c) await c.navigate(url).catch(() => {});
         return c.focus();
       }

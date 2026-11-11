@@ -4,7 +4,7 @@
 // =====================================================================
 import {
   sb, state, esc, icon, refreshIcons, toast, errMsg, checkForm, prefs, fmtDateTime, APP_VERSION, avatarHTML, roleLabel,
-  prepararFoto, subirFoto, borrarFotoPropia, push, openModal, ganchos, emoji, getDirectorio,
+  prepararFoto, subirFoto, borrarFotoPropia, push, openModal, ganchos, emoji, getDirectorio, K_THEME,
 } from '../core.js';
 
 // Mosaico de información con ilustración
@@ -111,7 +111,7 @@ async function correoPrueba(btn) {
     if (vista) {
       let logo = '';
       try {
-        const b = await (await fetch('/logo-correo.png')).blob();
+        const b = await (await fetch('logo-correo.png')).blob();
         logo = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); });
       } catch { /* sin logo: se muestra el nombre en texto */ }
       const html = String(data.html).replace('__LOGO__', /^data:image\/png/.test(logo) ? logo : '');
@@ -136,7 +136,7 @@ export default {
   async render(el) {
     const p = state.profile;
     const user = state.session?.user;
-    const theme = prefs.get('brom.theme') || 'system';
+    const theme = prefs.get(K_THEME) || 'system';
     el.innerHTML = `
       <section class="page-intro"><div><span class="eyebrow">Cuenta</span><h1>Mi perfil</h1><p>Tus datos de acceso y preferencias.</p></div></section>
       <div class="pf">
