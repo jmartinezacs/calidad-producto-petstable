@@ -5,6 +5,7 @@ import {
   sb, state, prefs, esc, icon, refreshIcons, toast, errMsg, openModal, checkForm,
   destroyCharts, animarCifras, emoji, APP_VERSION, TZ, navigate, avatarHTML, restyleCharts, roleLabel, fotoDe, ganchos, push, TIPOS_AVISO,
   BASE, EN_PORTAL, K_REMEMBER, K_THEME,
+  registrarServiceWorker,
 } from './core.js';
 import dashboard from './modules/dashboard.js';
 import lotes from './modules/lotes.js';
@@ -171,7 +172,7 @@ function startApp() {
     setInterval(revisarVersion, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', revisarVersion);
     // Service worker: permite instalar el portal como aplicación (no guarda caché)
-    if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
+    registrarServiceWorker(); // sola: el de la app; en el portal: el del portal
     // Avisos: se revisan cada minuto y al volver a la pestaña
     setInterval(() => cargarAvisos(), 60 * 1000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) cargarAvisos(); });
