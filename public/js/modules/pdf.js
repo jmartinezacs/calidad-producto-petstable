@@ -22,7 +22,7 @@ export function cargarJsPDF() {
 // Las fuentes estándar del PDF solo tienen Latin-1: se sustituyen los símbolos que no existen
 export const pdfTxt = (s) => String(s ?? '').replace(/→/g, '>').replace(/⋮/g, '(tres puntos)').replace(/⋯/g, '(...)').replace(/…/g, '...')
   .replace(/[–—]/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/x̄/g, 'media').replace(/[“”«»]/g, '"').replace(/[‘’]/g, "'");
-export const RGB = { navy: [11, 30, 45], navy2: [29, 66, 96], orange: [245, 128, 32], orangeSoft: [255, 240, 226], turq: [15, 163, 166], turqSoft: [225, 246, 246],
+export const RGB = { navy: [11, 30, 45], navy2: [29, 66, 96], orange: [126, 34, 206], orangeSoft: [243, 232, 255], turq: [15, 163, 166], turqSoft: [225, 246, 246],
   txt: [38, 50, 62], muted: [110, 125, 140], line: [218, 226, 233], bg: [246, 248, 250], ok: [21, 138, 87], okSoft: [221, 246, 234], bad: [196, 47, 55], badSoft: [255, 227, 228] };
 export const hexRGB = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const n = m ? parseInt(m[1], 16) : 0xF58020; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 

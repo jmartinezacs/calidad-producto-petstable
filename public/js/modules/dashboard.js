@@ -99,7 +99,7 @@ const statusCard = (cls, title, desc, n, go = '', ilus = '') =>
 const cardHead = (title, sub = '', btn = '') =>
   `<div class="card-head center"><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}</div>${btn}</div>`;
 
-function chartCard(id, title, sub, cls = '', total = '', alto = 0, ilus = 'n_resultados', color = '#F58020') {
+function chartCard(id, title, sub, cls = '', total = '', alto = 0, ilus = 'n_resultados', color = '#7E22CE') {
   return `<div class="card chart-card" style="--cc:${color}"><div class="card-head center"><span class="cc-ico ilus" aria-hidden="true">${emoji(ilus)}</span><div><h3>${esc(title)}</h3>${sub ? `<p>${esc(sub)}</p>` : ''}${total ? `<span class="total-badge">${total}</span>` : ''}</div></div>
     <div tabindex="0" title="Ampliar gráfica" class="chart-box ${cls}"${alto ? ` style="height:${alto}px"` : ''}><canvas id="${id}" role="img" aria-label="${esc(title)}"></canvas></div></div>`;
 }
@@ -139,7 +139,7 @@ function contenido(cat, lotes, rs) {
       ${chartCard('ch-pct', 'Porcentaje de cumplimiento', `${fmtNum(ok + no)} análisis evaluados en el periodo`, '', '', 0, 'activo', '#16A34A')}
     </div>
     <div class="grid grid-2 mt">
-      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'n_recetas', '#F58020')}
+      ${chartCard('ch-receta', 'Cumplimiento por receta', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'n_recetas', '#7E22CE')}
       ${chartCard('ch-area', 'Cumplimiento por área de análisis', 'Porcentaje de análisis que cumplen', 'sm', '', 0, 'microbiologia', '#7C3AED')}
     </div>
     <div class="grid grid-2 mt">

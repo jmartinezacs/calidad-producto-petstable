@@ -89,7 +89,7 @@ const TEMAS = [
 ];
 
 // ---------------- Instalación ----------------
-const C = { navy: '#0B1E2D', navy2: '#1D4260', orange: '#F58020', orangeSoft: '#FFE7D1', turq: '#0FA3A6', bg: '#F4F7FA', line: '#D5DEE6', muted: '#8A99A8', txt: '#1F2D3A', white: '#FFFFFF' };
+const C = { navy: '#0B1E2D', navy2: '#1D4260', orange: '#7E22CE', orangeSoft: '#E9D5FF', turq: '#0FA3A6', bg: '#F4F7FA', line: '#D5DEE6', muted: '#8A99A8', txt: '#1F2D3A', white: '#FFFFFF' };
 const URL_APP = location.host || 'liberacion-de-producto';
 const appIcon = () => document.querySelector('img.app-icon')?.src || '';
 

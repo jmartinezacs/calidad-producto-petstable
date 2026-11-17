@@ -507,8 +507,8 @@ const charts = new Set();
 const chartConfigs = new WeakMap();
 export function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 // Colores distintos para cada barra o segmento (no se repiten mientras alcancen)
-export const PALETTE = ['#F58020', '#1BC7C7', '#7C3AED', '#16A34A', '#DB2777', '#2563EB', '#CA8A04', '#0891B2', '#DC2626', '#65A30D',
-  '#9333EA', '#0D9488', '#E8890C', '#4F46E5', '#BE185D', '#475569'];
+export const PALETTE = ['#7E22CE', '#1BC7C7', '#F58020', '#16A34A', '#DB2777', '#2563EB', '#CA8A04', '#0891B2', '#DC2626', '#65A30D',
+  '#C2410C', '#0D9488', '#E8890C', '#4F46E5', '#BE185D', '#475569'];
 // Categorías sin color propio: paleta validada para daltonismo, en orden y nunca cíclica
 // (de la novena en adelante, gris neutro). Las recetas, áreas y estados conservan su color de negocio.
 const PALETA_CAT = { claro: ['#2A78D6', '#EB6834', '#1BAF7A', '#EDA100', '#E87BA4', '#008300', '#6250D6', '#E34948'], oscuro: ['#3987E5', '#D95926', '#199E70', '#C98500', '#D55181', '#008300', '#9085E9', '#E66767'] };
