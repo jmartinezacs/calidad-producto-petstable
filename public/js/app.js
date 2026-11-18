@@ -344,6 +344,7 @@ function bindGlobalEvents() {
       case 'toggle-menu': toggleMenu(); break;
       case 'close-menu': closeMenu(); break;
       case 'toggle-theme': cycleTheme(); break;
+      case 'set-theme': setTheme(a.dataset.tema); break;
       case 'go-profile': navigate('#/perfil'); break;
       case 'go-home': navigate('#/panel'); break;
       case 'fab-lote': {
@@ -440,6 +441,8 @@ function effectiveDark() {
 function cycleTheme() { setTheme(effectiveDark() ? 'light' : 'dark'); }
 // El selector muestra sol y luna; se resalta el modo activo
 function updateThemeButton() {
+  // Selector del menú lateral (celular), como en Ruta de calidad y Servicio médico
+  document.querySelectorAll('.side-tema [data-tema]').forEach((b) => { const on = (b.dataset.tema === 'dark') === effectiveDark(); b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
   const dark = effectiveDark();
   const btn = document.querySelector('.theme-toggle');
   btn.classList.toggle('is-dark', dark);
@@ -535,3 +538,11 @@ setTimeout(async () => {
     if (!data.session) showLogin();
   }
 }, 2500);
+
+// Transición suave al cambiar entre modo claro y oscuro (la misma del portal; estilos en el bloque de marca)
+new MutationObserver(() => {
+  const h = document.documentElement;
+  h.classList.add('tema-cambia');
+  clearTimeout(window.__temaCambia);
+  window.__temaCambia = setTimeout(() => h.classList.remove('tema-cambia'), 520);
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

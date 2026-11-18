@@ -29,7 +29,7 @@ export default {
         <div>
           <span class="eyebrow">Panel general</span>
           <h1 class="hello">Hola, ${esc(p.nombre.split(' ')[0])} <span class="paws" aria-hidden="true">${icon('paw-print')}${icon('paw-print')}</span></h1>
-          <p>Estado de liberación de los lotes y cumplimiento de sus análisis bromatológicos, fisicoquímicos, microbiológicos y sensoriales.</p>
+          <p>Liberación de lotes y cumplimiento de sus análisis.</p>
         </div>
         <div class="toolbar" style="margin:0">
           <label class="sr-only" for="dash-period">Periodo</label>

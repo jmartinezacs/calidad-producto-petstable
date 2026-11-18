@@ -300,7 +300,7 @@ function agregarForm() {
         const { data, error } = await sb.rpc('brom_buscar_cuentas', { p_q: q });
         if (t !== n) return;
         if (error) { box.innerHTML = `<p class="form-error">${esc(errMsg(error))}</p>`; return; }
-        if (!data?.length) { box.innerHTML = '<p class="hint">No se encontraron cuentas con esa búsqueda. La persona debe tener una cuenta de Pet\'s Table (la que usa en las demás aplicaciones).</p>'; return; }
+        if (!data?.length) { box.innerHTML = '<p class="hint">Sin resultados. La persona necesita su cuenta de Pet\'s Table.</p>'; return; }
         box.innerHTML = data.map((c, i) => `<button type="button" class="cuenta ${c.ya_registrado ? 'ya' : ''}" data-i="${i}" ${c.ya_registrado ? 'disabled' : ''}>
           ${avatarHTML(c.nombre, c.foto_sugerida)}<span class="user-txt"><b>${esc(c.nombre)}</b><small>${esc(c.email)}</small></span>
           <span class="cuenta-est">${c.ya_registrado ? '<span class="pill gray">Ya tiene acceso</span>' : c.ultimo_acceso ? `<small>Último acceso: ${fmtDateTime(c.ultimo_acceso)}</small>` : '<small>Sin accesos</small>'}</span></button>`).join('');

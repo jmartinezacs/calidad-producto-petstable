@@ -227,7 +227,7 @@ export default {
         <p class="faq-vacio hidden" id="faq-vacio">${icon('search-x')} No encontramos preguntas con esa búsqueda. Prueba con otras palabras o consulta a un administrador.</p>
         <section class="faq-sec faq-instalar" id="faq-instalar" data-texto="${esc(norm('instalar aplicacion celular android iphone ipad computadora chrome safari edge pantalla de inicio'))}">
           <h2><span class="faq-sec-ico">${emoji('celular')}</span>Instalar la aplicación<small>Paso a paso</small></h2>
-          <p class="faq-intro">Instalada, Liberación se abre desde su propio ícono, y en pantalla completa. No ocupa espacio como una app de tienda y se actualiza sola.</p>
+          <p class="faq-intro">Se abre desde su ícono, en pantalla completa, y se actualiza sola.</p>
           <div class="faq-tabs" role="tablist">${INSTALAR.map((p, i) => `<button role="tab" class="faq-tab ${i === 0 ? 'on' : ''}" data-plat="${p.id}" aria-selected="${i === 0}">${emoji(p.ilus)}<span><b>${esc(p.titulo)}</b><small>${esc(p.sub)}</small></span></button>`).join('')}</div>
           ${INSTALAR.map((p, i) => `<div class="faq-pasos ${i === 0 ? '' : 'hidden'}" data-pasos="${p.id}">${p.pasos.map(([tit, txt, dib], k) => `
             <article class="faq-paso"><div class="faq-ilus">${dib()}</div>
