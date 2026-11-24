@@ -75,7 +75,21 @@ export const icon = (name, cls = '') => `<i data-lucide="${name}"${cls ? ` class
 export function refreshIcons() { try { window.lucide?.createIcons(); } catch { /* sin íconos */ } }
 // Ilustración a color propia (fuentes/ilustraciones.src → public/emoji), mismo estilo que Ruta de calidad.
 // Decorativa: alt vacío y oculta a lectores de pantalla.
-export const emoji = (slug, cls = '') => `<img class="emoji ${cls}" src="emoji/${slug}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
+// ---------------- Imágenes realistas (estándar Pet's Table, fase 2) ----------------
+// Las ilustraciones se pueden sustituir por imágenes realistas en public/iconos3d/<nombre>.webp
+// (256 × 256, fondo transparente; ver el README de esa carpeta). Solo se usan los nombres listados en
+// ICONOS_3D; los demás conservan su ilustración. Si una imagen no carga, vuelve sola a la ilustración.
+export const ICONOS_3D = new Set([]);
+const ICO3D_VER = '1';
+export function con3d(n) { return !!n && ICONOS_3D.has(n); }
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.classList.contains('ico3d') || !img.dataset.respaldo) return;
+  const r = img.dataset.respaldo; delete img.dataset.respaldo; img.classList.remove('ico3d'); img.src = r;
+}, true);
+export const emoji = (slug, cls = '') => (con3d(slug)
+  ? `<img class="emoji ico3d ${cls}" src="iconos3d/${slug}.webp?v=${ICO3D_VER}" data-respaldo="emoji/${slug}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`
+  : `<img class="emoji ${cls}" src="emoji/${slug}.svg" alt="" aria-hidden="true" loading="lazy" decoding="async">`);
 // Ilustración de cada área de análisis (las áreas nuevas usan la de Fisicoquímico)
 const ILUS_AREA = { bromatologico: 'bromatologico', fisicoquimico: 'fisicoquimicos', microbiologico: 'microbiologia', sensorial: 'sensorial' };
 export const ilusArea = (id) => ILUS_AREA[id] || 'fisicoquimicos';

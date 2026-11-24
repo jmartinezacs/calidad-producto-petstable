@@ -97,6 +97,12 @@ foreach ($dir in @('emoji', 'notif', 'creditos')) {
   if (Test-Path $destino) { Remove-Item $destino -Recurse -Force }
   Copy-Item (Join-Path $Src $dir) $destino -Recurse -Force
 }
+# Imágenes realistas (iconos3d): solo imágenes; el README se queda en public/iconos3d
+$ico3d = Get-ChildItem (Join-Path $Src 'iconos3d\*') -Include *.webp, *.png -ErrorAction SilentlyContinue
+if ($ico3d) {
+  New-Item -ItemType Directory -Force (Join-Path $Out 'iconos3d') | Out-Null
+  $ico3d | Copy-Item -Destination (Join-Path $Out 'iconos3d') -Force
+}
 # Versión publicada: la app la consulta para ofrecer "Actualizar" cuando cambia
 if ($configJs -notmatch 'APP_VERSION:\s*["'']([^"'']+)["'']') { throw 'No se encontró APP_VERSION en config.js' }
 [IO.File]::WriteAllText((Join-Path $Out 'version.json'), "{`"version`":`"$($Matches[1])`"}`n", $utf8)
