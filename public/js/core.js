@@ -79,8 +79,15 @@ export function refreshIcons() { try { window.lucide?.createIcons(); } catch { /
 // Las ilustraciones se pueden sustituir por imágenes realistas en public/iconos3d/<nombre>.webp
 // (256 × 256, fondo transparente; ver el README de esa carpeta). Solo se usan los nombres listados en
 // ICONOS_3D; los demás conservan su ilustración. Si una imagen no carga, vuelve sola a la ilustración.
-export const ICONOS_3D = new Set([]);
-const ICO3D_VER = '1';
+export const ICONOS_3D = new Set([ // Paquete de imágenes realistas (v1, 43 imágenes)
+  'activo', 'almacenamiento', 'bromatologico', 'calendario', 'camara', 'celular', 'certificado', 'cohete', 
+  'correo', 'en_captura', 'firma', 'fisicoquimicos', 'folio', 'gafete', 'huella', 'inactivo', 'liberado', 
+  'libro', 'listo_liberar', 'llave', 'microbiologia', 'monitor', 'n_alerta', 'n_avisos', 'n_ayuda', 
+  'n_bitacora', 'n_catalogos', 'n_lotes', 'n_panel', 'n_perfil', 'n_recetas', 'n_resultados', 'n_usuarios', 
+  'no_conforme', 'paquete', 'personas', 'puesto', 'recepcion', 'receta', 'reloj', 'revertido', 'sensorial', 
+  'tableta',
+]);
+const ICO3D_VER = '2';
 export function con3d(n) { return !!n && ICONOS_3D.has(n); }
 document.addEventListener('error', (e) => {
   const img = e.target;
